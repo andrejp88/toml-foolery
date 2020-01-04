@@ -53,7 +53,7 @@ Result:
 
 ```toml
 name = "Esmerelda Weatherwax"
-uuid = 58b2eda5-43ac-426b-84a8-86875799a7b2
+uuid = "58b2eda5-43ac-426b-84a8-86875799a7b2"
 creation-time = 2020-01-04 17:11:44.713+00:00
 position.x = 3.14159
 position.y = 5
@@ -63,3 +63,52 @@ town = "Bad Ass"
 region = "Ramtops"
 planet = "The Disc"
 ```
+
+## TOML-to-D conversions
+
+Each TOML type has one or more corresponding types in D.
+
+### String
+- `string`
+- `char` — Decoder will throw an exception if the string in the TOML contains more than one UTF-8 code unit.
+- [`std.uuid.UUID`](https://dlang.org/library/std/uuid/uuid.html) — Decoder uses [`parseUUID`](https://dlang.org/library/std/uuid/parse_uuid.html) and may throw [`UUIDParsingException`](https://dlang.org/library/std/uuid/uuid_parsing_exception.html).
+
+### Integer
+- `byte`
+- `short`
+- `int`
+- `long`
+- `ubyte`
+- `ushort`
+- `uint`
+- `ulong`
+- [`std.bigint.BigInt`](https://dlang.org/library/std/bigint/big_int.html)
+
+### Float
+- `float`
+- `double`
+- `real`
+
+### Boolean
+- `bool`
+- [`std.typecons.Flag`](https://dlang.org/library/std/typecons/flag.html)
+
+### Offset Date-Time
+- [`std.datetime.systime.SysTime`](https://dlang.org/library/std/datetime/systime/sys_time.html)
+
+### Local Date-Time
+- [`std.datetime.date.DateTime`](https://dlang.org/library/std/datetime/date/date_time.html)
+
+### Local Date
+- [`std.datetime.date.Date`](https://dlang.org/library/std/datetime/date/date.html)
+
+### Local Time
+- [`std.datetime.date.TimeOfDay`](https://dlang.org/library/std/datetime/date/time_of_day.html)
+
+### Array
+- Static arrays
+- In future, dynamic arrays will also be supported.
+
+### Table
+- Structs
+- Associative arrays
