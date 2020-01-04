@@ -1,0 +1,10 @@
+name "easy_toml"
+description "Provides conversion of any struct into TOML data (and vice-versa) through just one function call."
+authors "Andrej Petrovic"
+copyright "Copyright © 2020, Andrej Petrovic"
+license "MIT"
+targetType "library"
+configuration "unittest" {
+	dependency "silly" version="~>1.0.0"
+	targetType "library"
+}

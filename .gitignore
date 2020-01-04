@@ -1,0 +1,22 @@
+# DUB
+.dub
+docs.json
+__dummy.html
+docs/
+
+# Binaries
+/easy_toml
+easy_toml.so
+easy_toml.dylib
+easy_toml.dll
+easy_toml.a
+easy_toml.lib
+easy_toml-test-*
+*.exe
+*.o
+*.obj
+*.lst
+/easy_toml-test-library
+
+# Editor-specific stuff
+/.vscode/
