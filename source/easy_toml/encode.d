@@ -3,7 +3,7 @@ module easy_toml.encode;
 import std.array : Appender;
 import std.conv : to;
 import std.format : format;
-import std.traits : isIntegral, isSomeString;
+import std.traits : isIntegral, isSomeString, isSomeChar;
 import std.uni : isNumber;
 
 import quirks : Fields;
@@ -22,7 +22,7 @@ string tomlify(T)(T object)
     enum auto fields = Fields!T;
     static foreach (field; fields)
     {
-        static if (isSomeString!(field.type))
+        static if (isSomeString!(field.type) || isSomeChar!(field.type))
         {
             buffer.put(field.name);
             buffer.put(` = "`);
@@ -418,4 +418,43 @@ unittest
         c = "🜀🍕👨‍👩‍👧"
         `
     );
+}
+
+@("Encode `char` fields as Strings")
+unittest
+{
+    struct S
+    {
+        char c;
+    }
+
+    S s = S('*');
+
+    tomlify(s).should.equalNoBlanks(`c = "*"`);
+}
+
+@("Encode `wchar` fields as Strings")
+unittest
+{
+    struct S
+    {
+        wchar w;
+    }
+
+    S s = S('ⵖ');
+
+    tomlify(s).should.equalNoBlanks(`w = "ⵖ"`);
+}
+
+@("Encode `dchar` fields as Strings")
+unittest
+{
+    struct S
+    {
+        dchar d;
+    }
+
+    S s = S('🌻');
+
+    tomlify(s).should.equalNoBlanks(`d = "🌻"`);
 }
