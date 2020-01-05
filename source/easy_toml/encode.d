@@ -59,6 +59,13 @@ string tomlify(T)(T object)
             buffer.put(valueStr);
             buffer.put("\n");
         }
+        else
+        {
+            buffer.put(field.name);
+            buffer.put(` = `);
+            buffer.put(__traits(getMember, object, field.name).to!string);
+            buffer.put('\n');
+        }
     }
 
     return buffer.data;
@@ -349,4 +356,19 @@ unittest
     S s = S(-1234);
 
     tomlify(s).should.equalNoBlanks(`x = -1234`);
+}
+
+@("Encode `bool` fields")
+unittest
+{
+    struct S
+    {
+        bool b;
+    }
+
+    S st = S(true);
+    tomlify(st).should.equalNoBlanks(`b = true`);
+
+    S sf = S(false);
+    tomlify(sf).should.equalNoBlanks(`b = false`);
 }
