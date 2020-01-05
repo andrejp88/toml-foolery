@@ -163,3 +163,129 @@ unittest
     S s3 = S(-128);
     tomlify(s3).should.equalNoBlanks(`b = -128`);
 }
+
+@("Encode `ubyte` fields")
+unittest
+{
+    struct S
+    {
+        ubyte ub;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`ub = 0`);
+
+    S s2 = S(127);
+    tomlify(s2).should.equalNoBlanks(`ub = 127`);
+
+    S s3 = S(255);
+    tomlify(s3).should.equalNoBlanks(`ub = 255`);
+}
+
+@("Encode `short` fields")
+unittest
+{
+    struct S
+    {
+        short s;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`s = 0`);
+
+    S s2 = S(short.max);
+    tomlify(s2).should.equalNoBlanks(`s = 32767`);
+
+    S s3 = S(short.min);
+    tomlify(s3).should.equalNoBlanks(`s = -32768`);
+}
+
+@("Encode `ushort` fields")
+unittest
+{
+    struct S
+    {
+        ushort us;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`us = 0`);
+
+    S s2 = S(32_768);
+    tomlify(s2).should.equalNoBlanks(`us = 32768`);
+
+    S s3 = S(65_535);
+    tomlify(s3).should.equalNoBlanks(`us = 65535`);
+}
+
+@("Encode `int` fields")
+unittest
+{
+    struct S
+    {
+        int i;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`i = 0`);
+
+    S s2 = S(int.min);
+    tomlify(s2).should.equalNoBlanks(`i = -2147483648`);
+
+    S s3 = S(int.max);
+    tomlify(s3).should.equalNoBlanks(`i = 2147483647`);
+}
+
+@("Encode `uint` fields")
+unittest
+{
+    struct S
+    {
+        uint ui;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`ui = 0`);
+
+    S s2 = S(2_147_483_648);
+    tomlify(s2).should.equalNoBlanks(`ui = 2147483648`);
+
+    S s3 = S(uint.max);
+    tomlify(s3).should.equalNoBlanks(`ui = 4294967295`);
+}
+
+@("Encode `long` fields")
+unittest
+{
+    struct S
+    {
+        long l;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`l = 0`);
+
+    S s2 = S(long.min);
+    tomlify(s2).should.equalNoBlanks(`l = -9223372036854775808`);
+
+    S s3 = S(long.max);
+    tomlify(s3).should.equalNoBlanks(`l = 9223372036854775807`);
+}
+
+@("Encode `ulong` fields")
+unittest
+{
+    struct S
+    {
+        ulong ul;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`ul = 0`);
+
+    S s2 = S(9_223_372_036_854_775_808_UL);
+    tomlify(s2).should.equalNoBlanks(`ul = 9223372036854775808`);
+
+    S s3 = S(ulong.max);
+    tomlify(s3).should.equalNoBlanks(`ul = 18446744073709551615`);
+}
