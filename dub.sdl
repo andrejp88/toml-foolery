@@ -6,5 +6,6 @@ license "MIT"
 targetType "library"
 configuration "unittest" {
 	dependency "silly" version="~>1.0.0"
+	dependency "dshould" version="~>1.1.0"
 	targetType "library"
 }

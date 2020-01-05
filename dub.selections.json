@@ -1,6 +1,8 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"silly": "1.0.0"
+		"dshould": "1.1.0",
+		"silly": "1.0.0",
+		"unit-threaded": "0.10.5"
 	}
 }
