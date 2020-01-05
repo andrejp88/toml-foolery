@@ -2,7 +2,9 @@ module easy_toml.encode;
 
 import std.array : Appender;
 import std.conv : to;
+import std.format : format;
 import std.traits : isIntegral;
+import std.uni : isNumber;
 
 import quirks : Fields;
 
@@ -39,9 +41,22 @@ string tomlify(T)(T object)
                 }
             }
 
+            string valueStr = value.to!string;
+            if (
+                (valueStr.length >= 5 && valueStr[0].isNumber) ||
+                (valueStr.length >= 6)
+            )
+            {
+                valueStr = "%,?d".format('_', value);
+            }
+            else
+            {
+                valueStr = "%d".format(value);
+            }
+
             buffer.put(field.name);
             buffer.put(` = `);
-            buffer.put(value.to!string);
+            buffer.put(valueStr);
             buffer.put("\n");
         }
     }
@@ -224,10 +239,10 @@ unittest
     tomlify(s1).should.equalNoBlanks(`s = 0`);
 
     S s2 = S(short.max);
-    tomlify(s2).should.equalNoBlanks(`s = 32767`);
+    tomlify(s2).should.equalNoBlanks(`s = 32_767`);
 
     S s3 = S(short.min);
-    tomlify(s3).should.equalNoBlanks(`s = -32768`);
+    tomlify(s3).should.equalNoBlanks(`s = -32_768`);
 }
 
 @("Encode `ushort` fields")
@@ -242,10 +257,10 @@ unittest
     tomlify(s1).should.equalNoBlanks(`us = 0`);
 
     S s2 = S(32_768);
-    tomlify(s2).should.equalNoBlanks(`us = 32768`);
+    tomlify(s2).should.equalNoBlanks(`us = 32_768`);
 
     S s3 = S(65_535);
-    tomlify(s3).should.equalNoBlanks(`us = 65535`);
+    tomlify(s3).should.equalNoBlanks(`us = 65_535`);
 }
 
 @("Encode `int` fields")
@@ -260,10 +275,10 @@ unittest
     tomlify(s1).should.equalNoBlanks(`i = 0`);
 
     S s2 = S(int.min);
-    tomlify(s2).should.equalNoBlanks(`i = -2147483648`);
+    tomlify(s2).should.equalNoBlanks(`i = -2_147_483_648`);
 
     S s3 = S(int.max);
-    tomlify(s3).should.equalNoBlanks(`i = 2147483647`);
+    tomlify(s3).should.equalNoBlanks(`i = 2_147_483_647`);
 }
 
 @("Encode `uint` fields")
@@ -278,10 +293,10 @@ unittest
     tomlify(s1).should.equalNoBlanks(`ui = 0`);
 
     S s2 = S(2_147_483_648);
-    tomlify(s2).should.equalNoBlanks(`ui = 2147483648`);
+    tomlify(s2).should.equalNoBlanks(`ui = 2_147_483_648`);
 
     S s3 = S(uint.max);
-    tomlify(s3).should.equalNoBlanks(`ui = 4294967295`);
+    tomlify(s3).should.equalNoBlanks(`ui = 4_294_967_295`);
 }
 
 @("Encode `long` fields")
@@ -296,10 +311,10 @@ unittest
     tomlify(s1).should.equalNoBlanks(`l = 0`);
 
     S s2 = S(long.min);
-    tomlify(s2).should.equalNoBlanks(`l = -9223372036854775808`);
+    tomlify(s2).should.equalNoBlanks(`l = -9_223_372_036_854_775_808`);
 
     S s3 = S(long.max);
-    tomlify(s3).should.equalNoBlanks(`l = 9223372036854775807`);
+    tomlify(s3).should.equalNoBlanks(`l = 9_223_372_036_854_775_807`);
 }
 
 @("Encode `ulong` fields")
@@ -314,11 +329,24 @@ unittest
     tomlify(s1).should.equalNoBlanks(`ul = 0`);
 
     S s2 = S(long.max.to!ulong);
-    tomlify(s2).should.equalNoBlanks(`ul = 9223372036854775807`);
+    tomlify(s2).should.equalNoBlanks(`ul = 9_223_372_036_854_775_807`);
 
     S s3 = S(long.max.to!ulong + 1);
     tomlify(s3).should.throwA!TomlEncodingException;
 
     S s4 = S(ulong.max);
     tomlify(s4).should.throwA!TomlEncodingException;
+}
+
+@("Separators should not be added to 4-digit negative numbers")
+unittest
+{
+    struct S
+    {
+        int x;
+    }
+
+    S s = S(-1234);
+
+    tomlify(s).should.equalNoBlanks(`x = -1234`);
 }
