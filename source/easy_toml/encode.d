@@ -3,7 +3,7 @@ module easy_toml.encode;
 import std.array : Appender;
 import std.conv : to;
 import std.format : format;
-import std.traits : isIntegral;
+import std.traits : isIntegral, isSomeString;
 import std.uni : isNumber;
 
 import quirks : Fields;
@@ -22,7 +22,7 @@ string tomlify(T)(T object)
     enum auto fields = Fields!T;
     static foreach (field; fields)
     {
-        static if (field.type.stringof == "string")
+        static if (isSomeString!(field.type))
         {
             buffer.put(field.name);
             buffer.put(` = "`);
@@ -183,19 +183,6 @@ unittest
     }
 
     assert(tomlify(EmptyStruct()) == "");
-}
-
-@("Encode `string` fields")
-unittest
-{
-    struct S
-    {
-        string str;
-    }
-
-    S s = S("Eskarina");
-
-    tomlify(s).should.equalNoBlanks(`str = "Eskarina"`);
 }
 
 @("Encode `byte` fields")
@@ -371,4 +358,64 @@ unittest
 
     S sf = S(false);
     tomlify(sf).should.equalNoBlanks(`b = false`);
+}
+
+@("Encode `string` fields")
+unittest
+{
+    struct S
+    {
+        string str;
+    }
+
+    S s = S("Eskarina");
+
+    tomlify(s).should.equalNoBlanks(`str = "Eskarina"`);
+}
+
+@("Encode `wstring` fields")
+unittest
+{
+    struct S
+    {
+        wstring wstr;
+    }
+
+    S s = S("Weskarina");
+
+    tomlify(s).should.equalNoBlanks(`wstr = "Weskarina"`);
+}
+
+@("Encode `dstring` fields")
+unittest
+{
+    struct S
+    {
+        dstring dstr;
+    }
+
+    S s = S("Deskarina");
+
+    tomlify(s).should.equalNoBlanks(`dstr = "Deskarina"`);
+}
+
+@("Encode strings with multi-codepoint unicode characters")
+unittest
+{
+    struct S
+    {
+        string a;
+        wstring b;
+        dstring c;
+    }
+
+    S s = S("🍕👨‍👩‍👧🜀", "👨‍👩‍👧🜀🍕"w, "🜀🍕👨‍👩‍👧"d);
+
+    tomlify(s).should.equalNoBlanks(
+        `
+        a = "🍕👨‍👩‍👧🜀"
+        b = "👨‍👩‍👧🜀🍕"
+        c = "🜀🍕👨‍👩‍👧"
+        `
+    );
 }
