@@ -1,6 +1,7 @@
 module easy_toml.encode;
 
 import std.array : Appender;
+import std.conv : to;
 
 import quirks : Fields;
 version(unittest) import dshould;
@@ -15,11 +16,22 @@ string tomlify(T)(T object)
     Appender!string buffer;
 
     enum auto fields = Fields!T;
-    static foreach (field; fields) {
-        buffer.put(field.name);
-        buffer.put(` = "`);
-        buffer.put(__traits(getMember, object, field.name));
-        buffer.put("\"\n");
+    static foreach (field; fields)
+    {
+        static if (field.type.stringof == "string")
+        {
+            buffer.put(field.name);
+            buffer.put(` = "`);
+            buffer.put(__traits(getMember, object, field.name));
+            buffer.put("\"\n");
+        }
+        else
+        {
+            buffer.put(field.name);
+            buffer.put(` = `);
+            buffer.put(__traits(getMember, object, field.name).to!string);
+            buffer.put("\n");
+        }
     }
 
     return buffer.data;
@@ -132,4 +144,22 @@ unittest
     S s = S("Eskarina");
 
     tomlify(s).should.equalNoBlanks(`str = "Eskarina"`);
+}
+
+@("Encode `byte` fields")
+unittest
+{
+    struct S
+    {
+        byte b;
+    }
+
+    S s1 = S(0);
+    tomlify(s1).should.equalNoBlanks(`b = 0`);
+
+    S s2 = S(127);
+    tomlify(s2).should.equalNoBlanks(`b = 127`);
+
+    S s3 = S(-128);
+    tomlify(s3).should.equalNoBlanks(`b = -128`);
 }
