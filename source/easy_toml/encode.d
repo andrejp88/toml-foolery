@@ -1,5 +1,8 @@
 module easy_toml.encode;
 
+import std.array : Appender;
+
+import quirks : Fields;
 version(unittest) import dshould;
 
 
@@ -9,7 +12,17 @@ version(unittest) import dshould;
 /// field is itself a struct, then it will show up as a subtable in the TOML.
 string tomlify(T)(T object)
 {
-    return "";
+    Appender!string buffer;
+
+    enum auto fields = Fields!T;
+    static foreach (field; fields) {
+        buffer.put(field.name);
+        buffer.put(` = "`);
+        buffer.put(__traits(getMember, object, field.name));
+        buffer.put("\"\n");
+    }
+
+    return buffer.data;
 }
 
 
@@ -106,4 +119,17 @@ unittest
     }
 
     assert(tomlify(EmptyStruct()) == "");
+}
+
+@("Encode `string` fields")
+unittest
+{
+    struct S
+    {
+        string str;
+    }
+
+    S s = S("Eskarina");
+
+    tomlify(s).should.equalNoBlanks(`str = "Eskarina"`);
 }
