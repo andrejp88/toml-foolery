@@ -81,8 +81,7 @@ Each TOML type has one or more corresponding types in D.
 - `ubyte`
 - `ushort`
 - `uint`
-- `ulong`
-- [`std.bigint.BigInt`](https://dlang.org/library/std/bigint/big_int.html)
+- `ulong` — The TOML spec says integer values must fit within `[long.min .. long.max]`. ulong fields are allowed but encoding will fail if the contained value is greater than `long.max`.
 
 ### Float
 - `float`

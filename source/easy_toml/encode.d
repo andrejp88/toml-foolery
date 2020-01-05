@@ -2,8 +2,10 @@ module easy_toml.encode;
 
 import std.array : Appender;
 import std.conv : to;
+import std.traits : isIntegral;
 
 import quirks : Fields;
+
 version(unittest) import dshould;
 
 
@@ -25,16 +27,44 @@ string tomlify(T)(T object)
             buffer.put(__traits(getMember, object, field.name));
             buffer.put("\"\n");
         }
-        else
+        else static if (isIntegral!(field.type))
         {
+            immutable field.type value = __traits(getMember, object, field.name);
+
+            static if (is(field.type == ulong))
+            {
+                if (value > long.max.to!ulong)
+                {
+                    throw new TomlEncodingException("ulong value is out of range of valid TOML integer type: " ~ value.to!string);
+                }
+            }
+
             buffer.put(field.name);
             buffer.put(` = `);
-            buffer.put(__traits(getMember, object, field.name).to!string);
+            buffer.put(value.to!string);
             buffer.put("\n");
         }
     }
 
     return buffer.data;
+}
+
+
+/// Thrown by `tomlify` if given data cannot be encoded in a way that adheres to
+/// the TOML spec.
+public class TomlEncodingException : Exception
+{
+    /// See `Exception.this()`
+    @nogc @safe pure nothrow this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
+    {
+        super(msg, file, line, nextInChain);
+    }
+
+    /// ditto
+    @nogc @safe pure nothrow this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
+    {
+        super(msg, file, line, nextInChain);
+    }
 }
 
 
@@ -283,9 +313,12 @@ unittest
     S s1 = S(0);
     tomlify(s1).should.equalNoBlanks(`ul = 0`);
 
-    S s2 = S(9_223_372_036_854_775_808_UL);
-    tomlify(s2).should.equalNoBlanks(`ul = 9223372036854775808`);
+    S s2 = S(long.max.to!ulong);
+    tomlify(s2).should.equalNoBlanks(`ul = 9223372036854775807`);
 
-    S s3 = S(ulong.max);
-    tomlify(s3).should.equalNoBlanks(`ul = 18446744073709551615`);
+    S s3 = S(long.max.to!ulong + 1);
+    tomlify(s3).should.throwA!TomlEncodingException;
+
+    S s4 = S(ulong.max);
+    tomlify(s4).should.throwA!TomlEncodingException;
 }
