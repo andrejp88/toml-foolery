@@ -70,7 +70,11 @@ Each TOML type has one or more corresponding types in D.
 
 ### String
 - `string`
-- `char` — Decoder will throw an exception if the string in the TOML contains more than one UTF-8 code unit.
+- `wstring`
+- `dstring`
+- `char` — Decoder will throw an exception if the value in the TOML contains more than one UTF-8 code unit.
+- `wchar` — 〃 more than one UTF-16 code unit.
+- `dchar` — 〃 more than one UTF-32 code unit.
 - [`std.uuid.UUID`](https://dlang.org/library/std/uuid/uuid.html) — Decoder uses [`parseUUID`](https://dlang.org/library/std/uuid/parse_uuid.html) and may throw [`UUIDParsingException`](https://dlang.org/library/std/uuid/uuid_parsing_exception.html).
 
 ### Integer
