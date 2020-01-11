@@ -7,6 +7,7 @@ public
 
 package
 {
+    import easy_toml.encode.boolean;
     import easy_toml.encode.integer;
     import easy_toml.encode.string;
 

@@ -32,7 +32,7 @@ public string tomlify(T)(T object)
         {
             buffer.put(field.name);
             buffer.put(` = `);
-            buffer.put(__traits(getMember, object, field.name).to!string);
+            buffer.put(`"ERROR: Don't know how to encode type '` ~ field.type.stringof ~ `'"`);
             buffer.put('\n');
         }
     }
@@ -65,7 +65,9 @@ private string tomlifyKey(string key)
 
 private enum bool makesTomlKeyValuePair(T) = (
     // !is(T == struct)
-    makesTomlInteger!T || makesTomlString!T
+    makesTomlInteger!T ||
+    makesTomlString!T ||
+    makesTomlBoolean!T
 );
 
 
@@ -162,19 +164,4 @@ unittest
     }
 
     assert(tomlify(EmptyStruct()) == "");
-}
-
-@("Encode `bool` fields")
-unittest
-{
-    struct S
-    {
-        bool b;
-    }
-
-    S st = S(true);
-    tomlify(st).should.equalNoBlanks(`b = true`);
-
-    S sf = S(false);
-    tomlify(sf).should.equalNoBlanks(`b = false`);
 }
