@@ -1,4 +1,4 @@
-module easy_toml.decode;
+module easy_toml.decode.decode;
 
 
 /// Decodes a TOML string

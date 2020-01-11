@@ -1,4 +1,4 @@
-module easy_toml.encode;
+module easy_toml.encode.encode;
 
 import std.array : Appender;
 import std.conv : to;
