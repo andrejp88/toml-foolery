@@ -22,41 +22,11 @@ string tomlify(T)(T object)
     enum auto fields = Fields!T;
     static foreach (field; fields)
     {
-        static if (makesTomlString!(field.type))
+        static if (makesTomlKeyValuePair!(field.type))
         {
             buffer.put(tomlifyKey(field.name));
             buffer.put(" = ");
             tomlifyValue(__traits(getMember, object, field.name), buffer);
-            buffer.put("\n");
-        }
-        else static if (isIntegral!(field.type))
-        {
-            immutable field.type value = __traits(getMember, object, field.name);
-
-            static if (is(field.type == ulong))
-            {
-                if (value > long.max.to!ulong)
-                {
-                    throw new TomlEncodingException("ulong value is out of range of valid TOML integer type: " ~ value.to!string);
-                }
-            }
-
-            string valueStr = value.to!string;
-            if (
-                (valueStr.length >= 5 && valueStr[0].isNumber) ||
-                (valueStr.length >= 6)
-            )
-            {
-                valueStr = "%,?d".format('_', value);
-            }
-            else
-            {
-                valueStr = "%d".format(value);
-            }
-
-            buffer.put(field.name);
-            buffer.put(` = `);
-            buffer.put(valueStr);
             buffer.put("\n");
         }
         else
@@ -94,8 +64,17 @@ private string tomlifyKey(string key)
     return key;
 }
 
+private enum bool makesTomlKeyValuePair(T) = (
+    // !is(T == struct)
+    makesTomlInteger!T || makesTomlString!T
+);
+
 private enum bool makesTomlString(T) = (
     isSomeChar!T || isSomeString!T
+);
+
+private enum bool makesTomlInteger(T) = (
+    isIntegral!T
 );
 
 /// Serializes (w/d/)strings and (w/d/)chars into TOML string values, quoted.
@@ -168,6 +147,153 @@ unittest
 {
     dchar d = '🌻';
     tomlifyValue(d).should.equal(`"🌻"`);
+}
+
+
+/// Serializes integral types into TOML Integer values.
+/// Throws:
+///     TomlEncodingException when value is out of range of valid TOML Integers
+///     (can only happen when T is `ulong`).
+private void tomlifyValue(T)(const T value, ref Appender!string buffer)
+if (makesTomlInteger!T)
+{
+    static if (is(T == ulong))
+    {
+        if (value > long.max.to!ulong)
+        {
+            throw new TomlEncodingException("ulong value is out of TOML integer range (-2^63, 2^63 - 1): " ~ value.to!string);
+        }
+    }
+
+    string valueStr = value.to!string;
+    if (
+        (valueStr.length >= 5 && valueStr[0].isNumber) ||
+        (valueStr.length >= 6)
+    )
+    {
+        valueStr = "%,?d".format('_', value);
+    }
+    else
+    {
+        valueStr = "%d".format(value);
+    }
+
+    buffer.put(valueStr);
+}
+
+
+@("Encode `byte` fields")
+unittest
+{
+    byte b1 = 0;
+    tomlifyValue(b1).should.equal(`0`);
+
+    byte b2 = byte.max;
+    tomlifyValue(b2).should.equal(`127`);
+
+    byte b3 = byte.min;
+    tomlifyValue(b3).should.equal(`-128`);
+}
+
+@("Encode `ubyte` fields")
+unittest
+{
+    ubyte ub1 = 0;
+    tomlifyValue(ub1).should.equal(`0`);
+
+    ubyte ub2 = 127;
+    tomlifyValue(ub2).should.equal(`127`);
+
+    ubyte ub3 = ubyte.max;
+    tomlifyValue(ub3).should.equal(`255`);
+}
+
+@("Encode `short` fields")
+unittest
+{
+    short s1 = 0;
+    tomlifyValue(s1).should.equal(`0`);
+
+    short s2 = short.max;
+    tomlifyValue(s2).should.equal(`32_767`);
+
+    short s3 = short.min;
+    tomlifyValue(s3).should.equal(`-32_768`);
+}
+
+@("Encode `ushort` fields")
+unittest
+{
+    ushort us1 = 0;
+    tomlifyValue(us1).should.equal(`0`);
+
+    ushort us2 = 32_768;
+    tomlifyValue(us2).should.equal(`32_768`);
+
+    ushort us3 = ushort.max;
+    tomlifyValue(us3).should.equal(`65_535`);
+}
+
+@("Encode `int` fields")
+unittest
+{
+    int i1 = 0;
+    tomlifyValue(i1).should.equal(`0`);
+
+    int i2 = int.min;
+    tomlifyValue(i2).should.equal(`-2_147_483_648`);
+
+    int i3 = int.max;
+    tomlifyValue(i3).should.equal(`2_147_483_647`);
+}
+
+@("Encode `uint` fields")
+unittest
+{
+    uint ui1 = uint(0);
+    tomlifyValue(ui1).should.equal(`0`);
+
+    uint ui2 = uint(2_147_483_648);
+    tomlifyValue(ui2).should.equal(`2_147_483_648`);
+
+    uint ui3 = uint(uint.max);
+    tomlifyValue(ui3).should.equal(`4_294_967_295`);
+}
+
+@("Encode `long` fields")
+unittest
+{
+    long l1 = 0;
+    tomlifyValue(l1).should.equal(`0`);
+
+    long l2 = long.min;
+    tomlifyValue(l2).should.equal(`-9_223_372_036_854_775_808`);
+
+    long l3 = long.max;
+    tomlifyValue(l3).should.equal(`9_223_372_036_854_775_807`);
+}
+
+@("Encode `ulong` fields")
+unittest
+{
+    ulong ul1 = 0;
+    tomlifyValue(ul1).should.equal(`0`);
+
+    ulong ul2 = long.max.to!ulong;
+    tomlifyValue(ul2).should.equal(`9_223_372_036_854_775_807`);
+
+    ulong ul3 = long.max.to!ulong + 1;
+    tomlifyValue(ul3).should.throwA!TomlEncodingException;
+
+    ulong ul4 = ulong.max;
+    tomlifyValue(ul4).should.throwA!TomlEncodingException;
+}
+
+@("Separators should not be added to 4-digit negative numbers")
+unittest
+{
+    int n = -1234;
+    tomlifyValue(n).should.equal(`-1234`);
 }
 
 
@@ -264,166 +390,6 @@ unittest
     }
 
     assert(tomlify(EmptyStruct()) == "");
-}
-
-@("Encode `byte` fields")
-unittest
-{
-    struct S
-    {
-        byte b;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`b = 0`);
-
-    S s2 = S(127);
-    tomlify(s2).should.equalNoBlanks(`b = 127`);
-
-    S s3 = S(-128);
-    tomlify(s3).should.equalNoBlanks(`b = -128`);
-}
-
-@("Encode `ubyte` fields")
-unittest
-{
-    struct S
-    {
-        ubyte ub;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`ub = 0`);
-
-    S s2 = S(127);
-    tomlify(s2).should.equalNoBlanks(`ub = 127`);
-
-    S s3 = S(255);
-    tomlify(s3).should.equalNoBlanks(`ub = 255`);
-}
-
-@("Encode `short` fields")
-unittest
-{
-    struct S
-    {
-        short s;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`s = 0`);
-
-    S s2 = S(short.max);
-    tomlify(s2).should.equalNoBlanks(`s = 32_767`);
-
-    S s3 = S(short.min);
-    tomlify(s3).should.equalNoBlanks(`s = -32_768`);
-}
-
-@("Encode `ushort` fields")
-unittest
-{
-    struct S
-    {
-        ushort us;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`us = 0`);
-
-    S s2 = S(32_768);
-    tomlify(s2).should.equalNoBlanks(`us = 32_768`);
-
-    S s3 = S(65_535);
-    tomlify(s3).should.equalNoBlanks(`us = 65_535`);
-}
-
-@("Encode `int` fields")
-unittest
-{
-    struct S
-    {
-        int i;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`i = 0`);
-
-    S s2 = S(int.min);
-    tomlify(s2).should.equalNoBlanks(`i = -2_147_483_648`);
-
-    S s3 = S(int.max);
-    tomlify(s3).should.equalNoBlanks(`i = 2_147_483_647`);
-}
-
-@("Encode `uint` fields")
-unittest
-{
-    struct S
-    {
-        uint ui;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`ui = 0`);
-
-    S s2 = S(2_147_483_648);
-    tomlify(s2).should.equalNoBlanks(`ui = 2_147_483_648`);
-
-    S s3 = S(uint.max);
-    tomlify(s3).should.equalNoBlanks(`ui = 4_294_967_295`);
-}
-
-@("Encode `long` fields")
-unittest
-{
-    struct S
-    {
-        long l;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`l = 0`);
-
-    S s2 = S(long.min);
-    tomlify(s2).should.equalNoBlanks(`l = -9_223_372_036_854_775_808`);
-
-    S s3 = S(long.max);
-    tomlify(s3).should.equalNoBlanks(`l = 9_223_372_036_854_775_807`);
-}
-
-@("Encode `ulong` fields")
-unittest
-{
-    struct S
-    {
-        ulong ul;
-    }
-
-    S s1 = S(0);
-    tomlify(s1).should.equalNoBlanks(`ul = 0`);
-
-    S s2 = S(long.max.to!ulong);
-    tomlify(s2).should.equalNoBlanks(`ul = 9_223_372_036_854_775_807`);
-
-    S s3 = S(long.max.to!ulong + 1);
-    tomlify(s3).should.throwA!TomlEncodingException;
-
-    S s4 = S(ulong.max);
-    tomlify(s4).should.throwA!TomlEncodingException;
-}
-
-@("Separators should not be added to 4-digit negative numbers")
-unittest
-{
-    struct S
-    {
-        int x;
-    }
-
-    S s = S(-1234);
-
-    tomlify(s).should.equalNoBlanks(`x = -1234`);
 }
 
 @("Encode `bool` fields")
