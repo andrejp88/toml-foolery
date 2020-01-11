@@ -15,10 +15,10 @@
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
 		"quirks": "0.6.1",
-		"silly": "1.0.0",
+		"silly": "1.0.1",
 		"stdx-allocator": "2.77.5",
 		"taggedalgebraic": "0.11.8",
-		"unit-threaded": "0.10.5",
+		"unit-threaded": "0.10.6",
 		"vibe-core": "1.8.1",
 		"vibe-d": "0.8.6"
 	}

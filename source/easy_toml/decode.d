@@ -8,7 +8,8 @@ T parseToml(T)(string toml)
 }
 
 @("An empty string should work with an empty struct.")
-unittest {
+unittest
+{
 
     struct EmptyStruct
     {
