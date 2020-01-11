@@ -22,12 +22,12 @@ string tomlify(T)(T object)
     enum auto fields = Fields!T;
     static foreach (field; fields)
     {
-        static if (isSomeString!(field.type) || isSomeChar!(field.type))
+        static if (makesTomlString!(field.type))
         {
-            buffer.put(field.name);
-            buffer.put(` = "`);
-            buffer.put(__traits(getMember, object, field.name));
-            buffer.put("\"\n");
+            buffer.put(tomlifyKey(field.name));
+            buffer.put(" = ");
+            tomlifyValue(__traits(getMember, object, field.name), buffer);
+            buffer.put("\n");
         }
         else static if (isIntegral!(field.type))
         {
@@ -87,6 +87,87 @@ public class TomlEncodingException : Exception
     {
         super(msg, file, line, nextInChain);
     }
+}
+
+private string tomlifyKey(string key)
+{
+    return key;
+}
+
+private enum bool makesTomlString(T) = (
+    isSomeChar!T || isSomeString!T
+);
+
+/// Serializes (w/d/)strings and (w/d/)chars into TOML string values, quoted.
+private void tomlifyValue(T)(const T value, ref Appender!string buffer)
+if (makesTomlString!T)
+{
+    buffer.put(`"`);
+    buffer.put(value);
+    buffer.put(`"`);
+}
+
+/// Helper for testing.
+private string tomlifyValue(T)(const T value)
+{
+    Appender!string buff;
+    tomlifyValue(value, buff);
+    return buff.data;
+}
+
+@("Encode `string` values")
+unittest
+{
+    string str = "Eskarina";
+    tomlifyValue(str).should.equal(`"Eskarina"`);
+}
+
+@("Encode `wstring` values")
+unittest
+{
+    wstring wstr = "Weskarina";
+    tomlifyValue(wstr).should.equal(`"Weskarina"`);
+}
+
+@("Encode `dstring` values")
+unittest
+{
+    dstring dstr = "Deskarina";
+    tomlifyValue(dstr).should.equal(`"Deskarina"`);
+}
+
+@("Encode strings with multi-codepoint unicode characters")
+unittest
+{
+    string a = "🍕👨‍👩‍👧🜀";
+    tomlifyValue(a).should.equal(`"🍕👨‍👩‍👧🜀"`);
+
+    wstring b = "👨‍👩‍👧🜀🍕"w;
+    tomlifyValue(b).should.equal(`"👨‍👩‍👧🜀🍕"`);
+
+    dstring c = "🜀🍕👨‍👩‍👧"d;
+    tomlifyValue(c).should.equal(`"🜀🍕👨‍👩‍👧"`);
+}
+
+@("Encode `char` values as Strings")
+unittest
+{
+    char c = '*';
+    tomlifyValue(c).should.equal(`"*"`);
+}
+
+@("Encode `wchar` values as Strings")
+unittest
+{
+    wchar w = 'ⵖ';
+    tomlifyValue(w).should.equal(`"ⵖ"`);
+}
+
+@("Encode `dchar` values as Strings")
+unittest
+{
+    dchar d = '🌻';
+    tomlifyValue(d).should.equal(`"🌻"`);
 }
 
 
@@ -358,103 +439,4 @@ unittest
 
     S sf = S(false);
     tomlify(sf).should.equalNoBlanks(`b = false`);
-}
-
-@("Encode `string` fields")
-unittest
-{
-    struct S
-    {
-        string str;
-    }
-
-    S s = S("Eskarina");
-
-    tomlify(s).should.equalNoBlanks(`str = "Eskarina"`);
-}
-
-@("Encode `wstring` fields")
-unittest
-{
-    struct S
-    {
-        wstring wstr;
-    }
-
-    S s = S("Weskarina");
-
-    tomlify(s).should.equalNoBlanks(`wstr = "Weskarina"`);
-}
-
-@("Encode `dstring` fields")
-unittest
-{
-    struct S
-    {
-        dstring dstr;
-    }
-
-    S s = S("Deskarina");
-
-    tomlify(s).should.equalNoBlanks(`dstr = "Deskarina"`);
-}
-
-@("Encode strings with multi-codepoint unicode characters")
-unittest
-{
-    struct S
-    {
-        string a;
-        wstring b;
-        dstring c;
-    }
-
-    S s = S("🍕👨‍👩‍👧🜀", "👨‍👩‍👧🜀🍕"w, "🜀🍕👨‍👩‍👧"d);
-
-    tomlify(s).should.equalNoBlanks(
-        `
-        a = "🍕👨‍👩‍👧🜀"
-        b = "👨‍👩‍👧🜀🍕"
-        c = "🜀🍕👨‍👩‍👧"
-        `
-    );
-}
-
-@("Encode `char` fields as Strings")
-unittest
-{
-    struct S
-    {
-        char c;
-    }
-
-    S s = S('*');
-
-    tomlify(s).should.equalNoBlanks(`c = "*"`);
-}
-
-@("Encode `wchar` fields as Strings")
-unittest
-{
-    struct S
-    {
-        wchar w;
-    }
-
-    S s = S('ⵖ');
-
-    tomlify(s).should.equalNoBlanks(`w = "ⵖ"`);
-}
-
-@("Encode `dchar` fields as Strings")
-unittest
-{
-    struct S
-    {
-        dchar d;
-    }
-
-    S s = S('🌻');
-
-    tomlify(s).should.equalNoBlanks(`d = "🌻"`);
 }
