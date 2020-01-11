@@ -19,28 +19,30 @@ package void tomlifyValue(T)(const T value, ref Appender!string buffer)
 if (makesTomlString!T)
 {
     buffer.put(`"`);
-    buffer.put(
-        value.to!string
-        .substitute!(
-            "\"", `\"`,
-            "\\", `\\`,
-            "\b", `\b`,
-            "\f", `\f`,
-            "\n", `\n`,
-            "\r", `\r`,
-        ).map!((e)
-        {
-            if (isControl(e) && e != dchar('\t'))
-            {
-                return `\u%04X`.format(cast(long)e);
-            }
-            else
-            {
-                return e.to!string;
-            }
-        }).join
-    );
+    buffer.put(value.to!string.escaped);
     buffer.put(`"`);
+}
+
+private string escaped(string s)
+{
+    return s.substitute!(
+        "\"", `\"`,
+        "\\", `\\`,
+        "\b", `\b`,
+        "\f", `\f`,
+        "\n", `\n`,
+        "\r", `\r`,
+    ).map!((e)
+    {
+        if (isControl(e) && e != dchar('\t'))
+        {
+            return `\u%04X`.format(cast(long)e);
+        }
+        else
+        {
+            return e.to!string;
+        }
+    }).join;
 }
 
 @("Encode `string` values")
