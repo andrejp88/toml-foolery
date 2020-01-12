@@ -46,40 +46,59 @@ if (makesTomlFloat!T)
     }
 }
 
-@("Encode `float` values — non-weird")
-unittest
+version(unittest)
 {
-    float zero = float(0.0f);
-    _tomlifyValue(zero).should.equal("0.0");
-
-    float one = float(1.0f);
-    _tomlifyValue(one).should.equal("1.0");
-
-    float negOne = float(-1.0f);
-    _tomlifyValue(negOne).should.equal("-1.0");
-
-    float po2 = float(512.5);
-    _tomlifyValue(po2).should.equal("512.5");
+    import std.meta : AliasSeq;
+    static foreach (type; AliasSeq!(float, double, real))
+    {
+        mixin(fpTest!type);
+    }
 }
 
-@("Encode `float` values — weird")
-unittest
+// I tried using a mixin template for this, it compiled but the tests didn't
+// show up in the output.
+private string fpTest(T)()
+if (isFloatingPoint!T)
 {
-    // Negative zero and negative NaN are not supported.
-    /// They just become 0 and NaN.
+    return
+    `
+    @("Encode ` ~ "`" ~ T.stringof ~ "`" ~ ` values — non-weird")
+    unittest
+    {
+        ` ~ T.stringof ~ ` zero = ` ~ T.stringof ~ `(0.0f);
+        _tomlifyValue(zero).should.equal("0.0");
 
-    float negZero = float(-0.0f);
-    _tomlifyValue(negZero).should.equal("0.0");
+        ` ~ T.stringof ~ ` one = ` ~ T.stringof ~ `(1.0f);
+        _tomlifyValue(one).should.equal("1.0");
 
-    float posInf = float(float.infinity);
-    _tomlifyValue(posInf).should.equal("inf");
+        ` ~ T.stringof ~ ` negOne = ` ~ T.stringof ~ `(-1.0f);
+        _tomlifyValue(negOne).should.equal("-1.0");
 
-    float negInf = float(-float.infinity);
-    _tomlifyValue(negInf).should.equal("-inf");
+        ` ~ T.stringof ~ ` po2 = ` ~ T.stringof ~ `(512.5);
+        _tomlifyValue(po2).should.equal("512.5");
+    }
 
-    float posNan = float(float.nan);
-    _tomlifyValue(posNan).should.equal("nan");
+    @("Encode ` ~ "`" ~ T.stringof ~ "`" ~ ` values — weird")
+    unittest
+    {
+        // Negative zero and negative NaN are not supported.
+        // They just become 0 and NaN.
 
-    float negNan = float(-float.nan);
-    _tomlifyValue(negNan).should.equal("nan");
+        ` ~ T.stringof ~ ` negZero = ` ~ T.stringof ~ `(-0.0f);
+        _tomlifyValue(negZero).should.equal("0.0");
+
+        ` ~ T.stringof ~ ` posInf = ` ~ T.stringof ~ `(` ~ T.stringof ~ `.infinity);
+        _tomlifyValue(posInf).should.equal("inf");
+
+        ` ~ T.stringof ~ ` negInf = ` ~ T.stringof ~ `(-` ~ T.stringof ~ `.infinity);
+        _tomlifyValue(negInf).should.equal("-inf");
+
+        ` ~ T.stringof ~ ` posNan = ` ~ T.stringof ~ `(` ~ T.stringof ~ `.nan);
+        _tomlifyValue(posNan).should.equal("nan");
+
+        ` ~ T.stringof ~ ` negNan = ` ~ T.stringof ~ `(-` ~ T.stringof ~ `.nan);
+        _tomlifyValue(negNan).should.equal("nan");
+    }
+    `
+    ;
 }
