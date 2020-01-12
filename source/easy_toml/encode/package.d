@@ -8,10 +8,13 @@ public
 package
 {
     import easy_toml.encode.boolean;
+    import easy_toml.encode.floating_point;
     import easy_toml.encode.integer;
     import easy_toml.encode.string;
 
+    import std.conv : to;
     import std.range : Appender;
+    import std.format : format;
 
     version(unittest) import dshould;
 }

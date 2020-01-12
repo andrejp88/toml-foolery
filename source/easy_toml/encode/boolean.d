@@ -1,6 +1,5 @@
 module easy_toml.encode.boolean;
 
-import std.conv : to;
 import std.traits : isBoolean;
 
 import easy_toml.encode;

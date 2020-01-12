@@ -1,8 +1,5 @@
 module easy_toml.encode.tomlify;
 
-import std.array : Appender;
-import std.conv : to;
-
 import quirks : Fields;
 
 import easy_toml.encode;

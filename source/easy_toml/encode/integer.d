@@ -1,7 +1,5 @@
 module easy_toml.encode.integer;
 
-import std.conv : to;
-import std.format : format;
 import std.traits : isIntegral;
 import std.uni : isNumber;
 
