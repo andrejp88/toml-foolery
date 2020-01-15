@@ -4,6 +4,7 @@ authors "Andrej Petrovic"
 copyright "Copyright © 2020, Andrej Petrovic"
 license "MIT"
 targetType "library"
+dependency "datefmt" version="1.0.4"
 dependency "quirks" version="0.6.1"
 configuration "library" {
 	targetType "library"

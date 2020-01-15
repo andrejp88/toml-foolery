@@ -3,8 +3,9 @@
 	"versions": {
 		"botan": "1.12.10",
 		"botan-math": "1.0.3",
+		"datefmt": "1.0.4",
 		"ddmp": "0.0.1-0.dev.3",
-		"diet-ng": "1.6.0",
+		"diet-ng": "1.6.1",
 		"dshould": "1.1.0",
 		"eventcore": "0.8.48",
 		"fluent-asserts": "0.12.5",

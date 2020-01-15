@@ -8,6 +8,7 @@ public
 package
 {
     import easy_toml.encode.boolean;
+    import easy_toml.encode.datetime;
     import easy_toml.encode.floating_point;
     import easy_toml.encode.integer;
     import easy_toml.encode.string;
