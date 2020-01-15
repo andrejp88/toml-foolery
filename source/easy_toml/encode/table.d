@@ -180,3 +180,36 @@ unittest
         f = 0
         `);
 }
+
+
+@("Encode tables whose names must be quoted")
+unittest
+{
+    struct A
+    {
+        int x;
+    }
+
+    struct B
+    {
+        int y;
+        A ш;
+    }
+
+    struct C
+    {
+        int z;
+        B normal;
+    }
+
+    _tomlifyValue(C()).should.equalNoBlanks(`
+    z = 0
+
+    [normal]
+    y = 0
+
+    [normal."ш"]
+    x = 0
+    `);
+
+}

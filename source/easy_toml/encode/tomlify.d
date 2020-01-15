@@ -12,7 +12,7 @@ import easy_toml.encode.string;
 import easy_toml.encode.table;
 
 import std.array : join;
-import std.algorithm : map;
+import std.algorithm : map, any;
 
 version(unittest) import dshould;
 
@@ -82,7 +82,28 @@ package enum bool makesTomlKey(T) = (
 package string tomlifyKey(T)(T key)
 if (makesTomlKey!T)
 {
-    return key;
+    if (key == "" || key.any!((dchar e)
+    {
+        import std.ascii : isAlphaNum;
+        return !(isAlphaNum(e) || e == dchar('-') || e == dchar('_'));
+    }))
+    {
+        return '"' ~ key ~ '"';
+    }
+    else
+    {
+        return key;
+    }
+}
+
+@("Ensure keys are legal")
+unittest
+{
+    tomlifyKey(`hello_woRLD---`).should.equal(`hello_woRLD---`);
+    tomlifyKey(`hello world`).should.equal(`"hello world"`);
+    tomlifyKey(`012`).should.equal(`012`);
+    tomlifyKey(`kiː`).should.equal(`"kiː"`);
+    tomlifyKey(``).should.equal(`""`);
 }
 
 /// Encodes any value of type T.
