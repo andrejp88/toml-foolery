@@ -13,7 +13,7 @@ package enum bool makesTomlFloat(T) = (
 /// Serializes float, double, and real into TOML floating point values.
 /// TOML floats are always 64-bit, floats and reals are converted to doubles
 /// first.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlFloat!T)
 {
     if (value == T(0.0))

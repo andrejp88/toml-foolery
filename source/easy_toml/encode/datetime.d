@@ -32,14 +32,14 @@ package enum bool makesTomlLocalTime(T) = (
 
 
 /// Serializes SysTime into TOML "Offset Date-Time" values.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlOffsetDateTime!T)
 {
     buffer.put(value.formatTime());
 }
 
 /// Serializes DateTime into TOML "Local Date-Time" values.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlLocalDateTime!T)
 {
     SysTime phonySysTime = SysTime(value);
@@ -47,7 +47,7 @@ if (makesTomlLocalDateTime!T)
 }
 
 /// Serializes Date into TOML "Local Date" values.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlLocalDate!T)
 {
     SysTime phonySysTime = SysTime(value);
@@ -55,7 +55,7 @@ if (makesTomlLocalDate!T)
 }
 
 /// Serializes TimeOfDay into TOML "Local Time" values.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlLocalTime!T)
 {
     SysTime phonySysTime = SysTime(DateTime(Date(), value));

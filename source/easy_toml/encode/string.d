@@ -15,7 +15,7 @@ package enum bool makesTomlString(T) = (
 );
 
 /// Serializes (w/d/)strings and (w/d/)chars into TOML string values, quoted and escaped.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
 if (makesTomlString!T)
 {
     buffer.put(`"`);
