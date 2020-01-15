@@ -1,6 +1,6 @@
 module easy_toml.encode.tomlify;
 
-import quirks : Fields;
+import quirks : Fields, isSomeString;
 
 import easy_toml.encode;
 
@@ -55,7 +55,12 @@ public class TomlEncodingException : Exception
     }
 }
 
-private string tomlifyKey(string key)
+package enum bool makesTomlKey(T) = (
+    isSomeString!T
+);
+
+package string tomlifyKey(T)(T key)
+if (makesTomlKey!T)
 {
     return key;
 }
@@ -124,7 +129,7 @@ version(unittest)
 {
     import dshould.ShouldType;
 
-    private void equalNoBlanks(Should, T)(
+    package void equalNoBlanks(Should, T)(
         Should should,
         T expected,
         Fence _ = Fence(),
