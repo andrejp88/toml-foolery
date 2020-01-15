@@ -1,7 +1,7 @@
 module easy_toml.encode.datetime;
 
 import std.datetime.systime : SysTime;
-import std.datetime.date : DateTime;
+import std.datetime.date : DateTime, Date, TimeOfDay;
 import datefmt : datefmt = format;
 import easy_toml.encode;
 
@@ -22,6 +22,14 @@ package enum bool makesTomlLocalDateTime(T) = (
     is(T == DateTime)
 );
 
+package enum bool makesTomlLocalDate(T) = (
+    is(T == Date)
+);
+
+package enum bool makesTomlLocalTime(T) = (
+    is(T == TimeOfDay)
+);
+
 
 /// Serializes SysTime into TOML "Offset Date-Time" values.
 package void tomlifyValue(T)(const T value, ref Appender!string buffer)
@@ -38,6 +46,22 @@ if (makesTomlLocalDateTime!T)
     buffer.put(formatTime(phonySysTime, "%F %T.%g", false));
 }
 
+/// Serializes Date into TOML "Local Date" values.
+package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+if (makesTomlLocalDate!T)
+{
+    SysTime phonySysTime = SysTime(value);
+    buffer.put(formatTime(phonySysTime, "%F", false));
+}
+
+/// Serializes TimeOfDay into TOML "Local Time" values.
+package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+if (makesTomlLocalTime!T)
+{
+    SysTime phonySysTime = SysTime(DateTime(Date(), value));
+    buffer.put(formatTime(phonySysTime, "%T.%g", false));
+}
+
 @("Encode `SysTime` values")
 unittest
 {
@@ -49,6 +73,18 @@ unittest
 unittest
 {
     _tomlifyValue(DateTime(2020, 1, 15, 15, 0, 33)).should.equal("2020-01-15 15:00:33.000");
+}
+
+@("Encode `Date` values")
+unittest
+{
+    _tomlifyValue(Date(2020, 1, 15)).should.equal("2020-01-15");
+}
+
+@("Encode `TimeOfDay` values")
+unittest
+{
+    _tomlifyValue(TimeOfDay(15, 0, 33)).should.equal("15:00:33.000");
 }
 
 
