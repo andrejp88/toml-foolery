@@ -62,3 +62,29 @@ unittest
     s = "kwyjibo"
     `);
 }
+
+@("Encode a struct within a struct")
+unittest
+{
+    struct Position
+    {
+        int x;
+        int y;
+    }
+
+    struct Entity
+    {
+        string name;
+        Position pos;
+    }
+
+    Entity e = Entity("Simon?", Position(-22, 95));
+
+    _tomlifyValue(e).should.equalNoBlanks(`
+        name = "Simon?"
+
+        [pos]
+        x = -22
+        y = 95
+        `);
+}
