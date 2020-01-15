@@ -21,10 +21,7 @@ if (makesTomlTable!T)
 
     static foreach (field; fields)
     {
-        buffer.put(tomlifyKey(field.name));
-        buffer.put(" = ");
-        tomlifyValue(__traits(getMember, value, field.name), buffer);
-        buffer.put("\n");
+        tomlifyField(field.name, __traits(getMember, value, field.name), buffer);
     }
 }
 

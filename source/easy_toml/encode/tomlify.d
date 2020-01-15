@@ -52,6 +52,25 @@ public class TomlEncodingException : Exception
     }
 }
 
+package void tomlifyField(K, V)(K key, V value, ref Appender!string buffer)
+if (makesTomlKey!K)
+{
+    static if(is(V == struct) && !isSpeciallyHandledStruct!V)
+    {
+        buffer.put('[');
+        buffer.put(tomlifyKey(key));
+        buffer.put("]\n");
+        tomlifyValue(value, buffer);
+    }
+    else
+    {
+        buffer.put(tomlifyKey(key));
+        buffer.put(" = ");
+        tomlifyValue(value, buffer);
+        buffer.put('\n');
+    }
+}
+
 package enum bool makesTomlKey(T) = (
     isSomeString!T
 );
@@ -78,22 +97,4 @@ version(unittest)
         tomlifyValue(value, buff);
         return buff.data;
     }
-}
-
-
- /*******************************
-  *                             *
-  *         Unit Tests          *
-  *                             *
-  *******************************/
-
-@("An empty struct should produce an empty string")
-unittest
-{
-    struct EmptyStruct
-    {
-
-    }
-
-    assert(tomlify(EmptyStruct()) == "");
 }
