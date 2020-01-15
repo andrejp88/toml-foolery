@@ -9,13 +9,13 @@ package enum bool makesTomlArray(T) = (
 );
 
 /// Serializes static arrays into TOML Array values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlArray!T)
 {
     buffer.put("[ ");
     foreach (element; value)
     {
-        tomlifyValue(element, buffer);
+        tomlifyValue(element, buffer, []);
         buffer.put(", ");
     }
     buffer.put("]");

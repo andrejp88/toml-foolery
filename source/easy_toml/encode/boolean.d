@@ -10,7 +10,7 @@ package enum bool makesTomlBoolean(T) = (
 );
 
 /// Serializes bools into TOML boolean values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlBoolean!T)
 {
     buffer.put(value.to!string);

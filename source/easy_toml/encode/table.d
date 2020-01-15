@@ -14,14 +14,14 @@ package enum bool makesTomlTable(T) = (
 );
 
 /// Serializes structs into TOML tables.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlTable!T)
 {
     enum auto fields = Fields!T;
 
     static foreach (field; fields)
     {
-        tomlifyField(field.name, __traits(getMember, value, field.name), buffer);
+        tomlifyField(field.name, __traits(getMember, value, field.name), buffer, parentTables);
     }
 }
 
@@ -62,7 +62,7 @@ unittest
     `);
 }
 
-@("Encode a struct within a struct")
+@("All that we see or seem is but a struct within a struct")
 unittest
 {
     struct Position
@@ -85,5 +85,98 @@ unittest
         [pos]
         x = -22
         y = 95
+        `);
+}
+
+@("Yo Dawg, I herd you like structs.")
+unittest
+{
+    struct Inner
+    {
+        int c;
+    }
+
+    struct Middle
+    {
+        int b;
+        Inner inn;
+    }
+
+    struct Outer
+    {
+        int a;
+        Middle mid;
+    }
+
+    Outer s = Outer();
+
+    _tomlifyValue(s).should.equalNoBlanks(`
+        a = 0
+
+        [mid]
+        b = 0
+
+        [mid.inn]
+        c = 0
+        `);
+}
+
+@("Structs all the way down")
+unittest
+{
+    struct L5
+    {
+        int f;
+    }
+
+    struct L4
+    {
+        int e;
+        L5 me;
+    }
+
+    struct L3
+    {
+        int d;
+        L4 told;
+    }
+
+    struct L2
+    {
+        int c;
+        L3 once;
+    }
+
+    struct L1
+    {
+        int b;
+        L2 body;
+    }
+
+    struct L0
+    {
+        int a;
+        L1 some;
+    }
+
+    L0 l;
+
+    _tomlifyValue(l).should.equalNoBlanks(`
+        a = 0
+
+        [some]
+        b = 0
+
+        [some.body]
+        c = 0
+
+        [some.body.once]
+        d = 0
+
+        [some.body.once.told]
+        e = 0
+
+        [some.body.once.told.me]
+        f = 0
         `);
 }

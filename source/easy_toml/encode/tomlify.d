@@ -11,6 +11,9 @@ import easy_toml.encode.integer;
 import easy_toml.encode.string;
 import easy_toml.encode.table;
 
+import std.array : join;
+import std.algorithm : map;
+
 version(unittest) import dshould;
 
 
@@ -52,21 +55,22 @@ public class TomlEncodingException : Exception
     }
 }
 
-package void tomlifyField(K, V)(K key, V value, ref Appender!string buffer)
+package void tomlifyField(K, V)(K key, V value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlKey!K)
 {
-    static if(is(V == struct) && !isSpeciallyHandledStruct!V)
+    static if(makesTomlTable!V)
     {
         buffer.put('[');
-        buffer.put(tomlifyKey(key));
+        string fullTableName = (parentTables ~ key).map!((e) => tomlifyKey(e)).join(".");
+        buffer.put(fullTableName);
         buffer.put("]\n");
-        tomlifyValue(value, buffer);
+        tomlifyValue(value, buffer, parentTables ~ key);
     }
     else
     {
         buffer.put(tomlifyKey(key));
         buffer.put(" = ");
-        tomlifyValue(value, buffer);
+        tomlifyValue(value, buffer, parentTables);
         buffer.put('\n');
     }
 }
@@ -82,9 +86,9 @@ if (makesTomlKey!T)
 }
 
 /// Encodes any value of type T.
-package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+package void tomlifyValue(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 {
-    tomlifyValueImpl(value, buffer);
+    tomlifyValueImpl(value, buffer, parentTables);
 }
 
 
@@ -94,7 +98,7 @@ version(unittest)
     package string _tomlifyValue(T)(const T value)
     {
         Appender!string buff;
-        tomlifyValue(value, buff);
+        tomlifyValue(value, buff, []);
         return buff.data;
     }
 }

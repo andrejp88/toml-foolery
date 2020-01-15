@@ -15,7 +15,7 @@ package enum bool makesTomlInteger(T) = (
 /// Throws:
 ///     TomlEncodingException when value is out of range of valid TOML Integers
 ///     (can only happen when T is `ulong`).
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer)
+package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlInteger!T)
 {
     static if (is(T == ulong))
