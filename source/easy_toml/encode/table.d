@@ -3,8 +3,10 @@ module easy_toml.encode.table;
 import std.traits : isAssociativeArray, KeyType, isSomeString;
 import quirks : Fields;
 import easy_toml.encode;
-import easy_toml.encode.tomlify : makesTomlKey, equalNoBlanks, tomlifyKey;
+import easy_toml.encode.tomlify : makesTomlKey, tomlifyKey;
 import easy_toml.encode.datetime : makesTomlOffsetDateTime, makesTomlLocalDateTime, makesTomlLocalTime, makesTomlLocalDate;
+
+version(unittest) import easy_toml.encode.util : equalNoBlanks;
 
 package enum bool makesTomlTable(T) = (
     is(T == struct) &&

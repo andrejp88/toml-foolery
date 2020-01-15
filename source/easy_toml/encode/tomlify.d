@@ -3,6 +3,13 @@ module easy_toml.encode.tomlify;
 import quirks : Fields, isSomeString;
 
 import easy_toml.encode;
+import easy_toml.encode.array;
+import easy_toml.encode.boolean;
+import easy_toml.encode.datetime;
+import easy_toml.encode.floating_point;
+import easy_toml.encode.integer;
+import easy_toml.encode.string;
+import easy_toml.encode.table;
 
 version(unittest) import dshould;
 
@@ -18,20 +25,10 @@ public string tomlify(T)(T object)
     enum auto fields = Fields!T;
     static foreach (field; fields)
     {
-        static if (makesTomlKeyValuePair!(field.type))
-        {
-            buffer.put(tomlifyKey(field.name));
-            buffer.put(" = ");
-            tomlifyValue(__traits(getMember, object, field.name), buffer);
-            buffer.put("\n");
-        }
-        else
-        {
-            buffer.put(field.name);
-            buffer.put(` = `);
-            buffer.put(`"ERROR: Don't know how to encode type '` ~ field.type.stringof ~ `'"`);
-            buffer.put('\n');
-        }
+        buffer.put(tomlifyKey(field.name));
+        buffer.put(" = ");
+        tomlifyValue(__traits(getMember, object, field.name), buffer);
+        buffer.put("\n");
     }
 
     return buffer.data;
@@ -65,90 +62,23 @@ if (makesTomlKey!T)
     return key;
 }
 
-private enum bool makesTomlKeyValuePair(T) = (
-    // !is(T == struct)
-    makesTomlInteger!T ||
-    makesTomlString!T ||
-    makesTomlBoolean!T
-);
-
-
-/*******************************
- *                             *
- *       Private Helpers       *
- *                             *
- *******************************/
-
-/// Compares two strings without caring about newlines.
-private bool compareStringsNoBlanks(string a, string b)
+/// Encodes any value of type T.
+package void tomlifyValue(T)(const T value, ref Appender!string buffer)
 {
-    return a.clean() == b.clean();
+    tomlifyValueImpl(value, buffer);
 }
 
-private string clean(string s)
-{
-    import std.string : strip;
-    import std.regex : ctRegex, replaceAll;
-
-    enum auto cleaner1 = ctRegex!(`(\r\n|\n)[\s\t]+`, "g");
-    enum auto cleaner2 = ctRegex!(`\n\n+|\r\n(\r\n)+`, "g");
-
-    return s.replaceAll(cleaner1, "\n").replaceAll(cleaner2, "\n").strip();
-}
-
-@("Test compareStringsNoBlanks")
-unittest
-{
-    assert(compareStringsNoBlanks(
-`a
-
-    b
-
-c
-  d
- e
-
-f`,
-`
-
-     a
-  b
-
-c
-
-d
-      e
-f
-
-
-`
-));
-}
 
 version(unittest)
 {
-    import dshould.ShouldType;
-
-    package void equalNoBlanks(Should, T)(
-        Should should,
-        T expected,
-        Fence _ = Fence(),
-        string file = __FILE__,
-        size_t line = __LINE__
-    )
-    if (isInstanceOf!(ShouldType, Should) && is(T == string))
+    /// Helper for testing.
+    package string _tomlifyValue(T)(const T value)
     {
-        immutable string actualClean = should.got().clean();
-        immutable string expectedClean = expected.clean();
-        should.check(
-            compareStringsNoBlanks(actualClean, expectedClean),
-            "\n" ~ expected.clean() ~ "\n",
-            "\n" ~ should.got().clean() ~ "\n\n, which differ in more ways than just newlines and indentation.",
-            file, line
-        );
+        Appender!string buff;
+        tomlifyValue(value, buff);
+        return buff.data;
     }
 }
-
 
 
  /*******************************
