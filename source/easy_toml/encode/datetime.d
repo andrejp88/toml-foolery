@@ -1,14 +1,25 @@
 module easy_toml.encode.datetime;
 
 import std.datetime.systime : SysTime;
-
+import std.datetime.date : DateTime;
 import datefmt : datefmt = format;
-
 import easy_toml.encode;
+
+
+version(unittest)
+{
+    import std.datetime.timezone : TimeZone, UTC, SimpleTimeZone;
+    import std.datetime : Duration, dur;
+}
+
 
 
 package enum bool makesTomlOffsetDateTime(T) = (
     is(T == SysTime)
+);
+
+package enum bool makesTomlLocalDateTime(T) = (
+    is(T == DateTime)
 );
 
 
@@ -16,7 +27,28 @@ package enum bool makesTomlOffsetDateTime(T) = (
 package void tomlifyValue(T)(const T value, ref Appender!string buffer)
 if (makesTomlOffsetDateTime!T)
 {
-    buffer.append(value.formatTime());
+    buffer.put(value.formatTime());
+}
+
+/// Serializes DateTime into TOML "Local Date-Time" values.
+package void tomlifyValue(T)(const T value, ref Appender!string buffer)
+if (makesTomlLocalDateTime!T)
+{
+    SysTime phonySysTime = SysTime(value);
+    buffer.put(formatTime(phonySysTime, "%F %T.%g", false));
+}
+
+@("Encode `SysTime` values")
+unittest
+{
+    immutable TimeZone cet = new immutable SimpleTimeZone(dur!"hours"(1), "CET");
+    _tomlifyValue(SysTime(DateTime(1996, 12, 11, 10, 20, 42), cet)).should.equal("1996-12-11 10:20:42.000 +01:00");
+}
+
+@("Encode `DateTime` values")
+unittest
+{
+    _tomlifyValue(DateTime(2020, 1, 15, 15, 0, 33)).should.equal("2020-01-15 15:00:33.000");
 }
 
 
@@ -64,8 +96,6 @@ public string formatTime(SysTime time, string formatStr = "%F %T.%g", bool appen
 @("formatTime")
 unittest
 {
-    import std.datetime : DateTime, Duration, dur;
-    import std.datetime.timezone : TimeZone, UTC, SimpleTimeZone;
 
     SysTime testUTC = SysTime(DateTime(2019, 11, 17, 20, 10, 35), dur!"msecs"(736), UTC());
     string expectedUTC = "2019-11-17 20:10:35.736Z";
