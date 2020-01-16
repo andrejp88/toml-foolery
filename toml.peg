@@ -74,7 +74,7 @@ string_          <- ml_basic_string / basic_string / ml_literal_string / literal
 
 basic_string     <- quotation_mark basic_char* quotation_mark
 
-quotation_mark   <-  [\"]             # "
+quotation_mark   <-  ["]             # "
 
 basic_char       <- basic_unescaped / escaped
 basic_unescaped  <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
@@ -83,7 +83,7 @@ escaped          <- escape escape_seq_char
 escape           <-  [\\]                    # \ backslash
 # " / \ / b / f / n / r / t / uXXXX / UXXXXXXXX
 
-escape_seq_char  <-  [\"]  /  [\\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
+escape_seq_char  <-  ["]  /  [\\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
 
 #; Multiline Basic String
 
@@ -101,7 +101,7 @@ mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
 literal_string   <- apostrophe literal_char* apostrophe
 
-apostrophe       <-  [\']  # ' apostrophe
+apostrophe       <-  [']  # ' apostrophe
 
 literal_char     <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
 
@@ -233,8 +233,8 @@ inline_table_keyvals <- keyval ( inline_table_sep inline_table_keyvals )?
 
 array_table      <- array_table_open key array_table_close
 
-array_table_open <- "\[\[" ws  # [[ Double left square bracket
-array_table_close <- ws "\]\]"  # ]] Double right square bracket
+array_table_open <- "[[" ws  # [[ Double left square bracket
+array_table_close <- ws "]]"  # ]] Double right square bracket
 
 #; Built-in ABNF terms, reproduced here for clarity
 
