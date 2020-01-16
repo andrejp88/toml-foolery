@@ -1,8 +1,15 @@
 ;; This is a slightly modified copy of https://github.com/toml-lang/toml/blob/master/toml.abnf
-;; '=/' has been removed, so all alternatives are defined using regular '/'.
-;; https://github.com/sanjayss/abnf2peg has been used to translate the ABNF to
-;; PEG.
-
+;;
+;; - '=/' has been removed, so all alternatives are defined using regular '/'.
+;;
+;; - Rules that share their names with keywords in D have their names appended
+;;   with a hyphen (e.g., "float" becomes "float-"), which gets translated to an
+;;   underscore in PEG.
+;;
+;; - https://github.com/sanjayss/abnf2peg has been used to translate the ABNF to
+;;   PEG.
+;;
+;; - The PEG version also has `TomlGrammar:` added before the first rule.
 
 ;; WARNING: This document is a work-in-progress and should not be considered
 ;; authoritative until further notice.
@@ -53,11 +60,11 @@ dotted-key = simple-key 1*( dot-sep simple-key )
 dot-sep   = ws %x2E ws  ; . Period
 keyval-sep = ws %x3D ws ; =
 
-val = string / boolean / array / inline-table / date-time / float / integer
+val = string- / boolean / array / inline-table / date-time / float- / integer
 
 ;; String
 
-string = ml-basic-string / basic-string / ml-literal-string / literal-string
+string- = ml-basic-string / basic-string / ml-literal-string / literal-string
 
 ;; Basic String
 
@@ -128,7 +135,7 @@ bin-int = bin-prefix digit0-1 *( digit0-1 / underscore digit0-1 )
 
 ;; Float
 
-float = float-int-part ( exp / frac [ exp ] ) / special-float
+float- = float-int-part ( exp / frac [ exp ] ) / special-float
 
 float-int-part = dec-int
 frac = decimal-point zero-prefixable-int
@@ -144,10 +151,10 @@ nan = %x6e.61.6e  ; nan
 
 ;; Boolean
 
-boolean = true / false
+boolean = true- / false-
 
-true    = %x74.72.75.65     ; true
-false   = %x66.61.6C.73.65  ; false
+true-    = %x74.72.75.65     ; true
+false-   = %x66.61.6C.73.65  ; false
 
 ;; Date and Time (as defined in RFC 3339)
 

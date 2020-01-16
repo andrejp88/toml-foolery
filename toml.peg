@@ -1,8 +1,15 @@
 #; This is a slightly modified copy of https://github.com/toml-lang/toml/blob/master/toml.abnf
-#; '=/' has been removed, so all alternatives are defined using regular '/'.
-#; https://github.com/sanjayss/abnf2peg has been used to translate the ABNF to
-#; PEG.
-
+#;
+#; - '=/' has been removed, so all alternatives are defined using regular '/'.
+#;
+#; - Rules that share their names with keywords in D have their names appended
+#;   with a hyphen (e.g., "float" becomes "float-"), which gets translated to an
+#;   underscore in PEG.
+#;
+#; - https://github.com/sanjayss/abnf2peg has been used to translate the ABNF to
+#;   PEG.
+#;
+#; - The PEG version also has `TomlGrammar:` added before the first rule.
 
 #; WARNING: This document is a work-in-progress and should not be considered
 #; authoritative until further notice.
@@ -17,6 +24,10 @@
 #; the beige box on the left. Tada!
 
 #; Overall Structure
+
+
+TomlGrammar:
+
 
 toml             <- expression ( newline expression )*
 
@@ -53,11 +64,11 @@ dotted_key       <- simple_key ( dot_sep simple_key )+
 dot_sep          <- ws  [.]  ws  # . Period
 keyval_sep       <- ws  [=]  ws # =
 
-val              <- string / boolean / array / inline_table / date_time / float / integer
+val              <- string_ / boolean / array / inline_table / date_time / float_ / integer
 
 #; String
 
-string           <- ml_basic_string / basic_string / ml_literal_string / literal_string
+string_          <- ml_basic_string / basic_string / ml_literal_string / literal_string
 
 #; Basic String
 
@@ -128,7 +139,7 @@ bin_int          <- bin_prefix digit0_1 ( digit0_1 / underscore digit0_1 )*
 
 #; Float
 
-float            <- float_int_part ( exp / frac ( exp )? ) / special_float
+float_           <- float_int_part ( exp / frac ( exp )? ) / special_float
 
 float_int_part   <- dec_int
 frac             <- decimal_point zero_prefixable_int
@@ -144,10 +155,10 @@ nan              <-  [n]   # nan
 
 #; Boolean
 
-boolean          <- true / false
+boolean          <- true_ / false_
 
-true             <-  [e]      # true
-false            <-  [e]   # false
+true_            <-  [e]      # true
+false_           <-  [e]   # false
 
 #; Date and Time (as defined in RFC 3339)
 
