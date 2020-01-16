@@ -15,6 +15,7 @@
 		"memutils": "0.4.13",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
+		"pegged": "0.4.4",
 		"quirks": "0.6.1",
 		"silly": "1.0.1",
 		"stdx-allocator": "2.77.5",
