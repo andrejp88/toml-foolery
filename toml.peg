@@ -63,16 +63,16 @@ string           <- ml_basic_string / basic_string / ml_literal_string / literal
 
 basic_string     <- quotation_mark basic_char* quotation_mark
 
-quotation_mark   <-  ["]             # "
+quotation_mark   <-  [\"]             # "
 
 basic_char       <- basic_unescaped / escaped
-basic_unescaped  <- wschar /  [!]  /  [#-[]  /  []-~]  / non_ascii
+basic_unescaped  <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
 escaped          <- escape escape_seq_char
 
-escape           <-  [\]                    # \ backslash
+escape           <-  [\\]                    # \ backslash
 # " / \ / b / f / n / r / t / uXXXX / UXXXXXXXX
 
-escape_seq_char  <-  ["]  /  [\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
+escape_seq_char  <-  [\"]  /  [\\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
 
 #; Multiline Basic String
 
@@ -83,14 +83,14 @@ ml_basic_body    <- mlb_content* ( mlb_quotes mlb_content+ )* ( mlb_quotes )?
 mlb_content      <- mlb_char / newline / mlb_escaped_nl
 mlb_char         <- mlb_unescaped / escaped
 mlb_quotes       <- quotation_mark quotation_mark?
-mlb_unescaped    <- wschar /  [!]  /  [#-[]  /  []-~]  / non_ascii
+mlb_unescaped    <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
 mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
 #; Literal String
 
 literal_string   <- apostrophe literal_char* apostrophe
 
-apostrophe       <-  [']  # ' apostrophe
+apostrophe       <-  [\']  # ' apostrophe
 
 literal_char     <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
 
@@ -188,8 +188,8 @@ local_time       <- partial_time
 
 array            <- array_open ( array_values )? ws_comment_newline array_close
 
-array_open       <-  [[]  # [
-array_close      <-  []]  # ]
+array_open       <-  [\[]  # [
+array_close      <-  [\]]  # ]
 
 array_values     <- ws_comment_newline val ws array_sep array_values / ws_comment_newline val ws ( array_sep )?
 
@@ -205,8 +205,8 @@ table            <- std_table / array_table
 
 std_table        <- std_table_open key std_table_close
 
-std_table_open   <-  [[]  ws     # [ Left square bracket
-std_table_close  <- ws  []]      # ] Right square bracket
+std_table_open   <-  [\[]  ws     # [ Left square bracket
+std_table_close  <- ws  [\]]      # ] Right square bracket
 
 #; Inline Table
 
@@ -222,8 +222,8 @@ inline_table_keyvals <- keyval ( inline_table_sep inline_table_keyvals )?
 
 array_table      <- array_table_open key array_table_close
 
-array_table_open <-  [[]  ws  # [[ Double left square bracket
-array_table_close <- ws  []]   # ]] Double right square bracket
+array_table_open <-  [\[]  ws  # [[ Double left square bracket
+array_table_close <- ws  [\]]   # ]] Double right square bracket
 
 #; Built-in ABNF terms, reproduced here for clarity
 
