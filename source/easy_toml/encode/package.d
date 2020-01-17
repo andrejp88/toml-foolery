@@ -15,5 +15,3 @@ package
 
     version(unittest) import dshould;
 }
-
-import std.range : Appender;

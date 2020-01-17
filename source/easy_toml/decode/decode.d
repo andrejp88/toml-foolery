@@ -1,5 +1,6 @@
 module easy_toml.decode.decode;
 
+import easy_toml.decode;
 import easy_toml.decode.peg_grammar;
 
 
@@ -26,4 +27,20 @@ T parseToml(T)(string toml)
     }
 
     return T();
+}
+
+
+
+
+@("Integer -> int")
+unittest
+{
+    struct S
+    {
+        int myInt;
+    }
+
+    S result = parseToml!S("myInt = 5");
+
+    result.myInt.should.equal(5);
 }
