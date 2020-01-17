@@ -2,6 +2,10 @@ module easy_toml.decode.decode;
 
 import easy_toml.decode;
 import easy_toml.decode.peg_grammar;
+// If you're working on the toml.peg file, comment the previous import and uncomment this:
+// import pegged.grammar; mixin(grammar(import("toml.peg")));
+// To turn it into a D module again, run the following code once:
+// import pegged.grammar : asModule; asModule("easy_toml.decode.peg_grammar", "source/easy_toml/decode/peg_grammar", import("toml.peg"));
 
 
 /// Decodes a TOML string
