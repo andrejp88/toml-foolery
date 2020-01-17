@@ -55,7 +55,7 @@ comment          <- comment_start_symbol non_eol*
 
 keyval           <- key keyval_sep val
 
-key              <- simple_key / dotted_key
+key              <- dotted_key / simple_key
 simple_key       <- quoted_key / unquoted_key
 
 unquoted_key     <- ( ALPHA / DIGIT /  [-]  /  [_]  )+ # A-Z / a-z / 0-9 / - / _
