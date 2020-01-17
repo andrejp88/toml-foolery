@@ -29,9 +29,10 @@
 TomlGrammar:
 
 
-toml             <- expression ( newline expression )*
-
-expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
+toml             <- expression ( newline+ expression )* :eoi
+valid_line       <- (comment_line / expression)? / newline
+comment_line     <- ws comment
+expression       <- ws ((keyval / table) (ws comment)?) # ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
 
 #; Whitespace
 
