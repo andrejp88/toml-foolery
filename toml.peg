@@ -30,7 +30,7 @@ TomlGrammar:
 
 
 toml             <  expression+ :eoi
-expression       <  table comment? / keyval comment? / comment?
+expression       <- ws table ws comment? / ws keyval ws comment? / ws comment?
 
 # expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
 
