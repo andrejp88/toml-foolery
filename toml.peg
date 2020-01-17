@@ -29,10 +29,10 @@
 TomlGrammar:
 
 
-toml             <- expression ( newline+ expression )* :eoi
-valid_line       <- (comment_line / expression)? / newline
-comment_line     <- ws comment
-expression       <- ws ((keyval / table) (ws comment)?) # ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
+toml             <  expression+ :eoi
+expression       <  table comment? / keyval comment? / comment?
+
+# expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
 
 #; Whitespace
 
@@ -132,7 +132,7 @@ oct_prefix       <- "0o"               # 0o
 bin_prefix       <- "0b"               # 0b
 
 dec_int          <- ( minus / plus )? unsigned_dec_int
-unsigned_dec_int <- DIGIT / digit1_9 ( DIGIT / underscore DIGIT )+
+unsigned_dec_int <- digit1_9 ( DIGIT / underscore DIGIT )+ / DIGIT
 
 hex_int          <- hex_prefix HEXDIG ( HEXDIG / underscore HEXDIG )*
 oct_int          <- oct_prefix digit0_7 ( digit0_7 / underscore digit0_7 )*
