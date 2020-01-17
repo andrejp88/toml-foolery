@@ -1,71 +1,46 @@
 module easy_toml.decode.decode;
 
 import std.array : Appender;
-import pegged.tohtml;
-// import easy_toml.decode.peg_grammar;
-import pegged.grammar; mixin(grammar(import("toml.peg")));
+import easy_toml.decode.peg_grammar;
+// If you're working on the toml.peg file, comment the previous import and uncomment this:
+// import pegged.grammar; mixin(grammar(import("toml.peg")));
+// To turn it into a D module again, run the following code once:
+// import pegged.grammar : asModule; asModule("easy_toml.decode.peg_grammar", "source/easy_toml/decode/peg_grammar", import("toml.peg"));
+
 
 /// Decodes a TOML string
 T parseToml(T)(string toml)
 {
-    import std.stdio : writeln;
-
-    // version (tracer)
-    // {
-    //     import std.experimental.logger;
-    //     sharedLog = new TraceLogger("TraceLog.txt");
-    //     traceAll();
-    // }
+    // version tracer is for debugging a grammar, it comes from pegged.
+    version (tracer)
+    {
+        import std.experimental.logger : sharedLog;
+        sharedLog = new TraceLogger("TraceLog " ~ __TIMESTAMP__ ~ ".txt");
+        traceAll();
+    }
 
     ParseTree tree = TomlGrammar(toml);
-    Appender!string buffer;
-    prettyPrintTree(tree, buffer, "");
-    writeln("\n\n\n~~~~~\n\n\n");
-    // writeln(buffer.data);
-    // writeln(tree.toString());
-    // writeln(toml);
-    toHTML!(Expand.ifNotMatch, ".comment", ".simple_key", ".basic_string", ".literal_string")(tree, "example_toml.html");
-    writeln("\n\n\n~~~~~\n\n\n");
+
+    version (tracer)
+    {
+        // Does not need to be in version(tracer) necessarily, but I figure if you
+        // want the tracer, you want the HTML.
+        // Be warned that toHTML breaks when encountering non-ASCII UTF-8 codepoints.
+        import pegged.tohtml : toHTML, Expand;
+        toHTML!(Expand.ifNotMatch, ".comment", ".simple_key", ".basic_string", ".literal_string", ".expression")(tree, "hard_example_toml.html");
+    }
 
     return T();
 }
 
-private void prettyPrintTree(ParseTree tree, ref Appender!string buffer, string indentation)
+
+@("PEG parser test - https://github.com/toml-lang/toml/blob/master/tests/hard_example.toml")
+unittest
 {
-    import std.array : join;
-    import std.algorithm : substitute;
+    struct Dummy {}
 
-    buffer.put(indentation);
-    buffer.put(tree.name.substitute!("\n", `\n`));
-
-    bool shouldRecurse = tree.children.length > 0 && tree.name != "TomlGrammar.comment";
-
-    if (shouldRecurse)
-    {
-        buffer.put("\n");
-        foreach (child; tree.children)
-        {
-            prettyPrintTree(child, buffer, indentation ~ "  ");
-        }
-    }
-    else
-    {
-        buffer.put(": ");
-        buffer.put(`"`);
-        buffer.put(tree.matches.join.substitute!("\n", `\n`));
-        buffer.put(`"`);
-        buffer.put("\n");
-    }
+    Dummy d = parseToml!Dummy(import("tests/hard_example.toml"));
 }
-
-
-// @("PEG parser test - https://github.com/toml-lang/toml/blob/master/tests/hard_example.toml")
-// unittest
-// {
-//     struct Dummy {}
-
-//     Dummy d = parseToml!Dummy(import("tests/hard_example.toml"));
-// }
 
 @("PEG parser test - https://github.com/toml-lang/toml/blob/master/tests/example.toml")
 unittest
