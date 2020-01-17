@@ -30,24 +30,24 @@ TomlGrammar:
 
 
 toml             <  expression+ :eoi
-expression       <- ws table ws comment? / ws keyval ws comment? / ws comment?
+expression       <- ws (table / keyval)? ws comment?
 
 # expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
 
 #; Whitespace
 
 ws               <- wschar*
-wschar           <-  [ ]  /  [\t]   # Space / Horizontal tab
+wschar           <-  [ \t]   # Space / Horizontal tab
 
 #; Newline
 
-newline          <-  [\n]  /  [\r]   [\n]   # LF / CRLF
+newline          <-  "\r"? "\n"   # LF / CRLF
 
 #; Comment
 
 comment_start_symbol <-  [#]  # #
-non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF]
-non_eol          <-  [\t]  /  [ -\x7F]  / non_ascii
+non_ascii        <-  [\x80-\uD7FF\uE000-\U0010FFFF]
+non_eol          <-  [\t -\x7F]  / non_ascii
 
 comment          <- comment_start_symbol non_eol*
 
@@ -58,7 +58,7 @@ keyval           <- key keyval_sep val
 key              <- dotted_key / simple_key
 simple_key       <- quoted_key / unquoted_key
 
-unquoted_key     <- ( ALPHA / DIGIT /  [-]  /  [_]  )+ # A-Z / a-z / 0-9 / - / _
+unquoted_key     <- ( ALPHA / DIGIT /  [-_]  )+ # A-Z / a-z / 0-9 / - / _
 quoted_key       <- basic_string / literal_string
 dotted_key       <- simple_key ( dot_sep simple_key )+
 
@@ -78,13 +78,13 @@ basic_string     <- quotation_mark basic_char* quotation_mark
 quotation_mark   <-  ["]             # "
 
 basic_char       <- basic_unescaped / escaped
-basic_unescaped  <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
+basic_unescaped  <- wschar /  [!#-\[\]-~]  / non_ascii
 escaped          <- escape escape_seq_char
 
 escape           <-  [\\]                    # \ backslash
 # " / \ / b / f / n / r / t / uXXXX / UXXXXXXXX
 
-escape_seq_char  <-  ["]  /  [\\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
+escape_seq_char  <-  ["\\bfnrt]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
 
 #; Multiline Basic String
 
@@ -95,7 +95,7 @@ ml_basic_body    <- mlb_content* ( mlb_quotes mlb_content+ )* ( mlb_quotes )?
 mlb_content      <- mlb_char / newline / mlb_escaped_nl
 mlb_char         <- mlb_unescaped / escaped
 mlb_quotes       <- quotation_mark quotation_mark?
-mlb_unescaped    <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
+mlb_unescaped    <- wschar /  [!#-\[\]-~]  / non_ascii
 mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
 #; Literal String
@@ -104,7 +104,7 @@ literal_string   <- apostrophe literal_char* apostrophe
 
 apostrophe       <-  [']  # ' apostrophe
 
-literal_char     <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
+literal_char     <-  [\t -&(-~]  / non_ascii
 
 #; Multiline Literal String
 
@@ -113,7 +113,7 @@ ml_literal_string_delim <- apostrophe apostrophe apostrophe
 ml_literal_body  <- mll_content* ( mll_quotes mll_content+ )* ( mll_quotes )?
 
 mll_content      <- mll_char / newline
-mll_char         <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
+mll_char         <-  [\t -&(-~]  / non_ascii
 mll_quotes       <- apostrophe apostrophe?
 
 #; Integer
@@ -239,6 +239,6 @@ array_table_close <- ws "]]"  # ]] Double right square bracket
 
 #; Built-in ABNF terms, reproduced here for clarity
 
-ALPHA            <-  [A-Z]  /  [a-z]  # A-Z / a-z
+ALPHA            <-  [A-Za-z]  # A-Z / a-z
 DIGIT            <-  [0-9]  # 0-9
 HEXDIG           <- DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
