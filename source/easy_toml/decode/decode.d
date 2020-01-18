@@ -256,3 +256,27 @@ unittest
 
     result.oct.should.equal(321);
 }
+
+@("Integers with underscores (all bases)")
+unittest
+{
+    struct S
+    {
+        int a;
+        int b;
+        int c;
+        int d;
+    }
+
+    S result = parseToml!S(`
+    a = 1_000
+    b = 0x0000_00ff
+    c = 0o7_7_7
+    d = 0b0_0_0_1_0_0_0_1
+    `);
+
+    result.a.should.equal(1000);
+    result.b.should.equal(255);
+    result.c.should.equal(511);
+    result.d.should.equal(17);
+}
