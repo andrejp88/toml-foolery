@@ -1,10 +1,20 @@
 module easy_toml.decode.floating_point;
 
 import easy_toml.decode;
-
+version (unittest) import std.math : isNaN;
 
 package real parseTomlFloat(string value)
 {
+    if (value[$-3 .. $] == "inf")
+    {
+        if (value[0] == '-')
+        {
+            return -real.infinity;
+        }
+
+        return real.infinity;
+    }
+
     return value.to!real;
 }
 
@@ -50,4 +60,20 @@ unittest
 unittest
 {
     parseTomlFloat("-3.14159e-03").should.equal.approximately(-0.003_141_59, error = 1.0e-05);
+}
+
+@("NaN")
+unittest
+{
+    assert(parseTomlFloat("nan").isNaN, "Expected NaN, received: " ~ parseTomlFloat("nan").to!string);
+    assert(parseTomlFloat("+nan").isNaN, "Expected NaN, received: " ~ parseTomlFloat("+nan").to!string);
+    assert(parseTomlFloat("-nan").isNaN, "Expected NaN, received: " ~ parseTomlFloat("-nan").to!string);
+}
+
+@("Infinity")
+unittest
+{
+    parseTomlFloat("inf").should.equal(real.infinity);
+    parseTomlFloat("+inf").should.equal(real.infinity);
+    parseTomlFloat("-inf").should.equal(-real.infinity);
 }
