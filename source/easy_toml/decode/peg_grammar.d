@@ -121,7 +121,7 @@ mll_quotes       <- apostrophe apostrophe?
 
 #; Integer
 
-integer          <- dec_int / hex_int / oct_int / bin_int
+integer          <- hex_int / oct_int / bin_int / dec_int
 
 minus            <-  [-]                        # -
 plus             <-  [+]                         # +
@@ -244,7 +244,7 @@ array_table_close <- ws "]]"  # ]] Double right square bracket
 
 ALPHA            <-  [A-Za-z]  # A-Z / a-z
 DIGIT            <-  [0-9]  # 0-9
-HEXDIG           <- DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
+HEXDIG           <- DIGIT / [A-Fa-f]
 
 
 +/
@@ -1992,7 +1992,7 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(dec_int, hex_int, oct_int, bin_int), "TomlGrammar.integer")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(hex_int, oct_int, bin_int, dec_int), "TomlGrammar.integer")(p);
         }
         else
         {
@@ -2000,7 +2000,7 @@ struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(dec_int, hex_int, oct_int, bin_int), "TomlGrammar.integer"), "integer")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(hex_int, oct_int, bin_int, dec_int), "TomlGrammar.integer"), "integer")(p);
                 memo[tuple(`integer`, p.end)] = result;
                 return result;
             }
@@ -2011,12 +2011,12 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(dec_int, hex_int, oct_int, bin_int), "TomlGrammar.integer")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(hex_int, oct_int, bin_int, dec_int), "TomlGrammar.integer")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(dec_int, hex_int, oct_int, bin_int), "TomlGrammar.integer"), "integer")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(hex_int, oct_int, bin_int, dec_int), "TomlGrammar.integer"), "integer")(TParseTree("", false,[], s));
         }
     }
     static string integer(GetName g)
@@ -4368,7 +4368,7 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.literal!("A"), pegged.peg.literal!("B"), pegged.peg.literal!("C"), pegged.peg.literal!("D"), pegged.peg.literal!("E"), pegged.peg.literal!("F")), "TomlGrammar.HEXDIG")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.or!(pegged.peg.charRange!('A', 'F'), pegged.peg.charRange!('a', 'f'))), "TomlGrammar.HEXDIG")(p);
         }
         else
         {
@@ -4376,7 +4376,7 @@ struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.literal!("A"), pegged.peg.literal!("B"), pegged.peg.literal!("C"), pegged.peg.literal!("D"), pegged.peg.literal!("E"), pegged.peg.literal!("F")), "TomlGrammar.HEXDIG"), "HEXDIG")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.or!(pegged.peg.charRange!('A', 'F'), pegged.peg.charRange!('a', 'f'))), "TomlGrammar.HEXDIG"), "HEXDIG")(p);
                 memo[tuple(`HEXDIG`, p.end)] = result;
                 return result;
             }
@@ -4387,12 +4387,12 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.literal!("A"), pegged.peg.literal!("B"), pegged.peg.literal!("C"), pegged.peg.literal!("D"), pegged.peg.literal!("E"), pegged.peg.literal!("F")), "TomlGrammar.HEXDIG")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.or!(pegged.peg.charRange!('A', 'F'), pegged.peg.charRange!('a', 'f'))), "TomlGrammar.HEXDIG")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.literal!("A"), pegged.peg.literal!("B"), pegged.peg.literal!("C"), pegged.peg.literal!("D"), pegged.peg.literal!("E"), pegged.peg.literal!("F")), "TomlGrammar.HEXDIG"), "HEXDIG")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(DIGIT, pegged.peg.or!(pegged.peg.charRange!('A', 'F'), pegged.peg.charRange!('a', 'f'))), "TomlGrammar.HEXDIG"), "HEXDIG")(TParseTree("", false,[], s));
         }
     }
     static string HEXDIG(GetName g)

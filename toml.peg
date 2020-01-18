@@ -118,7 +118,7 @@ mll_quotes       <- apostrophe apostrophe?
 
 #; Integer
 
-integer          <- dec_int / hex_int / oct_int / bin_int
+integer          <- hex_int / oct_int / bin_int / dec_int
 
 minus            <-  [-]                        # -
 plus             <-  [+]                         # +
@@ -241,4 +241,4 @@ array_table_close <- ws "]]"  # ]] Double right square bracket
 
 ALPHA            <-  [A-Za-z]  # A-Z / a-z
 DIGIT            <-  [0-9]  # 0-9
-HEXDIG           <- DIGIT / "A" / "B" / "C" / "D" / "E" / "F"
+HEXDIG           <- DIGIT / [A-Fa-f]

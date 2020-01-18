@@ -35,7 +35,8 @@ T parseToml(T)(string toml)
 
     foreach (ParseTree line; lines)
     {
-        assert(line.name == "TomlGrammar.expression");
+        assert(line.name == "TomlGrammar.expression",
+               "Expected a TomlGrammar.expression, got: " ~ line.name ~ ". Full tree:\n" ~ tree.toString());
 
         lineLoop:
         foreach (ParseTree partOfLine; line.children)
@@ -215,4 +216,43 @@ unittest
     S result = parseToml!S("myInt = 5123456");
 
     result.myInt.should.equal(5_123_456);
+}
+
+@("Hex Integer -> long")
+unittest
+{
+    struct S
+    {
+        long hex;
+    }
+
+    S result = parseToml!S("hex = 0xbeadface");
+
+    result.hex.should.equal(0xbeadface);
+}
+
+@("Binary Integer -> ubyte")
+unittest
+{
+    struct S
+    {
+        ubyte bin;
+    }
+
+    S result = parseToml!S("bin = 0b00110010");
+
+    result.bin.should.equal(50);
+}
+
+@("Octal Integer -> short")
+unittest
+{
+    struct S
+    {
+        short oct;
+    }
+
+    S result = parseToml!S("oct = 0o501");
+
+    result.oct.should.equal(321);
 }
