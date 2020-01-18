@@ -93,15 +93,14 @@ if (is(S == struct))
         // For each member of S...
         static foreach (string member; __traits(allMembers, S))
         {
-            // ...that isn't a nested struct declaration...
+            // ...that isn't a nested struct declaration
             static if (!is(__traits(getMember, dest, member)))
             {
-                // ...and whose type is T (or close enough)
-                static if(is(T : typeof(__traits(getMember, dest, member))))
+                if (member == address[0])
                 {
-                    if (member == address[0])
+                    static if (__traits(compiles, value.to!(typeof(__traits(getMember, dest, member)))))
                     {
-                        __traits(getMember, dest, member) = value;
+                        __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
                     }
                 }
             }

@@ -6,7 +6,7 @@ import std.ascii : isASCII, isHexDigit;
 import easy_toml.decode;
 
 
-package int parseTomlInteger(string value)
+package long parseTomlInteger(string value)
 {
     bool isCleanedChar(dchar c)
     {
@@ -28,7 +28,7 @@ package int parseTomlInteger(string value)
                 value[0..2] == "0b" ?  2   :
                 10;
 
-    return (radix != 10 ? value[2..$] : value).filter!(e => e != '_').to!int(radix);
+    return (radix != 10 ? value[2..$] : value).filter!(e => e != '_').to!long(radix);
 }
 
 @("Positive")
@@ -89,6 +89,12 @@ unittest
 unittest
 {
     parseTomlInteger("0xbEe").should.equal(0xbee);
+}
+
+@("Hex — long")
+unittest
+{
+    parseTomlInteger("0xbeadface").should.equal(0xBeadFace);
 }
 
 @("Hex — underscores")
