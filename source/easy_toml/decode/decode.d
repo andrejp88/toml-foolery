@@ -4,8 +4,9 @@ import std.exception : enforce;
 import std.algorithm : find;
 
 import easy_toml.decode;
-import easy_toml.decode.peg_grammar;
 import easy_toml.decode.integer;
+import easy_toml.decode.floating_point;
+import easy_toml.decode.peg_grammar;
 // If you're working on the toml.peg file, comment the previous import and uncomment this:
 // import pegged.grammar; mixin(grammar(import("toml.peg")));
 // To turn it into a D module again, run the following code once:
@@ -55,6 +56,10 @@ T parseToml(T)(string toml)
                     {
                         case "TomlGrammar.integer":
                             putInStruct(dest, [ key ], parseTomlInteger(value));
+                            break;
+
+                        case "TomlGrammar.float_":
+                            putInStruct(dest, [ key ], parseTomlFloat(value));
                             break;
 
                         default:
@@ -279,4 +284,87 @@ unittest
     result.b.should.equal(255);
     result.c.should.equal(511);
     result.d.should.equal(17);
+}
+
+@("Floating Point -> float")
+unittest
+{
+    struct S
+    {
+        float f;
+    }
+
+    S result = parseToml!S("f = 1.1234");
+
+    result.f.should.equal.approximately(1.1234, error = 1.0e-05);
+}
+
+@("Floating Point -> real")
+unittest
+{
+    struct S
+    {
+        real r;
+    }
+
+    S result = parseToml!S("r = 12_232.008_2");
+
+    result.r.should.equal.approximately(12_232.0082, error = 1.0e-05);
+}
+
+@("Floating Point -> double")
+unittest
+{
+    struct S
+    {
+        real d;
+    }
+
+    S result = parseToml!S("d = -3.141_6e-01");
+
+    result.d.should.equal.approximately(-3.141_6e-01, error = 1.0e-05);
+}
+
+@("Floating Point — Infinities")
+unittest
+{
+    struct S
+    {
+        real pi;
+        double ni;
+        float i;
+    }
+
+    S result = parseToml!S(`
+        pi = +inf
+        ni = -inf
+        i = inf
+    `);
+
+    result.pi.should.equal(real.infinity);
+    result.ni.should.equal(-double.infinity);
+    result.i.should.equal(float.infinity);
+}
+
+@("Floating Point — NaNs")
+unittest
+{
+    import std.math : isNaN;
+
+    struct S
+    {
+        real pNan;
+        double nNan;
+        float nan;
+    }
+
+    S result = parseToml!S(`
+        pNan = +nan
+        nNan = -nan
+        nan = nan
+    `);
+
+    assert(result.pNan.isNaN, "Expected result.pNan to be NaN, but got: " ~ result.pNan.to!string);
+    assert(result.nNan.isNaN, "Expected result.nNan to be NaN, but got: " ~ result.nNan.to!string);
+    assert(result.nan.isNaN, "Expected result.nan to be NaN, but got: " ~ result.nan.to!string);
 }
