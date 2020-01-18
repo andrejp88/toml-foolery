@@ -31,6 +31,12 @@ unittest
     parseTomlInteger("123").should.equal(123);
 }
 
+@("Positive with leading +")
+unittest
+{
+    parseTomlInteger("+123").should.equal(123);
+}
+
 @("Negative")
 unittest
 {
