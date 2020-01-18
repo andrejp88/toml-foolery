@@ -5,6 +5,7 @@ import std.algorithm : find;
 
 import easy_toml.decode;
 import easy_toml.decode.peg_grammar;
+import easy_toml.decode.integer;
 // If you're working on the toml.peg file, comment the previous import and uncomment this:
 // import pegged.grammar; mixin(grammar(import("toml.peg")));
 // To turn it into a D module again, run the following code once:
@@ -52,7 +53,7 @@ T parseToml(T)(string toml)
                     switch (valuePT.children[0].name)
                     {
                         case "TomlGrammar.integer":
-                            putInStruct(dest, [ key ], value.to!int);
+                            putInStruct(dest, [ key ], parseTomlInteger(value));
                             break;
 
                         default:
