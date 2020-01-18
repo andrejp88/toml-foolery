@@ -1,7 +1,7 @@
 module easy_toml.decode.integer;
 
 import std.algorithm : filter, all;
-import std.ascii : isASCII, isDigit, isHexDigit, isOctalDigit;
+import std.ascii : isASCII, isHexDigit;
 
 import easy_toml.decode;
 
@@ -11,7 +11,7 @@ package int parseTomlInteger(string value)
     bool isCleanedChar(dchar c)
     {
         return c.isASCII && (
-            c.isDigit ||
+            c.isHexDigit ||
             c == 'x' ||
             c == 'o' ||
             c == 'b' ||
@@ -22,7 +22,13 @@ package int parseTomlInteger(string value)
 
     assert(value.all!((e) => isCleanedChar(e) || e == '_'));
 
-    return value.filter!isCleanedChar.to!int;
+    int radix = value.length < 3    ?  10  :
+                value[0..2] == "0x" ?  16  :
+                value[0..2] == "0o" ?  8   :
+                value[0..2] == "0b" ?  2   :
+                10;
+
+    return (radix != 10 ? value[2..$] : value).filter!(e => e != '_').to!int(radix);
 }
 
 @("Positive")
@@ -65,4 +71,40 @@ unittest
 unittest
 {
     parseTomlInteger("-189_912").should.equal(-189_912);
+}
+
+@("Hex — lowercase")
+unittest
+{
+    parseTomlInteger("0xbee").should.equal(0xbee);
+}
+
+@("Hex — uppercase")
+unittest
+{
+    parseTomlInteger("0xBEE").should.equal(0xbee);
+}
+
+@("Hex — mixed case")
+unittest
+{
+    parseTomlInteger("0xbEe").should.equal(0xbee);
+}
+
+@("Hex — underscores")
+unittest
+{
+    parseTomlInteger("0xb_e_e").should.equal(0xbee);
+}
+
+@("Octal")
+unittest
+{
+    parseTomlInteger("0o777").should.equal(511);
+}
+
+@("Binary")
+unittest
+{
+    parseTomlInteger("0b11001101").should.equal(205);
 }
