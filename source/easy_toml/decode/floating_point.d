@@ -1,7 +1,8 @@
 module easy_toml.decode.floating_point;
 
-import easy_toml.decode;
+import std.algorithm : filter;
 version (unittest) import std.math : isNaN;
+import easy_toml.decode;
 
 package real parseTomlFloat(string value)
 {
@@ -15,7 +16,7 @@ package real parseTomlFloat(string value)
         return real.infinity;
     }
 
-    return value.to!real;
+    return value.filter!(e => e != '_').to!real;
 }
 
 @("Fractional — Basic")
@@ -76,4 +77,10 @@ unittest
     parseTomlFloat("inf").should.equal(real.infinity);
     parseTomlFloat("+inf").should.equal(real.infinity);
     parseTomlFloat("-inf").should.equal(-real.infinity);
+}
+
+@("Underscores")
+unittest
+{
+    parseTomlFloat("-3.1_41_59e-0_3").should.equal.approximately(-0.003_141_59, error = 1.0e-05);
 }
