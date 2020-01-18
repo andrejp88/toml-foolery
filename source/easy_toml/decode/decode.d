@@ -62,6 +62,10 @@ T parseToml(T)(string toml)
                             putInStruct(dest, [ key ], parseTomlFloat(value));
                             break;
 
+                        case "TomlGrammar.boolean":
+                            putInStruct(dest, [ key ], value.to!string);
+                            break;
+
                         default:
                             break;
                     }
@@ -367,4 +371,22 @@ unittest
     assert(result.pNan.isNaN, "Expected result.pNan to be NaN, but got: " ~ result.pNan.to!string);
     assert(result.nNan.isNaN, "Expected result.nNan to be NaN, but got: " ~ result.nNan.to!string);
     assert(result.nan.isNaN, "Expected result.nan to be NaN, but got: " ~ result.nan.to!string);
+}
+
+@("Boolean -> bool")
+unittest
+{
+    struct S
+    {
+        bool t;
+        bool f;
+    }
+
+    S result = parseToml!S(`
+        t = true
+        f = false
+    `);
+
+    result.t.should.equal(true);
+    result.f.should.equal(false);
 }
