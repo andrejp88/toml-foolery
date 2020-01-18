@@ -4,8 +4,10 @@ import std.exception : enforce;
 import std.algorithm : find;
 
 import easy_toml.decode;
-import easy_toml.decode.integer;
 import easy_toml.decode.floating_point;
+import easy_toml.decode.integer;
+import easy_toml.decode.string;
+
 import easy_toml.decode.peg_grammar;
 // If you're working on the toml.peg file, comment the previous import and uncomment this:
 // import pegged.grammar; mixin(grammar(import("toml.peg")));
@@ -63,7 +65,29 @@ T parseToml(T)(string toml)
                             break;
 
                         case "TomlGrammar.boolean":
-                            putInStruct(dest, [ key ], value.to!string);
+                            putInStruct(dest, [ key ], value.to!bool);
+                            break;
+
+                        case "TomlGrammar.string_":
+                            string stringType = valuePT.children[0].children[0].name;
+                            switch (stringType)
+                            {
+                                case "TomlGrammar.basic_string":
+                                    putInStruct(dest, [ key ], parseTomlBasicString(value));
+                                    break;
+
+                                case "TomlGrammar.ml_basic_string":
+                                    break;
+
+                                case "TomlGrammar.literal_string":
+                                    break;
+
+                                case "TomlGrammar.ml_literal_string":
+                                    break;
+
+                                default:
+                                    throw new Exception("Unsupported TOML string type: " ~ stringType);
+                            }
                             break;
 
                         default:
@@ -389,4 +413,19 @@ unittest
 
     result.t.should.equal(true);
     result.f.should.equal(false);
+}
+
+@("Basic String -> string")
+unittest
+{
+    struct S
+    {
+        string s;
+    }
+
+    S result = parseToml!S(`
+        s = "Appel"
+    `);
+
+    result.s.should.equal("Appel");
 }
