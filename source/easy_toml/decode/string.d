@@ -12,6 +12,11 @@ package string parseTomlBasicString(string value)
     return value[1 .. $-1].unescaped;
 }
 
+package string parseTomlBasicMultiLineString(string value)
+{
+    return value[3 .. $-3].unescaped;
+}
+
 /// Opposite of easy_toml.encode.string.escaped
 private string unescaped(string s)
 {
@@ -41,4 +46,17 @@ unittest
 unittest
 {
     parseTomlBasicString(`"\"Hello\nWorld!\""`).should.equal("\"Hello\nWorld!\"");
+}
+
+@("ML Basic — Simple")
+unittest
+{
+    parseTomlBasicMultiLineString("\"\"\"Hello\nWorld!\"\"\"").should.equal("Hello\nWorld!");
+}
+
+// TODO: Document that no EOL conversion ever happens.
+@("ML Basic — CRLF")
+unittest
+{
+    parseTomlBasicMultiLineString("\"\"\"Hello\r\nWorld!\"\"\"").should.equal("Hello\r\nWorld!");
 }
