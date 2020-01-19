@@ -15,7 +15,7 @@ package string parseTomlBasicString(string value)
 
 package string parseTomlBasicMultiLineString(string value)
 {
-    return value[3 .. $-3].unescaped.removeEscapedLinebreaks.strip("\n\r");
+    return value[3 .. $-3].unescaped.removeEscapedLinebreaks.removeLeadingNewline;
 }
 
 package string parseTomlLiteralString(string value)
@@ -25,7 +25,7 @@ package string parseTomlLiteralString(string value)
 
 package string parseTomlLiteralMultiLineString(string value)
 {
-    return value[3 .. $-3].strip("\n\r");
+    return value[3 .. $-3].removeLeadingNewline;
 }
 
 /// Opposite of easy_toml.encode.string.escaped
@@ -49,6 +49,24 @@ private string removeEscapedLinebreaks(string value)
 
     enum auto re = ctRegex!(`\\\r?\n\s*`, "g");
     return value.replaceAll(re, "");
+}
+
+/// For multiline strings, remove the newline immediately following the opening quotes
+/// if one exists.
+private string removeLeadingNewline(string value)
+{
+    if (value[0] == '\n')
+    {
+        return value[1..$];
+    }
+    else if (value[0..2] == "\r\n")
+    {
+        return value[2..$];
+    }
+    else
+    {
+        return value;
+    }
 }
 
 @("Basic — Simple")
@@ -78,7 +96,7 @@ unittest
 @("ML Basic — Leading Newline")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"\nHello\nWorld!\"\"\"").should.equal("Hello\nWorld!");
+    parseTomlBasicMultiLineString("\"\"\"\nHello\nWorld!\n\"\"\"").should.equal("Hello\nWorld!\n");
 }
 
 @("ML Basic — Trailing backslash")
@@ -91,7 +109,7 @@ unittest
 @("ML Basic — CRLF")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"Hello\r\nWorld!\"\"\"").should.equal("Hello\r\nWorld!");
+    parseTomlBasicMultiLineString("\"\"\"\r\nHello\r\nWorld!\"\"\"").should.equal("Hello\r\nWorld!");
 }
 
 @("Literal — Simple")
@@ -115,7 +133,7 @@ unittest
 @("ML Literal — Leading Newline")
 unittest
 {
-    parseTomlLiteralMultiLineString("'''\n Hello\nWorld!'''").should.equal(" Hello\nWorld!");
+    parseTomlLiteralMultiLineString("'''\n Hello\nWorld!\n'''").should.equal(" Hello\nWorld!\n");
 }
 
 @("ML Literal — Trailing backslash")
