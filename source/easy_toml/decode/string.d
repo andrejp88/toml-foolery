@@ -29,6 +29,7 @@ package string parseTomlLiteralMultiLineString(string value)
 }
 
 /// Opposite of easy_toml.encode.string.escaped
+/// TODO: Parse unicode escape sequences
 private string unescaped(string s)
 {
     return s.substitute!(
@@ -38,6 +39,7 @@ private string unescaped(string s)
         `\f`, "\f",
         `\n`, "\n",
         `\r`, "\r",
+        `\t`, "\t",
     ).to!string;
 }
 
@@ -64,7 +66,7 @@ unittest
 @("Basic — Escaped chars")
 unittest
 {
-    parseTomlBasicString(`"\"Hello\nWorld!\""`).should.equal("\"Hello\nWorld!\"");
+    parseTomlBasicString(`"\"Hello\n\tWorld!\""`).should.equal("\"Hello\n\tWorld!\"");
 }
 
 @("ML Basic — Simple")
