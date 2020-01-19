@@ -495,7 +495,7 @@ unittest
     }
 
     S result = parseToml!S(`
-        s = "🦢"
+        s = "\U0001F9A2"
         w = "🐃"
         d = "🦆"
     `);
