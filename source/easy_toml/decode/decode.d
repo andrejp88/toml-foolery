@@ -482,3 +482,25 @@ Abc\t''de
 
     result.s.should.equal("Abc\\t''de\n");
 }
+
+
+@("String Unicode test (string, wstring, and dstring)")
+unittest
+{
+    struct S
+    {
+        string s;
+        wstring w;
+        dstring d;
+    }
+
+    S result = parseToml!S(`
+        s = "🦢"
+        w = "🐃"
+        d = "🦆"
+    `);
+
+    result.s.should.equal("🦢");
+    result.w.should.equal("🐃"w);
+    result.d.should.equal("🦆"d);
+}
