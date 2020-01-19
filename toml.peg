@@ -94,7 +94,7 @@ ml_basic_body    <- mlb_content* ( mlb_quotes mlb_content+ )* ( mlb_quotes )?
 
 mlb_content      <- mlb_char / newline / mlb_escaped_nl
 mlb_char         <- mlb_unescaped / escaped
-mlb_quotes       <- quotation_mark quotation_mark?
+mlb_quotes       <- quotation_mark quotation_mark? !quotation_mark
 mlb_unescaped    <- wschar /  [!#-\[\]-~]  / non_ascii
 mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
@@ -114,7 +114,7 @@ ml_literal_body  <- mll_content* ( mll_quotes mll_content+ )* ( mll_quotes )?
 
 mll_content      <- mll_char / newline
 mll_char         <-  [\t -&(-~]  / non_ascii
-mll_quotes       <- apostrophe apostrophe?
+mll_quotes       <- apostrophe apostrophe? !apostrophe
 
 #; Integer
 

@@ -97,7 +97,7 @@ ml_basic_body    <- mlb_content* ( mlb_quotes mlb_content+ )* ( mlb_quotes )?
 
 mlb_content      <- mlb_char / newline / mlb_escaped_nl
 mlb_char         <- mlb_unescaped / escaped
-mlb_quotes       <- quotation_mark quotation_mark?
+mlb_quotes       <- quotation_mark quotation_mark? !quotation_mark
 mlb_unescaped    <- wschar /  [!#-\[\]-~]  / non_ascii
 mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
@@ -117,7 +117,7 @@ ml_literal_body  <- mll_content* ( mll_quotes mll_content+ )* ( mll_quotes )?
 
 mll_content      <- mll_char / newline
 mll_char         <-  [\t -&(-~]  / non_ascii
-mll_quotes       <- apostrophe apostrophe?
+mll_quotes       <- apostrophe apostrophe? !apostrophe
 
 #; Integer
 
@@ -1560,7 +1560,7 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark)), "TomlGrammar.mlb_quotes")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark), pegged.peg.negLookahead!(quotation_mark)), "TomlGrammar.mlb_quotes")(p);
         }
         else
         {
@@ -1568,7 +1568,7 @@ struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark)), "TomlGrammar.mlb_quotes"), "mlb_quotes")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark), pegged.peg.negLookahead!(quotation_mark)), "TomlGrammar.mlb_quotes"), "mlb_quotes")(p);
                 memo[tuple(`mlb_quotes`, p.end)] = result;
                 return result;
             }
@@ -1579,12 +1579,12 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark)), "TomlGrammar.mlb_quotes")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark), pegged.peg.negLookahead!(quotation_mark)), "TomlGrammar.mlb_quotes")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark)), "TomlGrammar.mlb_quotes"), "mlb_quotes")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(quotation_mark, pegged.peg.option!(quotation_mark), pegged.peg.negLookahead!(quotation_mark)), "TomlGrammar.mlb_quotes"), "mlb_quotes")(TParseTree("", false,[], s));
         }
     }
     static string mlb_quotes(GetName g)
@@ -1956,7 +1956,7 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe)), "TomlGrammar.mll_quotes")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe), pegged.peg.negLookahead!(apostrophe)), "TomlGrammar.mll_quotes")(p);
         }
         else
         {
@@ -1964,7 +1964,7 @@ struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe)), "TomlGrammar.mll_quotes"), "mll_quotes")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe), pegged.peg.negLookahead!(apostrophe)), "TomlGrammar.mll_quotes"), "mll_quotes")(p);
                 memo[tuple(`mll_quotes`, p.end)] = result;
                 return result;
             }
@@ -1975,12 +1975,12 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe)), "TomlGrammar.mll_quotes")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe), pegged.peg.negLookahead!(apostrophe)), "TomlGrammar.mll_quotes")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe)), "TomlGrammar.mll_quotes"), "mll_quotes")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(apostrophe, pegged.peg.option!(apostrophe), pegged.peg.negLookahead!(apostrophe)), "TomlGrammar.mll_quotes"), "mll_quotes")(TParseTree("", false,[], s));
         }
     }
     static string mll_quotes(GetName g)
@@ -4434,3 +4434,4 @@ struct GenericTomlGrammar(TParseTree)
 }
 
 alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;
+
