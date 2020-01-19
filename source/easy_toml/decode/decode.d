@@ -87,6 +87,7 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.ml_literal_string":
+                                    putInStruct(dest, address, parseTomlLiteralMultiLineString(value));
                                     break;
 
                                 default:
@@ -463,4 +464,21 @@ unittest
     `);
 
     result.s.should.equal("Abc\\tde");
+}
+
+@("Literal Multiline String -> string")
+unittest
+{
+    struct S
+    {
+        string s;
+    }
+
+    S result = parseToml!S(`
+        s = '''
+Abc\t''de
+'''
+    `);
+
+    result.s.should.equal("Abc\\t''de\n");
 }
