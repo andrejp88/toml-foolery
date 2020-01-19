@@ -77,6 +77,7 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.ml_basic_string":
+                                    putInStruct(dest, [ key ], parseTomlBasicMultiLineString(value));
                                     break;
 
                                 case "TomlGrammar.literal_string":
@@ -428,4 +429,20 @@ unittest
     `);
 
     result.s.should.equal("Appel");
+}
+
+@("Basic Multiline String -> string")
+unittest
+{
+    struct S
+    {
+        string s;
+    }
+
+    S result = parseToml!S(`
+        s = """
+        Phlogiston\tX"""
+    `);
+
+    result.s.should.equal("        Phlogiston\tX");
 }
