@@ -54,18 +54,20 @@ T parseToml(T)(string toml)
                     string key = keyPT.input[keyPT.begin .. keyPT.end];
                     string value = valuePT.input[valuePT.begin .. valuePT.end];
 
+                    string[] address = [ key ];
+
                     switch (valuePT.children[0].name)
                     {
                         case "TomlGrammar.integer":
-                            putInStruct(dest, [ key ], parseTomlInteger(value));
+                            putInStruct(dest, address, parseTomlInteger(value));
                             break;
 
                         case "TomlGrammar.float_":
-                            putInStruct(dest, [ key ], parseTomlFloat(value));
+                            putInStruct(dest, address, parseTomlFloat(value));
                             break;
 
                         case "TomlGrammar.boolean":
-                            putInStruct(dest, [ key ], value.to!bool);
+                            putInStruct(dest, address, value.to!bool);
                             break;
 
                         case "TomlGrammar.string_":
@@ -73,14 +75,15 @@ T parseToml(T)(string toml)
                             switch (stringType)
                             {
                                 case "TomlGrammar.basic_string":
-                                    putInStruct(dest, [ key ], parseTomlBasicString(value));
+                                    putInStruct(dest, address, parseTomlBasicString(value));
                                     break;
 
                                 case "TomlGrammar.ml_basic_string":
-                                    putInStruct(dest, [ key ], parseTomlBasicMultiLineString(value));
+                                    putInStruct(dest, address, parseTomlBasicMultiLineString(value));
                                     break;
 
                                 case "TomlGrammar.literal_string":
+                                    putInStruct(dest, address, parseTomlLiteralString(value));
                                     break;
 
                                 case "TomlGrammar.ml_literal_string":
@@ -445,4 +448,19 @@ unittest
     `);
 
     result.s.should.equal("        Phlogiston\tX");
+}
+
+@("Literal String -> string")
+unittest
+{
+    struct S
+    {
+        string s;
+    }
+
+    S result = parseToml!S(`
+        s = 'Abc\tde'
+    `);
+
+    result.s.should.equal("Abc\\tde");
 }
