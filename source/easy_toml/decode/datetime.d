@@ -16,6 +16,11 @@ public SysTime parseTomlLocalDateTime(string value)
     return parseRFC3339NoOffset(value);
 }
 
+public Date parseTomlLocalDate(string value)
+{
+    return parseRFC3339DateOnly(value);
+}
+
 /// Parses any [RFC 3339](https://tools.ietf.org/html/rfc3339) string.
 ///
 /// The grammar in §5.6 of the above document is reproduced below for convenience.
@@ -88,7 +93,7 @@ out (retVal; retVal.timezone == LocalTime())
 
     enum auto dateTime =
         ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
-    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac          8tzd  9tzh   10tzm
+    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac
 
     Captures!string capturesDateTime = value.matchFirst(dateTime);
 
@@ -110,6 +115,28 @@ out (retVal; retVal.timezone == LocalTime())
             secondStr.to!int
         ),
         nsecs(fracStr.padRight('0', 9).to!string[0..9].to!long)
+    );
+}
+
+private Date parseRFC3339DateOnly(string value)
+{
+    import std.regex : ctRegex, matchFirst, Captures;
+    import std.range : padRight;
+
+    enum auto date =
+        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)$`);
+    //  0 full     1year      2mon   3day
+
+    Captures!string capturesDate = value.matchFirst(date);
+
+    string yearStr         = capturesDate[1];
+    string monthStr        = capturesDate[2];
+    string dayStr          = capturesDate[3];
+
+    return Date(
+        yearStr.to!int,
+        monthStr.to!int,
+        dayStr.to!int
     );
 }
 
@@ -202,4 +229,10 @@ unittest
             LocalTime()
         )
     );
+}
+
+@("Local Date -> Date")
+unittest
+{
+    parseTomlLocalDate("2020-01-26").should.equal(Date(2020, 1, 26));
 }
