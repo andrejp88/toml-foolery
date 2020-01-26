@@ -241,6 +241,23 @@ unittest
     s.ogres.are.like.onions.bye.c.should.equal(9);
 }
 
+@("putInStruct — now with methods")
+unittest
+{
+    struct S
+    {
+        int a;
+        int b(int c)
+        {
+            return c;
+        }
+    }
+
+    S s;
+    putInStruct(s, ["a"], 5);
+    s.a.should.equal(5);
+}
+
 
 
 @("Simple Integer -> int")
