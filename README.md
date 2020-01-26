@@ -100,7 +100,7 @@ Each TOML type has one or more corresponding types in D.
 - [`std.datetime.systime.SysTime`](https://dlang.org/library/std/datetime/systime/sys_time.html)
 
 ### Local Date-Time
-- [`std.datetime.date.DateTime`](https://dlang.org/library/std/datetime/date/date_time.html)
+- [`std.datetime.date.SysTime`](https://dlang.org/library/std/datetime/date/date_time.html) with `timezone` equal to [`LocalTime`](https://dlang.org/library/std/datetime/timezone/local_time.html).
 
 ### Local Date
 - [`std.datetime.date.Date`](https://dlang.org/library/std/datetime/date/date.html)
