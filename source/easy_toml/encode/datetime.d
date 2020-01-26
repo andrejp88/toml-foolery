@@ -2,6 +2,7 @@ module easy_toml.encode.datetime;
 
 import std.datetime.systime : SysTime;
 import std.datetime.date : DateTime, Date, TimeOfDay;
+import std.datetime.timezone : LocalTime;
 import datefmt : datefmt = format;
 import easy_toml.encode;
 
@@ -19,7 +20,7 @@ package enum bool makesTomlOffsetDateTime(T) = (
 );
 
 package enum bool makesTomlLocalDateTime(T) = (
-    is(T == DateTime)
+    is(T == SysTime)
 );
 
 package enum bool makesTomlLocalDate(T) = (
@@ -31,19 +32,23 @@ package enum bool makesTomlLocalTime(T) = (
 );
 
 
-/// Serializes SysTime into TOML "Offset Date-Time" values.
+/// Serializes SysTime into:
+/// TOML "Offset Date-Time" values.
+/// OR
+/// TOML "Local Date-Time" value, if timezone is LocalTime.
 package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
-if (makesTomlOffsetDateTime!T)
+if (makesTomlOffsetDateTime!T || makesTomlLocalDateTime!T)
 {
-    buffer.put(value.formatTime());
-}
-
-/// Serializes DateTime into TOML "Local Date-Time" values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
-if (makesTomlLocalDateTime!T)
-{
-    SysTime phonySysTime = SysTime(value);
-    buffer.put(formatTime(phonySysTime, "%F %T.%g", false));
+    // This won't be true if value.timezone happens to be the same as the user's
+    // local timezone. It really has to be the LocalTime singleton instance.
+    if (value.timezone == LocalTime())
+    {
+        buffer.put(value.formatTime("%F %T.%g", false));
+    }
+    else
+    {
+        buffer.put(value.formatTime());
+    }
 }
 
 /// Serializes Date into TOML "Local Date" values.
@@ -62,17 +67,17 @@ if (makesTomlLocalTime!T)
     buffer.put(formatTime(phonySysTime, "%T.%g", false));
 }
 
-@("Encode `SysTime` values")
+@("Encode `SysTime` values with non-LocalTime")
 unittest
 {
     immutable TimeZone cet = new immutable SimpleTimeZone(dur!"hours"(1), "CET");
     _tomlifyValue(SysTime(DateTime(1996, 12, 11, 10, 20, 42), cet)).should.equal("1996-12-11 10:20:42.000 +01:00");
 }
 
-@("Encode `DateTime` values")
+@("Encode `SysTime` values with LocalTime")
 unittest
 {
-    _tomlifyValue(DateTime(2020, 1, 15, 15, 0, 33)).should.equal("2020-01-15 15:00:33.000");
+    _tomlifyValue(SysTime(DateTime(2020, 1, 15, 15, 0, 33))).should.equal("2020-01-15 15:00:33.000");
 }
 
 @("Encode `Date` values")
