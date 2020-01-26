@@ -137,7 +137,7 @@ if (is(S == struct))
             {
                 if (member == address[0])
                 {
-                    static if (__traits(compiles, value.to!(typeof(__traits(getMember, dest, member)))))
+                    static if (__traits(compiles, __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))))
                     {
                         __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
                     }
@@ -246,18 +246,78 @@ unittest
 {
     struct S
     {
+        struct C
+        {
+            int x;
+        }
+
         int a;
-        int b(int c)
+        C c;
+
+        int noArgs()
+        {
+            return 123;
+        }
+
+        int oneArg(int c)
         {
             return c;
+        }
+
+        int oodlesOfArgs(int one, string two, char three)
+        {
+            return one;
+        }
+
+        void proc() { }
+
+        int varargs(int[] x...)
+        {
+            return x.length > 0 ? x[0] : -1;
+        }
+
+        C returnsStruct(C andTakesOneToo)
+        {
+            return andTakesOneToo;
         }
     }
 
     S s;
-    putInStruct(s, ["a"], 5);
-    s.a.should.equal(5);
+
+    putInStruct(s, ["c", "x"], 5);
+    putInStruct(s, ["a"], 9);
+    s.c.x.should.equal(5);
+    s.a.should.equal(9);
 }
 
+@("putInStruct — properties")
+unittest
+{
+    struct S
+    {
+        int _x;
+        int x() @property const { return _x; }
+        void x(int newX) @property { _x = newX; }
+    }
+
+    S s;
+    putInStruct(s, ["x"], 5);
+    s.x.should.equal(5);
+}
+
+@("putInStruct — read-only properties")
+unittest
+{
+    struct S
+    {
+        int y;
+        int x() @property const { return y; }
+    }
+
+    S s;
+    // Just needs to compile:
+    putInStruct(s, ["y"], 5);
+}
 
 
 @("Simple Integer -> int")
