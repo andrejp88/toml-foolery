@@ -5,6 +5,7 @@ import std.exception : enforce;
 import std.traits : rvalueOf;
 
 import easy_toml.decode;
+import easy_toml.decode.datetime;
 import easy_toml.decode.floating_point;
 import easy_toml.decode.integer;
 import easy_toml.decode.string;
@@ -96,8 +97,22 @@ T parseToml(T)(string toml)
                             }
                             break;
 
-                        default:
+                        case "TomlGrammar.date_time":
+                            string dateTimeType = valuePT.children[0].children[0].name;
+                            switch (dateTimeType)
+                            {
+                                case "TomlGrammar.offset_date_time":
+                                    putInStruct(dest, address, parseTomlOffsetDateTime(value));
+                                    break;
+
+                                default:
+                                    throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
+                            }
                             break;
+
+                        default:
+                            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ valuePT.children[0].name ~ "\""); }
+                            else { break; }
                     }
 
                     break;
@@ -608,4 +623,32 @@ unittest
     result.s.should.equal("🦢");
     result.w.should.equal("🐃"w);
     result.d.should.equal("🦆"d);
+}
+
+@("Offset Date-Time -> SysTime")
+unittest
+{
+    import std.datetime : SysTime, DateTime, nsecs, UTC;
+
+    struct S
+    {
+        SysTime t;
+    }
+
+    S result = parseToml!S(`
+        t = 2020-01-26 12:09:59Z
+    `);
+
+    result.t.should.equal(SysTime(
+        DateTime(
+            2020,
+            1,
+            26,
+            12,
+            9,
+            59
+        ),
+        nsecs(0),
+        UTC()
+    ));
 }
