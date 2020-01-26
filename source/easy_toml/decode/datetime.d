@@ -11,6 +11,11 @@ public SysTime parseTomlOffsetDateTime(string value)
     return parseRFC3339(value);
 }
 
+public SysTime parseTomlLocalDateTime(string value)
+{
+    return parseRFC3339NoOffset(value);
+}
+
 /// Parses any [RFC 3339](https://tools.ietf.org/html/rfc3339) string.
 ///
 /// The grammar in §5.6 of the above document is reproduced below for convenience.
@@ -50,8 +55,6 @@ private SysTime parseRFC3339(string value)
 
     Captures!string capturesDateTime = value.matchFirst(dateTime);
 
-    import std.stdio : writeln;
-
     string yearStr         = capturesDateTime[1];
     string monthStr        = capturesDateTime[2];
     string dayStr          = capturesDateTime[3];
@@ -74,6 +77,39 @@ private SysTime parseRFC3339(string value)
         ),
         nsecs(fracStr.padRight('0', 9).to!string[0..9].to!long),
         new immutable SimpleTimeZone(hours((offsetDirStr ~ hourOffsetStr).to!long) + minutes(minuteOffsetStr.to!long))
+    );
+}
+
+private SysTime parseRFC3339NoOffset(string value)
+out (retVal; retVal.timezone == LocalTime())
+{
+    import std.regex : ctRegex, matchFirst, Captures;
+    import std.range : padRight;
+
+    enum auto dateTime =
+        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
+    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac          8tzd  9tzh   10tzm
+
+    Captures!string capturesDateTime = value.matchFirst(dateTime);
+
+    string yearStr         = capturesDateTime[1];
+    string monthStr        = capturesDateTime[2];
+    string dayStr          = capturesDateTime[3];
+    string hourStr         = capturesDateTime[4];
+    string minuteStr       = capturesDateTime[5];
+    string secondStr       = capturesDateTime[6];
+    string fracStr         = capturesDateTime[7]  != "" ? capturesDateTime[7]  :  "0";
+
+    return SysTime(
+        DateTime(
+            yearStr.to!int,
+            monthStr.to!int,
+            dayStr.to!int,
+            hourStr.to!int,
+            minuteStr.to!int,
+            secondStr.to!int
+        ),
+        nsecs(fracStr.padRight('0', 9).to!string[0..9].to!long)
     );
 }
 
@@ -134,4 +170,16 @@ unittest
     SysTime expected = SysTime(DateTime(2020, 1, 26, 16, 55, 23), nsecs(999_999_999), UTC());
     parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999Z").should.equal(expected);
     parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999999Z").should.equal(expected);
+}
+
+@("Local Date-Time -> SysTime")
+unittest
+{
+    parseTomlLocalDateTime("2020-01-26 17:13:11").should.equal(
+        SysTime(
+            DateTime(2020, 1, 26, 17, 13, 11),
+            0.nsecs,
+            LocalTime()
+        )
+    );
 }
