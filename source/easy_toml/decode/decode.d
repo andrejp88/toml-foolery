@@ -1,7 +1,8 @@
 module easy_toml.decode.decode;
 
-import std.exception : enforce;
 import std.algorithm : find;
+import std.exception : enforce;
+import std.traits : rvalueOf;
 
 import easy_toml.decode;
 import easy_toml.decode.floating_point;
@@ -126,6 +127,7 @@ T parseToml(T)(string toml)
 /// A magical function which puts `value` into `dest`, inside the field indicated by `address`.
 private void putInStruct(S, T)(ref S dest, string[] address, T value)
 if (is(S == struct))
+in (address.length > 0, "`address` may not be empty")
 {
     if (address.length == 1)
     {
@@ -153,12 +155,17 @@ if (is(S == struct))
             // ...that isn't a nested struct declaration...
             static if (!is(__traits(getMember, dest, member)))
             {
-                // ...and that is a struct itself
+                // ...is a struct itself...
                 static if(is(typeof(__traits(getMember, dest, member)) == struct))
                 {
-                    if (member == address[0])
+                    // ...but isn't a @property
+                    // (since those return structs as rvalues which cannot be passed as ref)
+                    static if(__traits(compiles, putInStruct(__traits(getMember, dest, member), address[1..$], value)))
                     {
-                        putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
+                        if (member == address[0])
+                        {
+                            putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
+                        }
                     }
                 }
             }
@@ -317,6 +324,27 @@ unittest
     S s;
     // Just needs to compile:
     putInStruct(s, ["y"], 5);
+}
+
+@("putInStruct — do not insert into read-only struct @properties.")
+unittest
+{
+    struct S
+    {
+        struct C
+        {
+            int x;
+        }
+
+        C _c;
+        C c() @property const { return _c; }
+    }
+
+    S s;
+    // C returns an rvalue, which cannot be ref, so it should be ignored by putInStruct.
+    // This should compile but c.x can't be changed.
+    putInStruct(s, ["c", "x"], 5);
+    s.c.x.should.equal(s.c.x.init);
 }
 
 
