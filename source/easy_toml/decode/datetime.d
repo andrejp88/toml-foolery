@@ -183,3 +183,23 @@ unittest
         )
     );
 }
+
+@("Local Date-Time -> SysTime (with fractional seconds)")
+unittest
+{
+    parseTomlLocalDateTime("2020-01-26 17:13:11.999999999").should.equal(
+        SysTime(
+            DateTime(2020, 1, 26, 17, 13, 11),
+            999_999_999.nsecs,
+            LocalTime()
+        )
+    );
+
+    parseTomlLocalDateTime("2020-01-26 17:13:11.999999999999").should.equal(
+        SysTime(
+            DateTime(2020, 1, 26, 17, 13, 11),
+            999_999_999.nsecs,
+            LocalTime()
+        )
+    );
+}
