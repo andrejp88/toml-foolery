@@ -4,6 +4,8 @@ import easy_toml.decode;
 import std.datetime;
 
 
+/// Up to nanosecond precision is supported.
+/// Additional precision is truncated, obeying the TOML spec.
 public SysTime parseTomlOffsetDateTime(string value)
 {
     return parseRFC3339(value);
@@ -70,7 +72,7 @@ private SysTime parseRFC3339(string value)
             minuteStr.to!int,
             secondStr.to!int
         ),
-        nsecs(fracStr.padRight('0', 9).to!string.to!long),
+        nsecs(fracStr.padRight('0', 9).to!string[0..9].to!long),
         new immutable SimpleTimeZone(hours((offsetDirStr ~ hourOffsetStr).to!long) + minutes(minuteOffsetStr.to!long))
     );
 }
@@ -124,4 +126,12 @@ unittest
     parseTomlOffsetDateTime("2020-01-20 21:54:56+05:45").should.equal(expected);
     parseTomlOffsetDateTime("2020-01-20t21:54:56+05:45").should.equal(expected);
     parseTomlOffsetDateTime("2020-01-20T21:54:56+05:45").should.equal(expected);
+}
+
+@("Offset Date-Time — truncate fracsecs")
+unittest
+{
+    SysTime expected = SysTime(DateTime(2020, 1, 26, 16, 55, 23), nsecs(999_999_999), UTC());
+    parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999Z").should.equal(expected);
+    parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999999Z").should.equal(expected);
 }
