@@ -1,7 +1,5 @@
 module easy_toml.encode.tomlify;
 
-import quirks : Fields, isSomeString;
-
 import easy_toml.encode;
 import easy_toml.encode.array;
 import easy_toml.encode.boolean;
@@ -11,8 +9,9 @@ import easy_toml.encode.integer;
 import easy_toml.encode.string;
 import easy_toml.encode.table;
 
-import std.array : join;
 import std.algorithm : map, any;
+import std.array : join;
+import std.traits : isSomeString, FieldNameTuple, Fields;
 
 version(unittest) import dshould;
 
@@ -25,12 +24,12 @@ public string tomlify(T)(T object)
 {
     Appender!string buffer;
 
-    enum auto fields = Fields!T;
-    static foreach (field; fields)
+    enum auto fieldNames = FieldNameTuple!T;
+    static foreach (fieldName; fieldNames)
     {
-        buffer.put(tomlifyKey(field.name));
+        buffer.put(tomlifyKey(fieldName));
         buffer.put(" = ");
-        tomlifyValue(__traits(getMember, object, field.name), buffer);
+        tomlifyValue(__traits(getMember, object, fieldName), buffer);
         buffer.put("\n");
     }
 

@@ -1,7 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"botan": "1.12.10",
+		"botan": "1.12.12",
 		"botan-math": "1.0.3",
 		"datefmt": "1.0.4",
 		"ddmp": "0.0.1-0.dev.3",
@@ -9,10 +9,10 @@
 		"dshould": "1.1.0",
 		"eventcore": "0.8.48",
 		"fluent-asserts": "0.12.5",
-		"libasync": "0.8.4",
+		"libasync": "0.8.5",
 		"libdparse": "0.8.8",
 		"libevent": "2.0.2+2.0.16",
-		"memutils": "0.4.13",
+		"memutils": "1.0.1",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
 		"pegged": "0.4.4",

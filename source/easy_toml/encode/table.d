@@ -1,7 +1,6 @@
 module easy_toml.encode.table;
 
-import std.traits : isAssociativeArray, KeyType, isSomeString;
-import quirks : Fields;
+import std.traits : isAssociativeArray, KeyType, isSomeString, FieldNameTuple;
 import easy_toml.encode;
 import easy_toml.encode.tomlify : makesTomlKey, tomlifyKey;
 import easy_toml.encode.datetime : makesTomlOffsetDateTime, makesTomlLocalDateTime, makesTomlLocalTime, makesTomlLocalDate;
@@ -17,11 +16,11 @@ package enum bool makesTomlTable(T) = (
 package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlTable!T)
 {
-    enum auto fields = Fields!T;
+    enum auto fieldNames = FieldNameTuple!T;
 
-    static foreach (field; fields)
+    static foreach (fieldName; fieldNames)
     {
-        tomlifyField(field.name, __traits(getMember, value, field.name), buffer, parentTables);
+        tomlifyField(fieldName, __traits(getMember, value, fieldName), buffer, parentTables);
     }
 }
 
