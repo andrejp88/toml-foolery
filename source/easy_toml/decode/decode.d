@@ -158,7 +158,7 @@ if (is(S == struct))
                 {
                     if (member == address[0])
                     {
-                        putInStruct(__traits(getMember, dest, member), address[1..$], value);
+                        putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
                     }
                 }
             }
