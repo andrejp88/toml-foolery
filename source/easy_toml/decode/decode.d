@@ -1,6 +1,7 @@
 module easy_toml.decode.decode;
 
-import std.algorithm : find;
+import std.algorithm : find, map;
+import std.array : array;
 import std.exception : enforce;
 import std.traits : rvalueOf;
 
@@ -126,6 +127,97 @@ T parseToml(T)(string toml)
                                 default:
                                     throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
                             }
+                            break;
+
+                        case "TomlGrammar.array":
+
+                            string typeRule;
+
+                            string[] consumeArrayValues(ParseTree arrayValuesPT, string[] acc)
+                            in (arrayValuesPT.name == "TomlGrammar.array_values")
+                            {
+                                ParseTree firstValPT = arrayValuesPT.children[1];
+                                assert(firstValPT.name == "TomlGrammar.val");
+                                string currTypeRule = firstValPT.children[0].name;
+                                if (typeRule == "")
+                                {
+                                    typeRule = currTypeRule;
+                                }
+                                else if (typeRule != currTypeRule)
+                                {
+                                    throw new Exception(
+                                        `Mixed-type arrays not yet supported. Array started with "` ~
+                                        typeRule ~ `" but also contains "` ~ currTypeRule ~ `".`
+                                    );
+                                }
+
+                                auto restFindResult = arrayValuesPT.children.find!((e) => e.name == "TomlGrammar.array_values");
+
+                                if (restFindResult.length > 0)
+                                {
+                                    ParseTree restValPT = restFindResult[0];
+                                    return consumeArrayValues(
+                                        restValPT,
+                                        acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end]
+                                    );
+                                }
+                                else
+                                {
+                                    return acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end];
+                                }
+                            }
+
+                            auto findResult = valuePT.children[0].children.find!((e) => e.name == "TomlGrammar.array_values");
+                            if (findResult.length == 0)
+                            {
+                                throw new Exception("Recevied an emtpy array, which is not yet supported.");
+                            }
+
+                            string[] valueStrings = consumeArrayValues(findResult[0], []);
+
+                            switch (typeRule)
+                            {
+                                case "TomlGrammar.integer":
+                                    long[] valueLongs = valueStrings.map!((e) => parseTomlInteger(e)).array;
+                                    putInStruct(dest, address, valueLongs);
+                                    break;
+
+                                case "TomlGrammar.float_":
+                                    break;
+
+                                case "TomlGrammar.boolean":
+                                    break;
+
+                                case "TomlGrammar.string_":
+                                    string stringType = valuePT.children[0].children[0].name;
+                                    switch (stringType)
+                                    {
+                                        case "TomlGrammar.basic_string":
+                                            break;
+
+                                        case "TomlGrammar.ml_basic_string":
+                                            break;
+
+                                        case "TomlGrammar.literal_string":
+                                            break;
+
+                                        case "TomlGrammar.ml_literal_string":
+                                            break;
+
+                                        default:
+                                            throw new Exception("Unsupported TOML string type: " ~ stringType);
+                                    }
+
+                                    break;
+
+                                case "TomlGrammar.date_time":
+                                    break;
+
+                                default:
+                                    debug { throw new Exception("Unsupported array value type: \"" ~ typeRule ~ "\""); }
+                                    else { break; }
+                            }
+
                             break;
 
                         default:
@@ -744,4 +836,43 @@ unittest
     `);
 
     result.t.should.equal(TimeOfDay(12, 9, 59));
+}
+
+@("Array of Integers -> long[]")
+unittest
+{
+    struct S
+    {
+        long[11] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            -82,
+            0,
+            +0,
+            -0,
+            525_600,
+            -189_912,
+            0xbEaD_fAcE,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123L,
+        +111L,
+        -82L,
+        0L,
+        +0L,
+        -0L,
+        525_600L,
+        -189_912L,
+        0xbEaD_fAcEL,
+        511L,
+        0b11001101L,
+    ].staticArray!(long, 11));
 }

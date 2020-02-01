@@ -67,12 +67,6 @@ unittest
     parseTomlInteger("-189_912").should.equal(-189_912);
 }
 
-@("Underscores — Negative")
-unittest
-{
-    parseTomlInteger("-189_912").should.equal(-189_912);
-}
-
 @("Hex — lowercase")
 unittest
 {
