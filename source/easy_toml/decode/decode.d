@@ -876,3 +876,238 @@ unittest
         0b11001101L,
     ].staticArray!(long, 11));
 }
+
+@("Array of Integers -> int[]")
+unittest
+{
+    struct S
+    {
+        int[10] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            -82,
+            0,
+            +0,
+            -0,
+            525_600,
+            -189_912,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        -82,
+        0,
+        +0,
+        -0,
+        525_600,
+        -189_912,
+        511,
+        0b11001101,
+    ].staticArray!(int, 10));
+}
+
+@("Array of Integers -> short[]")
+unittest
+{
+    struct S
+    {
+        short[10] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            -82,
+            0,
+            +0,
+            -0,
+            5_600,
+            -9_912,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        -82,
+        0,
+        +0,
+        -0,
+        5_600,
+        -9_912,
+        511,
+        0b11001101,
+    ].staticArray!(short, 10));
+}
+
+@("Array of Integers -> byte[]")
+unittest
+{
+    struct S
+    {
+        byte[7] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            1_2_3,
+            +1_1_1,
+            -82,
+            0,
+            +0,
+            -0,
+            0b01001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        -82,
+        0,
+        +0,
+        -0,
+        0b01001101,
+    ].staticArray!(byte, 7));
+}
+
+@("Array of Integers -> ulong[]")
+unittest
+{
+    struct S
+    {
+        ulong[9] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            0,
+            +0,
+            -0,             # This should still work (both the -0 and this comment).
+            525_600,
+            0xbEaD_fAcE,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123L,
+        +111L,
+        0L,
+        +0L,
+        -0L,
+        525_600L,
+        0xbEaD_fAcEL,
+        511L,
+        0b11001101L,
+    ].staticArray!(ulong, 9));
+}
+
+@("Array of Integers -> uint[]")
+unittest
+{
+    struct S
+    {
+        uint[8] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            0,
+            +0,
+            -0,
+            525_600,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        0,
+        +0,
+        -0,
+        525_600,
+        511,
+        0b11001101,
+    ].staticArray!(uint, 8));
+}
+
+@("Array of Integers -> ushort[]")
+unittest
+{
+    struct S
+    {
+        ushort[8] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            0,
+            +0,
+            -0,
+            5_600,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        0,
+        +0,
+        -0,
+        5_600,
+        511,
+        0b11001101,
+    ].staticArray!(ushort, 8));
+}
+
+@("Array of Integers -> ubyte[]")
+unittest
+{
+    struct S
+    {
+        ubyte[6] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            1_2_3,
+            +1_1_1,
+            0,
+            +0,
+            -0,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([
+        123,
+        +111,
+        0,
+        +0,
+        -0,
+        0b11001101,
+    ].staticArray!(ubyte, 6));
+}
