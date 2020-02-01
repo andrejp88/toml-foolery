@@ -21,6 +21,11 @@ public Date parseTomlLocalDate(string value)
     return parseRFC3339DateOnly(value);
 }
 
+public TimeOfDay parseTomlLocalTime(string value)
+{
+    return parseRFC3339TimeOnly(value);
+}
+
 /// Parses any [RFC 3339](https://tools.ietf.org/html/rfc3339) string.
 ///
 /// The grammar in §5.6 of the above document is reproduced below for convenience.
@@ -140,6 +145,29 @@ private Date parseRFC3339DateOnly(string value)
     );
 }
 
+private TimeOfDay parseRFC3339TimeOnly(string value)
+{
+    import std.regex : ctRegex, matchFirst, Captures;
+    import std.range : padRight;
+
+    enum auto dateTime =
+        ctRegex!(`^(\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
+    //  0 full     1hr    2min   3sec       4frac
+
+    Captures!string capturesDateTime = value.matchFirst(dateTime);
+
+    string hourStr         = capturesDateTime[1];
+    string minuteStr       = capturesDateTime[2];
+    string secondStr       = capturesDateTime[3];
+    string fracStr         = capturesDateTime[4]  != "" ? capturesDateTime[7]  :  "0";
+
+    return TimeOfDay(
+        hourStr.to!int,
+        minuteStr.to!int,
+        secondStr.to!int
+    );
+}
+
 @("Offset Date-Time (UTC) -> SysTime")
 unittest
 {
@@ -235,4 +263,10 @@ unittest
 unittest
 {
     parseTomlLocalDate("2020-01-26").should.equal(Date(2020, 1, 26));
+}
+
+@("Local Time -> Time")
+unittest
+{
+    parseTomlLocalTime("13:51:15").should.equal(TimeOfDay(13, 51, 15));
 }
