@@ -4,6 +4,11 @@ import std.algorithm : find;
 import std.exception : enforce;
 import std.traits : rvalueOf;
 
+version (unittest)
+{
+    import std.datetime;
+}
+
 import easy_toml.decode;
 import easy_toml.decode.datetime;
 import easy_toml.decode.floating_point;
@@ -103,6 +108,18 @@ T parseToml(T)(string toml)
                             {
                                 case "TomlGrammar.offset_date_time":
                                     putInStruct(dest, address, parseTomlOffsetDateTime(value));
+                                    break;
+
+                                case "TomlGrammar.local_date_time":
+                                    putInStruct(dest, address, parseTomlLocalDateTime(value));
+                                    break;
+
+                                case "TomlGrammar.local_date":
+                                    putInStruct(dest, address, parseTomlLocalDate(value));
+                                    break;
+
+                                case "TomlGrammar.local_time":
+                                    putInStruct(dest, address, parseTomlLocalTime(value));
                                     break;
 
                                 default:
@@ -628,8 +645,6 @@ unittest
 @("Offset Date-Time -> SysTime")
 unittest
 {
-    import std.datetime : SysTime, DateTime, nsecs, UTC;
-
     struct S
     {
         SysTime t;
@@ -651,4 +666,60 @@ unittest
         nsecs(0),
         UTC()
     ));
+}
+
+@("Local Date-Time -> SysTime where tz = LocalTime")
+unittest
+{
+    struct S
+    {
+        SysTime t;
+    }
+
+    S result = parseToml!S(`
+        t = 2020-01-26 12:09:59
+    `);
+
+    result.t.should.equal(SysTime(
+        DateTime(
+            2020,
+            1,
+            26,
+            12,
+            9,
+            59
+        ),
+        nsecs(0),
+        null
+    ));
+}
+
+@("Local Date -> Date")
+unittest
+{
+    struct S
+    {
+        Date t;
+    }
+
+    S result = parseToml!S(`
+        t = 2020-01-26
+    `);
+
+    result.t.should.equal(Date(2020, 1, 26));
+}
+
+@("Local Time -> TimeOfDay")
+unittest
+{
+    struct S
+    {
+        TimeOfDay t;
+    }
+
+    S result = parseToml!S(`
+        t = 12:09:59
+    `);
+
+    result.t.should.equal(TimeOfDay(12, 9, 59));
 }
