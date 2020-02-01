@@ -7,6 +7,7 @@ import std.traits : rvalueOf;
 version (unittest)
 {
     import std.datetime;
+    import std.array : staticArray;
 }
 
 import easy_toml.decode;
@@ -377,6 +378,27 @@ unittest
     // This should compile but c.x can't be changed.
     putInStruct(s, ["c", "x"], 5);
     s.c.x.should.equal(s.c.x.init);
+}
+
+@("putInStruct — Static array -> Static array")
+unittest
+{
+    struct S
+    {
+        int[4] statArr;
+        int[5] badSizeStatArr;
+    }
+
+    S s;
+
+    putInStruct(s, ["statArr"], staticArray!(int, 4)([27, 92, 71, -34]));
+    s.statArr.should.equal(staticArray!(int, 4)([27, 92, 71, -34]));
+
+    putInStruct(s, ["badSizeStatArr"], staticArray!(int, 4)([62, 12, 92, 10])).should.throwAn!Exception;
+
+    int[] dynArr = [33, 22, 11, 99];
+    putInStruct(s, ["statArr"], dynArr);
+    s.statArr.should.equal(staticArray!(int, 4)([33, 22, 11, 99]));
 }
 
 
