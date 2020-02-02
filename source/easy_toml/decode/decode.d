@@ -1111,3 +1111,46 @@ unittest
         0b11001101,
     ].staticArray!(ubyte, 6));
 }
+
+@("Array of Integers -> dynamic int[]")
+unittest
+{
+    struct S
+    {
+        int[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [
+            123,
+            +111,
+            -82,
+        #   0,
+        #   +0,
+        #   -0,
+        #   525_600,
+        #   -189_912,
+        #   0o777,
+        #   0b11001101
+        ]
+    `);
+
+    result.t.should.equal([ 123, +111, -82, ]);
+
+    result = parseToml!S(`
+        t = [
+        #   123,
+        #   +111,
+        #   -82,
+        #   0,
+        #   +0,
+        #   -0,
+        #   525_600,
+            -189_912,
+            0o777,
+            0b11001101
+        ]
+    `);
+
+    result.t.should.equal([ -189_912, 511, 0b11001101 ]);
+}
