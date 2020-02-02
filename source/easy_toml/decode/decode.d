@@ -162,6 +162,8 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.float_":
+                                    real[] valueReals = valueStrings.map!((e) => parseTomlFloat(e)).array;
+                                    putInStruct(dest, address, valueReals);
                                     break;
 
                                 case "TomlGrammar.boolean":
@@ -1130,4 +1132,19 @@ unittest
     `);
 
     result.t.should.equal([ "do", "re", "mi" ]);
+}
+
+@("Array of Floats -> dynamic float[]")
+unittest
+{
+    struct S
+    {
+        float[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ 0.0, 2e5, -3.6e-2 ]
+    `);
+
+    result.t.should.equal([ 0.0f, 2e5f, -3.6e-2f ]);
 }
