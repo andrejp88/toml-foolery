@@ -167,6 +167,8 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.boolean":
+                                    bool[] valueBools = valueStrings.map!(e => e.to!bool).array;
+                                    putInStruct(dest, address, valueBools);
                                     break;
 
                                 case "TomlGrammar.string_":
@@ -1147,4 +1149,20 @@ unittest
     `);
 
     result.t.should.equal([ 0.0f, 2e5f, -3.6e-2f ]);
+}
+
+@("Array of Booleans -> dynamic bool[]")
+unittest
+{
+    struct S
+    {
+        bool[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ true, false, false, true,
+         ]
+    `);
+
+    result.t.should.equal([ true, false, false, true ]);
 }
