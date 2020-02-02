@@ -80,28 +80,7 @@ T parseToml(T)(string toml)
                             break;
 
                         case "TomlGrammar.string_":
-                            string stringType = valuePT.children[0].children[0].name;
-                            switch (stringType)
-                            {
-                                case "TomlGrammar.basic_string":
-                                    putInStruct(dest, address, parseTomlBasicString(value));
-                                    break;
-
-                                case "TomlGrammar.ml_basic_string":
-                                    putInStruct(dest, address, parseTomlBasicMultiLineString(value));
-                                    break;
-
-                                case "TomlGrammar.literal_string":
-                                    putInStruct(dest, address, parseTomlLiteralString(value));
-                                    break;
-
-                                case "TomlGrammar.ml_literal_string":
-                                    putInStruct(dest, address, parseTomlLiteralMultiLineString(value));
-                                    break;
-
-                                default:
-                                    throw new Exception("Unsupported TOML string type: " ~ stringType);
-                            }
+                            putInStruct(dest, address, parseTomlString(value));
                             break;
 
                         case "TomlGrammar.date_time":

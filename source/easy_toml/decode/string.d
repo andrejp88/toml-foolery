@@ -8,23 +8,31 @@ import std.uni;
 
 import easy_toml.decode;
 
+package string parseTomlString(string value)
+{
+    return
+        value[0..3] == `"""` ? parseTomlBasicMultiLineString(value) :
+        value[0..3] == `'''` ? parseTomlLiteralMultiLineString(value) :
+        value[0..1] == `"`   ? parseTomlBasicString(value) :
+                               parseTomlLiteralString(value);
+}
 
-package string parseTomlBasicString(string value)
+private string parseTomlBasicString(string value)
 {
     return value[1 .. $-1].unescaped;
 }
 
-package string parseTomlBasicMultiLineString(string value)
+private string parseTomlBasicMultiLineString(string value)
 {
     return value[3 .. $-3].unescaped.removeEscapedLinebreaks.removeLeadingNewline;
 }
 
-package string parseTomlLiteralString(string value)
+private string parseTomlLiteralString(string value)
 {
     return value[1 .. $-1];
 }
 
-package string parseTomlLiteralMultiLineString(string value)
+private string parseTomlLiteralMultiLineString(string value)
 {
     return value[3 .. $-3].removeLeadingNewline;
 }
