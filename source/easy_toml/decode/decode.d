@@ -168,25 +168,8 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.string_":
-                                    string stringType = valuePT.children[0].children[0].name;
-                                    switch (stringType)
-                                    {
-                                        case "TomlGrammar.basic_string":
-                                            break;
-
-                                        case "TomlGrammar.ml_basic_string":
-                                            break;
-
-                                        case "TomlGrammar.literal_string":
-                                            break;
-
-                                        case "TomlGrammar.ml_literal_string":
-                                            break;
-
-                                        default:
-                                            throw new Exception("Unsupported TOML string type: " ~ stringType);
-                                    }
-
+                                    string[] valueParsedStrings = valueStrings.map!((e) => parseTomlString(e)).array;
+                                    putInStruct(dest, address, valueParsedStrings);
                                     break;
 
                                 case "TomlGrammar.date_time":
@@ -1132,4 +1115,19 @@ unittest
     `);
 
     result.t.should.equal([ -189_912, 511, 0b11001101 ]);
+}
+
+@("Array of Strings -> dynamic string[]")
+unittest
+{
+    struct S
+    {
+        string[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ "do", "re", "mi" ]
+    `);
+
+    result.t.should.equal([ "do", "re", "mi" ]);
 }
