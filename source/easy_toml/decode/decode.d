@@ -838,7 +838,7 @@ unittest
     result.t.should.equal(TimeOfDay(12, 9, 59));
 }
 
-@("Array of Integers -> long[]")
+@("Array of Integers -> static long[]")
 unittest
 {
     struct S
@@ -877,7 +877,7 @@ unittest
     ].staticArray!(long, 11));
 }
 
-@("Array of Integers -> int[]")
+@("Array of Integers -> static int[]")
 unittest
 {
     struct S
@@ -914,7 +914,7 @@ unittest
     ].staticArray!(int, 10));
 }
 
-@("Array of Integers -> short[]")
+@("Array of Integers -> static short[]")
 unittest
 {
     struct S
@@ -951,7 +951,7 @@ unittest
     ].staticArray!(short, 10));
 }
 
-@("Array of Integers -> byte[]")
+@("Array of Integers -> static byte[]")
 unittest
 {
     struct S
@@ -982,7 +982,7 @@ unittest
     ].staticArray!(byte, 7));
 }
 
-@("Array of Integers -> ulong[]")
+@("Array of Integers -> static ulong[]")
 unittest
 {
     struct S
@@ -1017,7 +1017,7 @@ unittest
     ].staticArray!(ulong, 9));
 }
 
-@("Array of Integers -> uint[]")
+@("Array of Integers -> static uint[]")
 unittest
 {
     struct S
@@ -1050,7 +1050,7 @@ unittest
     ].staticArray!(uint, 8));
 }
 
-@("Array of Integers -> ushort[]")
+@("Array of Integers -> static ushort[]")
 unittest
 {
     struct S
@@ -1083,7 +1083,7 @@ unittest
     ].staticArray!(ushort, 8));
 }
 
-@("Array of Integers -> ubyte[]")
+@("Array of Integers -> static ubyte[]")
 unittest
 {
     struct S
