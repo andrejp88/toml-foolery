@@ -57,8 +57,8 @@ T parseToml(T)(string toml)
             {
                 case "TomlGrammar.keyval":
 
-                    ParseTree keyPT = partOfLine.children.find!((e) => e.name == "TomlGrammar.key")[0];
-                    ParseTree valuePT = partOfLine.children.find!((e) => e.name == "TomlGrammar.val")[0];
+                    ParseTree keyPT = partOfLine.children.find!(e => e.name == "TomlGrammar.key")[0];
+                    ParseTree valuePT = partOfLine.children.find!(e => e.name == "TomlGrammar.val")[0];
 
                     string key = keyPT.input[keyPT.begin .. keyPT.end];
                     string value = valuePT.input[valuePT.begin .. valuePT.end];
@@ -130,7 +130,7 @@ T parseToml(T)(string toml)
                                     );
                                 }
 
-                                auto restFindResult = arrayValuesPT.children.find!((e) => e.name == "TomlGrammar.array_values");
+                                auto restFindResult = arrayValuesPT.children.find!(e => e.name == "TomlGrammar.array_values");
 
                                 if (restFindResult.length > 0)
                                 {
@@ -146,7 +146,7 @@ T parseToml(T)(string toml)
                                 }
                             }
 
-                            auto findResult = valuePT.children[0].children.find!((e) => e.name == "TomlGrammar.array_values");
+                            auto findResult = valuePT.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
                             if (findResult.length == 0)
                             {
                                 throw new Exception("Recevied an emtpy array, which is not yet supported.");
@@ -157,12 +157,12 @@ T parseToml(T)(string toml)
                             switch (typeRule)
                             {
                                 case "TomlGrammar.integer":
-                                    long[] valueLongs = valueStrings.map!((e) => parseTomlInteger(e)).array;
+                                    long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
                                     putInStruct(dest, address, valueLongs);
                                     break;
 
                                 case "TomlGrammar.float_":
-                                    real[] valueReals = valueStrings.map!((e) => parseTomlFloat(e)).array;
+                                    real[] valueReals = valueStrings.map!(e => parseTomlFloat(e)).array;
                                     putInStruct(dest, address, valueReals);
                                     break;
 
@@ -172,7 +172,7 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.string_":
-                                    string[] valueParsedStrings = valueStrings.map!((e) => parseTomlString(e)).array;
+                                    string[] valueParsedStrings = valueStrings.map!(e => parseTomlString(e)).array;
                                     putInStruct(dest, address, valueParsedStrings);
                                     break;
 
