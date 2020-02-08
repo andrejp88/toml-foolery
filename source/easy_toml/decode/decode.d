@@ -45,6 +45,8 @@ T parseToml(T)(string toml)
 
     T dest;
 
+    string[] tableAddress = [];
+
     foreach (ParseTree line; lines)
     {
         assert(line.name == "TomlGrammar.expression",
@@ -63,7 +65,7 @@ T parseToml(T)(string toml)
                     string key = keyPT.input[keyPT.begin .. keyPT.end];
                     string value = valuePT.input[valuePT.begin .. valuePT.end];
 
-                    string[] address = [ key ];
+                    string[] address = tableAddress ~ key;
 
                     switch (valuePT.children[0].name)
                     {
@@ -247,6 +249,18 @@ T parseToml(T)(string toml)
                     break;
 
                 case "TomlGrammar.table":
+
+                    ParseTree tableKeyPT =
+                        partOfLine
+                        .children
+                        .find!(e => e.name == "TomlGrammar.std_table")[0]
+                        .children
+                        .find!(e => e.name == "TomlGrammar.key")[0];
+
+                    string tableKey = tableKeyPT.input[tableKeyPT.begin .. tableKeyPT.end];
+
+                    tableAddress = [ tableKey ];
+
                     break;
 
                 default:
@@ -1304,4 +1318,29 @@ unittest
     s.f.should.equal([]);
     s.s.should.equal([]);
     s.t.should.equal([]);
+}
+
+@("Table - one nested")
+unittest
+{
+    struct Inner
+    {
+        int x;
+    }
+
+    struct Outer
+    {
+        Inner inn;
+        int x;
+    }
+
+    Outer o = parseToml!Outer(`
+    x = 5
+
+    [inn]
+    x = 10
+    `);
+
+    o.x.should.equal(5);
+    o.inn.x.should.equal(10);
 }
