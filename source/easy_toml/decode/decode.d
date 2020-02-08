@@ -62,10 +62,9 @@ T parseToml(T)(string toml)
                     ParseTree keyPT = partOfLine.children.find!(e => e.name == "TomlGrammar.key")[0];
                     ParseTree valuePT = partOfLine.children.find!(e => e.name == "TomlGrammar.val")[0];
 
-                    string key = keyPT.input[keyPT.begin .. keyPT.end];
                     string value = valuePT.input[valuePT.begin .. valuePT.end];
 
-                    string[] address = tableAddress ~ key;
+                    string[] address = tableAddress ~ splitDottedKey(keyPT);
 
                     switch (valuePT.children[0].name)
                     {
@@ -250,32 +249,13 @@ T parseToml(T)(string toml)
 
                 case "TomlGrammar.table":
 
-                    ParseTree tableKeyPT =
+                    tableAddress =
                         partOfLine
                         .children
                         .find!(e => e.name == "TomlGrammar.std_table")[0]
                         .children
-                        .find!(e => e.name == "TomlGrammar.key")[0];
-
-                    tableAddress =
-                        tableKeyPT.children[0].name == "TomlGrammar.dotted_key" ?
-                        (
-                            tableKeyPT.children[0]
-                                .children
-                                .filter!(e => e.name == "TomlGrammar.simple_key")
-                                .map!(e =>
-                                    e.children[0].name == "TomlGrammar.quoted_key" ?
-                                    e.input[e.begin + 1 .. e.end - 1] :
-                                    e.input[e.begin .. e.end]
-                                )
-                                .array
-                        )
-                        :
-                        (
-                            tableKeyPT.children[0].children[0].name == "TomlGrammar.quoted_key" ?
-                            [ tableKeyPT.input[tableKeyPT.begin + 1 .. tableKeyPT.end - 1] ] :
-                            [ tableKeyPT.input[tableKeyPT.begin .. tableKeyPT.end] ]
-                        );
+                        .find!(e => e.name == "TomlGrammar.key")[0]
+                        .splitDottedKey;
 
                     break;
 
@@ -540,6 +520,30 @@ unittest
     int[] dynArr = [33, 22, 11, 99];
     putInStruct(s, ["statArr"], dynArr);
     s.statArr.should.equal(staticArray!(int, 4)([33, 22, 11, 99]));
+}
+
+private string[] splitDottedKey(ParseTree pt)
+pure
+in (pt.name == "TomlGrammar.key")
+{
+    return pt.children[0].name == "TomlGrammar.dotted_key" ?
+                        (
+                            pt.children[0]
+                                .children
+                                .filter!(e => e.name == "TomlGrammar.simple_key")
+                                .map!(e =>
+                                    e.children[0].name == "TomlGrammar.quoted_key" ?
+                                    e.input[e.begin + 1 .. e.end - 1] :
+                                    e.input[e.begin .. e.end]
+                                )
+                                .array
+                        )
+                        :
+                        (
+                            pt.children[0].children[0].name == "TomlGrammar.quoted_key" ?
+                            [ pt.input[pt.begin + 1 .. pt.end - 1] ] :
+                            [ pt.input[pt.begin .. pt.end] ]
+                        );
 }
 
 
@@ -1414,6 +1418,39 @@ unittest
 
     [mantle.outer."iñner"]
     heat = 9001
+
+    `);
+
+    earth.mantle.outer.iñner.heat.should.equal(9001);
+}
+
+@("Table - dotted keys")
+unittest
+{
+    struct InnerCore
+    {
+        int heat;
+    }
+
+    struct OuterCore
+    {
+        InnerCore iñner;
+    }
+
+    struct Mantle
+    {
+        OuterCore outer;
+    }
+
+    struct Earth
+    {
+        Mantle mantle;
+    }
+
+    Earth earth = parseToml!Earth(`
+
+    [mantle.outer]
+    "iñner".heat = 9001
 
     `);
 
