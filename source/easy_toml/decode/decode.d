@@ -182,7 +182,8 @@ T parseToml(T)(string toml)
                             auto findResult = valuePT.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
                             if (findResult.length == 0)
                             {
-                                throw new Exception("Recevied an emtpy array, which is not yet supported.");
+                                putInStruct(dest, address, []);
+                                break;
                             }
 
                             string[] valueStrings = consumeArrayValues(findResult[0], []);
@@ -1277,4 +1278,30 @@ unittest
     `);
 
     result.t.should.equal([ TimeOfDay(12, 53, 23), TimeOfDay(0, 20, 1), TimeOfDay(19, 22, 54), ]);
+}
+
+@("Arrays — Empty")
+unittest
+{
+    struct S
+    {
+        int[] i;
+        float[] f;
+        string[] s;
+        TimeOfDay[] t;
+    }
+
+    S s;
+
+    s = parseToml!S(`
+    i = []
+    f = []
+    s = []
+    t = []
+    `);
+
+    s.i.should.equal([]);
+    s.f.should.equal([]);
+    s.s.should.equal([]);
+    s.t.should.equal([]);
 }
