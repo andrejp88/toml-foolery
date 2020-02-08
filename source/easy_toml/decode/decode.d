@@ -1,6 +1,6 @@
 module easy_toml.decode.decode;
 
-import std.algorithm : find, map, canFind;
+import std.algorithm;
 import std.array : array;
 import std.exception : enforce;
 import std.traits : rvalueOf;
@@ -257,9 +257,25 @@ T parseToml(T)(string toml)
                         .children
                         .find!(e => e.name == "TomlGrammar.key")[0];
 
-                    string tableKey = tableKeyPT.input[tableKeyPT.begin .. tableKeyPT.end];
-
-                    tableAddress = [ tableKey ];
+                    tableAddress =
+                        tableKeyPT.children[0].name == "TomlGrammar.dotted_key" ?
+                        (
+                            tableKeyPT.children[0]
+                                .children
+                                .filter!(e => e.name == "TomlGrammar.simple_key")
+                                .map!(e =>
+                                    e.children[0].name == "TomlGrammar.quoted_key" ?
+                                    e.input[e.begin + 1 .. e.end - 1] :
+                                    e.input[e.begin .. e.end]
+                                )
+                                .array
+                        )
+                        :
+                        (
+                            tableKeyPT.children[0].children[0].name == "TomlGrammar.quoted_key" ?
+                            [ tableKeyPT.input[tableKeyPT.begin + 1 .. tableKeyPT.end - 1] ] :
+                            [ tableKeyPT.input[tableKeyPT.begin .. tableKeyPT.end] ]
+                        );
 
                     break;
 
@@ -1320,7 +1336,7 @@ unittest
     s.t.should.equal([]);
 }
 
-@("Table - one nested")
+@("Table - one level")
 unittest
 {
     struct Inner
@@ -1343,4 +1359,63 @@ unittest
 
     o.x.should.equal(5);
     o.inn.x.should.equal(10);
+}
+
+@("Table - two levels")
+unittest
+{
+    struct Nucleus
+    {
+        int c;
+    }
+
+    struct Inner
+    {
+        Nucleus nuc;
+    }
+
+    struct Outer
+    {
+        Inner inn;
+    }
+
+    Outer o = parseToml!Outer(`
+    [inn.nuc]
+    c = 2
+    `);
+
+    o.inn.nuc.c.should.equal(2);
+}
+
+@("Table - three level + unicode")
+unittest
+{
+    struct InnerCore
+    {
+        int heat;
+    }
+
+    struct OuterCore
+    {
+        InnerCore iñner;
+    }
+
+    struct Mantle
+    {
+        OuterCore outer;
+    }
+
+    struct Earth
+    {
+        Mantle mantle;
+    }
+
+    Earth earth = parseToml!Earth(`
+
+    [mantle.outer."iñner"]
+    heat = 9001
+
+    `);
+
+    earth.mantle.outer.iñner.heat.should.equal(9001);
 }
