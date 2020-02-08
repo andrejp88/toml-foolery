@@ -7,9 +7,9 @@ import std.variant : Algebraic;
 import easy_toml.decode;
 
 
-alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
+package alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
 
-private DateAndOrTime parseTomlGenericDateTime(string value)
+package DateAndOrTime parseTomlGenericDateTime(string value)
 {
     enum auto offsetDateTimeRegEx =
         ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?(?:[Zz]|([+-])(\d\d):(\d\d))$`);
@@ -39,7 +39,13 @@ private DateAndOrTime parseTomlGenericDateTime(string value)
     if (!captures.empty) return DateAndOrTime(parseRFC3339DateOnly(captures));
 
     captures = value.matchFirst(timeRegex);
-    assert (!captures.empty);
+    assert (!captures.empty,
+        `Input "` ~ value ~ `" matches none of the following regexes:` ~
+        "\n\t" ~ offsetDateTimeRegEx.to!string ~
+        "\n\t" ~ localDateTimeRegEx.to!string ~
+        "\n\t" ~ dateRegex.to!string ~
+        "\n\t" ~ timeRegex.to!string
+    );
     return DateAndOrTime(parseRFC3339TimeOnly(captures));
 }
 

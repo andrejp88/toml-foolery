@@ -1,6 +1,6 @@
 module easy_toml.decode.decode;
 
-import std.algorithm : find, map;
+import std.algorithm : find, map, canFind;
 import std.array : array;
 import std.exception : enforce;
 import std.traits : rvalueOf;
@@ -110,23 +110,56 @@ T parseToml(T)(string toml)
 
                         case "TomlGrammar.array":
 
-                            string typeRule;
+                            string[] typeRules;
 
                             string[] consumeArrayValues(ParseTree arrayValuesPT, string[] acc)
                             in (arrayValuesPT.name == "TomlGrammar.array_values")
                             {
+                                string[] getTypeRules(ParseTree valPT)
+                                {
+                                    string[] _getTypeRules(ParseTree valPT, string fullMatch, string[] acc)
+                                    {
+                                        if (
+                                            valPT.input[valPT.begin .. valPT.end] != fullMatch ||
+                                            !([
+                                                "TomlGrammar.string_",
+                                                "TomlGrammar.boolean",
+                                                "TomlGrammar.array",
+                                                "TomlGrammar.inline_table",
+                                                "TomlGrammar.date_time",
+                                                "TomlGrammar.float_",
+                                                "TomlGrammar.integer",
+                                                "TomlGrammar.offset_date_time",
+                                                "TomlGrammar.local_date_time",
+                                                "TomlGrammar.local_date",
+                                                "TomlGrammar.local_time",
+                                              ].canFind(valPT.name))
+                                        )
+                                        {
+                                            return acc;
+                                        }
+                                        else
+                                        {
+                                            return _getTypeRules(valPT.children[0], fullMatch, acc ~ valPT.name);
+                                        }
+                                    }
+
+                                    // Trabampoline
+                                    return _getTypeRules(valPT.children[0], valPT.input[valPT.begin .. valPT.end], []);
+                                }
+
                                 ParseTree firstValPT = arrayValuesPT.children[1];
                                 assert(firstValPT.name == "TomlGrammar.val");
-                                string currTypeRule = firstValPT.children[0].name;
-                                if (typeRule == "")
+                                string[] currTypeRules = getTypeRules(firstValPT);
+                                if (typeRules.length == 0)
                                 {
-                                    typeRule = currTypeRule;
+                                    typeRules = currTypeRules;
                                 }
-                                else if (typeRule != currTypeRule)
+                                else if (typeRules != currTypeRules)
                                 {
                                     throw new Exception(
                                         `Mixed-type arrays not yet supported. Array started with "` ~
-                                        typeRule ~ `" but also contains "` ~ currTypeRule ~ `".`
+                                        typeRules.to!string ~ `" but also contains "` ~ currTypeRules.to!string ~ `".`
                                     );
                                 }
 
@@ -154,7 +187,7 @@ T parseToml(T)(string toml)
 
                             string[] valueStrings = consumeArrayValues(findResult[0], []);
 
-                            switch (typeRule)
+                            switch (typeRules[0])
                             {
                                 case "TomlGrammar.integer":
                                     long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
@@ -177,10 +210,29 @@ T parseToml(T)(string toml)
                                     break;
 
                                 case "TomlGrammar.date_time":
+                                    auto datesAndOrTimes = valueStrings.map!(e => parseTomlGenericDateTime(e));
+
+                                    if (datesAndOrTimes[0].type == typeid(SysTime))
+                                    {
+                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
+                                    }
+                                    else if (datesAndOrTimes[0].type == typeid(Date))
+                                    {
+                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
+                                    }
+                                    else if (datesAndOrTimes[0].type == typeid(TimeOfDay))
+                                    {
+                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Unsupported TOML date_time sub-type: " ~ datesAndOrTimes[0].type.to!string);
+                                    }
+
                                     break;
 
                                 default:
-                                    debug { throw new Exception("Unsupported array value type: \"" ~ typeRule ~ "\""); }
+                                    debug { throw new Exception("Unsupported array value type: \"" ~ typeRules[0] ~ "\""); }
                                     else { break; }
                             }
 
@@ -1165,4 +1217,64 @@ unittest
     `);
 
     result.t.should.equal([ true, false, false, true ]);
+}
+
+@("Array of Offset Date-Times -> dynamic SysTime[]")
+unittest
+{
+    struct S
+    {
+        SysTime[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ 2020-02-02 12:51:05Z ]
+    `);
+
+    result.t.should.equal([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), UTC()) ]);
+}
+
+@("Array of Local Date-Times -> dynamic SysTime[]")
+unittest
+{
+    struct S
+    {
+        SysTime[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ 2020-02-02 12:51:05 ]
+    `);
+
+    result.t.should.equal([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), LocalTime()) ]);
+}
+
+@("Array of Local Dates -> dynamic Date[]")
+unittest
+{
+    struct S
+    {
+        Date[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ 2020-02-02, 2020-10-31 ]
+    `);
+
+    result.t.should.equal([ Date(2020, 2, 2), Date(2020, 10, 31) ]);
+}
+
+@("Array of Local Times -> dynamic TimeOfDay[]")
+unittest
+{
+    struct S
+    {
+        TimeOfDay[] t;
+    }
+
+    S result = parseToml!S(`
+        t = [ 12:53:23, 00:20:01, 19:22:54 ]
+    `);
+
+    result.t.should.equal([ TimeOfDay(12, 53, 23), TimeOfDay(0, 20, 1), TimeOfDay(19, 22, 54), ]);
 }
