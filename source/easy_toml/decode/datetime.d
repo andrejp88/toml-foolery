@@ -1,29 +1,78 @@
 module easy_toml.decode.datetime;
 
-import easy_toml.decode;
 import std.datetime;
+import std.regex : ctRegex, matchFirst, Captures;
+import std.variant : Algebraic;
 
+import easy_toml.decode;
+
+
+alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
+
+private DateAndOrTime parseTomlGenericDateTime(string value)
+{
+    enum auto offsetDateTimeRegEx =
+        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?(?:[Zz]|([+-])(\d\d):(\d\d))$`);
+    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac          8tzd  9tzh   10tzm
+
+    enum auto localDateTimeRegEx =
+        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
+    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac
+
+    enum auto dateRegex =
+        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)$`);
+    //  0 full     1year      2mon   3day
+
+    enum auto timeRegex =
+        ctRegex!(`^(\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
+    //  0 full     1hr    2min   3sec       4frac
+
+    Captures!string captures;
+
+    captures = value.matchFirst(offsetDateTimeRegEx);
+    if (!captures.empty) return DateAndOrTime(parseRFC3339(captures));
+
+    captures = value.matchFirst(localDateTimeRegEx);
+    if (!captures.empty) return DateAndOrTime(parseRFC3339NoOffset(captures));
+
+    captures = value.matchFirst(dateRegex);
+    if (!captures.empty) return DateAndOrTime(parseRFC3339DateOnly(captures));
+
+    captures = value.matchFirst(timeRegex);
+    assert (!captures.empty);
+    return DateAndOrTime(parseRFC3339TimeOnly(captures));
+}
 
 /// Up to nanosecond precision is supported.
 /// Additional precision is truncated, obeying the TOML spec.
-public SysTime parseTomlOffsetDateTime(string value)
+package SysTime parseTomlOffsetDateTime(string value)
 {
-    return parseRFC3339(value);
+    DateAndOrTime dt = parseTomlGenericDateTime(value);
+    assert(dt.peek!SysTime !is null, "Expected SysTime, but got: " ~ dt.type.to!string);
+    assert(dt.get!SysTime.timezone != LocalTime(), "Expected SysTime with an offset, but got LocalTime.");
+    return dt.get!SysTime;
 }
 
-public SysTime parseTomlLocalDateTime(string value)
+package SysTime parseTomlLocalDateTime(string value)
 {
-    return parseRFC3339NoOffset(value);
+    DateAndOrTime dt = parseTomlGenericDateTime(value);
+    assert(dt.peek!SysTime !is null, "Expected SysTime, but got: " ~ dt.type.to!string);
+    assert(dt.get!SysTime.timezone == LocalTime(), "Expected SysTime with LocalTime, but got time zone: " ~ dt.get!SysTime.timezone.to!string);
+    return dt.get!SysTime;
 }
 
-public Date parseTomlLocalDate(string value)
+package Date parseTomlLocalDate(string value)
 {
-    return parseRFC3339DateOnly(value);
+    DateAndOrTime dt = parseTomlGenericDateTime(value);
+    assert(dt.peek!Date !is null, "Expected Date, but got: " ~ dt.type.to!string);
+    return dt.get!Date;
 }
 
-public TimeOfDay parseTomlLocalTime(string value)
+package TimeOfDay parseTomlLocalTime(string value)
 {
-    return parseRFC3339TimeOnly(value);
+    DateAndOrTime dt = parseTomlGenericDateTime(value);
+    assert(dt.peek!TimeOfDay !is null, "Expected TimeOfDay, but got: " ~ dt.type.to!string);
+    return dt.get!TimeOfDay;
 }
 
 /// Parses any [RFC 3339](https://tools.ietf.org/html/rfc3339) string.
@@ -54,27 +103,20 @@ public TimeOfDay parseTomlLocalTime(string value)
 /// Throws:
 ///     DateTimeException if the given string represents an invalid date.
 ///
-private SysTime parseRFC3339(string value)
+private SysTime parseRFC3339(Captures!string captures)
 {
-    import std.regex : ctRegex, matchFirst, Captures;
     import std.range : padRight;
 
-    enum auto dateTime =
-        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?(?:[Zz]|([+-])(\d\d):(\d\d))$`);
-    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac          8tzd  9tzh   10tzm
-
-    Captures!string capturesDateTime = value.matchFirst(dateTime);
-
-    string yearStr         = capturesDateTime[1];
-    string monthStr        = capturesDateTime[2];
-    string dayStr          = capturesDateTime[3];
-    string hourStr         = capturesDateTime[4];
-    string minuteStr       = capturesDateTime[5];
-    string secondStr       = capturesDateTime[6];
-    string fracStr         = capturesDateTime[7]  != "" ? capturesDateTime[7]  :  "0";
-    string offsetDirStr    = capturesDateTime[8]  != "" ? capturesDateTime[8]  :  "+";
-    string hourOffsetStr   = capturesDateTime[9]  != "" ? capturesDateTime[9]  : "00";
-    string minuteOffsetStr = capturesDateTime[10] != "" ? capturesDateTime[10] : "00";
+    string yearStr         = captures[1];
+    string monthStr        = captures[2];
+    string dayStr          = captures[3];
+    string hourStr         = captures[4];
+    string minuteStr       = captures[5];
+    string secondStr       = captures[6];
+    string fracStr         = captures[7]  != "" ? captures[7]  :  "0";
+    string offsetDirStr    = captures[8]  != "" ? captures[8]  :  "+";
+    string hourOffsetStr   = captures[9]  != "" ? captures[9]  : "00";
+    string minuteOffsetStr = captures[10] != "" ? captures[10] : "00";
 
     return SysTime(
         DateTime(
@@ -90,25 +132,18 @@ private SysTime parseRFC3339(string value)
     );
 }
 
-private SysTime parseRFC3339NoOffset(string value)
+private SysTime parseRFC3339NoOffset(Captures!string captures)
 out (retVal; retVal.timezone == LocalTime())
 {
-    import std.regex : ctRegex, matchFirst, Captures;
     import std.range : padRight;
 
-    enum auto dateTime =
-        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
-    //  0 full     1year      2mon   3day       4hr    5min   6sec       7frac
-
-    Captures!string capturesDateTime = value.matchFirst(dateTime);
-
-    string yearStr         = capturesDateTime[1];
-    string monthStr        = capturesDateTime[2];
-    string dayStr          = capturesDateTime[3];
-    string hourStr         = capturesDateTime[4];
-    string minuteStr       = capturesDateTime[5];
-    string secondStr       = capturesDateTime[6];
-    string fracStr         = capturesDateTime[7]  != "" ? capturesDateTime[7]  :  "0";
+    string yearStr         = captures[1];
+    string monthStr        = captures[2];
+    string dayStr          = captures[3];
+    string hourStr         = captures[4];
+    string minuteStr       = captures[5];
+    string secondStr       = captures[6];
+    string fracStr         = captures[7]  != "" ? captures[7]  :  "0";
 
     return SysTime(
         DateTime(
@@ -123,20 +158,13 @@ out (retVal; retVal.timezone == LocalTime())
     );
 }
 
-private Date parseRFC3339DateOnly(string value)
+private Date parseRFC3339DateOnly(Captures!string captures)
 {
-    import std.regex : ctRegex, matchFirst, Captures;
     import std.range : padRight;
 
-    enum auto date =
-        ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)$`);
-    //  0 full     1year      2mon   3day
-
-    Captures!string capturesDate = value.matchFirst(date);
-
-    string yearStr         = capturesDate[1];
-    string monthStr        = capturesDate[2];
-    string dayStr          = capturesDate[3];
+    string yearStr         = captures[1];
+    string monthStr        = captures[2];
+    string dayStr          = captures[3];
 
     return Date(
         yearStr.to!int,
@@ -145,21 +173,14 @@ private Date parseRFC3339DateOnly(string value)
     );
 }
 
-private TimeOfDay parseRFC3339TimeOnly(string value)
+private TimeOfDay parseRFC3339TimeOnly(Captures!string captures)
 {
-    import std.regex : ctRegex, matchFirst, Captures;
     import std.range : padRight;
 
-    enum auto dateTime =
-        ctRegex!(`^(\d\d):(\d\d):(\d\d)(?:\.(\d+))?$`);
-    //  0 full     1hr    2min   3sec       4frac
-
-    Captures!string capturesDateTime = value.matchFirst(dateTime);
-
-    string hourStr         = capturesDateTime[1];
-    string minuteStr       = capturesDateTime[2];
-    string secondStr       = capturesDateTime[3];
-    string fracStr         = capturesDateTime[4]  != "" ? capturesDateTime[7]  :  "0";
+    string hourStr         = captures[1];
+    string minuteStr       = captures[2];
+    string secondStr       = captures[3];
+    string fracStr         = captures[4]  != "" ? captures[7]  :  "0";
 
     return TimeOfDay(
         hourStr.to!int,
