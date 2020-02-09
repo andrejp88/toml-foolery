@@ -58,193 +58,7 @@ T parseToml(T)(string toml)
             switch (partOfLine.name)
             {
                 case "TomlGrammar.keyval":
-
-                    ParseTree keyPT = partOfLine.children.find!(e => e.name == "TomlGrammar.key")[0];
-                    ParseTree valuePT = partOfLine.children.find!(e => e.name == "TomlGrammar.val")[0];
-
-                    string value = valuePT.input[valuePT.begin .. valuePT.end];
-
-                    string[] address = tableAddress ~ splitDottedKey(keyPT);
-
-                    switch (valuePT.children[0].name)
-                    {
-                        case "TomlGrammar.integer":
-                            putInStruct(dest, address, parseTomlInteger(value));
-                            break;
-
-                        case "TomlGrammar.float_":
-                            putInStruct(dest, address, parseTomlFloat(value));
-                            break;
-
-                        case "TomlGrammar.boolean":
-                            putInStruct(dest, address, value.to!bool);
-                            break;
-
-                        case "TomlGrammar.string_":
-                            putInStruct(dest, address, parseTomlString(value));
-                            break;
-
-                        case "TomlGrammar.date_time":
-                            string dateTimeType = valuePT.children[0].children[0].name;
-                            switch (dateTimeType)
-                            {
-                                case "TomlGrammar.offset_date_time":
-                                    putInStruct(dest, address, parseTomlOffsetDateTime(value));
-                                    break;
-
-                                case "TomlGrammar.local_date_time":
-                                    putInStruct(dest, address, parseTomlLocalDateTime(value));
-                                    break;
-
-                                case "TomlGrammar.local_date":
-                                    putInStruct(dest, address, parseTomlLocalDate(value));
-                                    break;
-
-                                case "TomlGrammar.local_time":
-                                    putInStruct(dest, address, parseTomlLocalTime(value));
-                                    break;
-
-                                default:
-                                    throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
-                            }
-                            break;
-
-                        case "TomlGrammar.array":
-
-                            string[] typeRules;
-
-                            string[] consumeArrayValues(ParseTree arrayValuesPT, string[] acc)
-                            in (arrayValuesPT.name == "TomlGrammar.array_values")
-                            {
-                                string[] getTypeRules(ParseTree valPT)
-                                {
-                                    string[] _getTypeRules(ParseTree valPT, string fullMatch, string[] acc)
-                                    {
-                                        if (
-                                            valPT.input[valPT.begin .. valPT.end] != fullMatch ||
-                                            !([
-                                                "TomlGrammar.string_",
-                                                "TomlGrammar.boolean",
-                                                "TomlGrammar.array",
-                                                "TomlGrammar.inline_table",
-                                                "TomlGrammar.date_time",
-                                                "TomlGrammar.float_",
-                                                "TomlGrammar.integer",
-                                                "TomlGrammar.offset_date_time",
-                                                "TomlGrammar.local_date_time",
-                                                "TomlGrammar.local_date",
-                                                "TomlGrammar.local_time",
-                                              ].canFind(valPT.name))
-                                        )
-                                        {
-                                            return acc;
-                                        }
-                                        else
-                                        {
-                                            return _getTypeRules(valPT.children[0], fullMatch, acc ~ valPT.name);
-                                        }
-                                    }
-
-                                    // Trabampoline
-                                    return _getTypeRules(valPT.children[0], valPT.input[valPT.begin .. valPT.end], []);
-                                }
-
-                                ParseTree firstValPT = arrayValuesPT.children[1];
-                                assert(firstValPT.name == "TomlGrammar.val");
-                                string[] currTypeRules = getTypeRules(firstValPT);
-                                if (typeRules.length == 0)
-                                {
-                                    typeRules = currTypeRules;
-                                }
-                                else if (typeRules != currTypeRules)
-                                {
-                                    throw new Exception(
-                                        `Mixed-type arrays not yet supported. Array started with "` ~
-                                        typeRules.to!string ~ `" but also contains "` ~ currTypeRules.to!string ~ `".`
-                                    );
-                                }
-
-                                auto restFindResult = arrayValuesPT.children.find!(e => e.name == "TomlGrammar.array_values");
-
-                                if (restFindResult.length > 0)
-                                {
-                                    ParseTree restValPT = restFindResult[0];
-                                    return consumeArrayValues(
-                                        restValPT,
-                                        acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end]
-                                    );
-                                }
-                                else
-                                {
-                                    return acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end];
-                                }
-                            }
-
-                            auto findResult = valuePT.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
-                            if (findResult.length == 0)
-                            {
-                                putInStruct(dest, address, []);
-                                break;
-                            }
-
-                            string[] valueStrings = consumeArrayValues(findResult[0], []);
-
-                            switch (typeRules[0])
-                            {
-                                case "TomlGrammar.integer":
-                                    long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
-                                    putInStruct(dest, address, valueLongs);
-                                    break;
-
-                                case "TomlGrammar.float_":
-                                    real[] valueReals = valueStrings.map!(e => parseTomlFloat(e)).array;
-                                    putInStruct(dest, address, valueReals);
-                                    break;
-
-                                case "TomlGrammar.boolean":
-                                    bool[] valueBools = valueStrings.map!(e => e.to!bool).array;
-                                    putInStruct(dest, address, valueBools);
-                                    break;
-
-                                case "TomlGrammar.string_":
-                                    string[] valueParsedStrings = valueStrings.map!(e => parseTomlString(e)).array;
-                                    putInStruct(dest, address, valueParsedStrings);
-                                    break;
-
-                                case "TomlGrammar.date_time":
-                                    auto datesAndOrTimes = valueStrings.map!(e => parseTomlGenericDateTime(e));
-
-                                    if (datesAndOrTimes[0].type == typeid(SysTime))
-                                    {
-                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
-                                    }
-                                    else if (datesAndOrTimes[0].type == typeid(Date))
-                                    {
-                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
-                                    }
-                                    else if (datesAndOrTimes[0].type == typeid(TimeOfDay))
-                                    {
-                                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
-                                    }
-                                    else
-                                    {
-                                        throw new Exception("Unsupported TOML date_time sub-type: " ~ datesAndOrTimes[0].type.to!string);
-                                    }
-
-                                    break;
-
-                                default:
-                                    debug { throw new Exception("Unsupported array value type: \"" ~ typeRules[0] ~ "\""); }
-                                    else { break; }
-                            }
-
-                            break;
-
-                        default:
-                            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ valuePT.children[0].name ~ "\""); }
-                            else { break; }
-                    }
-
+                    processTomlKeyVal(partOfLine, dest, tableAddress);
                     break;
 
                 case "TomlGrammar.table":
@@ -275,6 +89,196 @@ T parseToml(T)(string toml)
     }
 
     return dest;
+}
+
+private void processTomlKeyVal(S)(ParseTree pt, ref S dest, string[] tableAddress)
+in (pt.name == "TomlGrammar.keyval")
+{
+    ParseTree keyPT = pt.children.find!(e => e.name == "TomlGrammar.key")[0];
+    ParseTree valuePT = pt.children.find!(e => e.name == "TomlGrammar.val")[0];
+
+    string value = valuePT.input[valuePT.begin .. valuePT.end];
+
+    string[] address = tableAddress ~ splitDottedKey(keyPT);
+
+    switch (valuePT.children[0].name)
+    {
+        case "TomlGrammar.integer":
+            putInStruct(dest, address, parseTomlInteger(value));
+            break;
+
+        case "TomlGrammar.float_":
+            putInStruct(dest, address, parseTomlFloat(value));
+            break;
+
+        case "TomlGrammar.boolean":
+            putInStruct(dest, address, value.to!bool);
+            break;
+
+        case "TomlGrammar.string_":
+            putInStruct(dest, address, parseTomlString(value));
+            break;
+
+        case "TomlGrammar.date_time":
+            string dateTimeType = valuePT.children[0].children[0].name;
+            switch (dateTimeType)
+            {
+                case "TomlGrammar.offset_date_time":
+                    putInStruct(dest, address, parseTomlOffsetDateTime(value));
+                    break;
+
+                case "TomlGrammar.local_date_time":
+                    putInStruct(dest, address, parseTomlLocalDateTime(value));
+                    break;
+
+                case "TomlGrammar.local_date":
+                    putInStruct(dest, address, parseTomlLocalDate(value));
+                    break;
+
+                case "TomlGrammar.local_time":
+                    putInStruct(dest, address, parseTomlLocalTime(value));
+                    break;
+
+                default:
+                    throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
+            }
+            break;
+
+        case "TomlGrammar.array":
+
+            string[] typeRules;
+
+            string[] consumeArrayValues(ParseTree arrayValuesPT, string[] acc)
+            in (arrayValuesPT.name == "TomlGrammar.array_values")
+            {
+                string[] getTypeRules(ParseTree valPT)
+                {
+                    string[] _getTypeRules(ParseTree valPT, string fullMatch, string[] acc)
+                    {
+                        if (
+                            valPT.input[valPT.begin .. valPT.end] != fullMatch ||
+                            !([
+                                "TomlGrammar.string_",
+                                "TomlGrammar.boolean",
+                                "TomlGrammar.array",
+                                "TomlGrammar.inline_table",
+                                "TomlGrammar.date_time",
+                                "TomlGrammar.float_",
+                                "TomlGrammar.integer",
+                                "TomlGrammar.offset_date_time",
+                                "TomlGrammar.local_date_time",
+                                "TomlGrammar.local_date",
+                                "TomlGrammar.local_time",
+                                ].canFind(valPT.name))
+                        )
+                        {
+                            return acc;
+                        }
+                        else
+                        {
+                            return _getTypeRules(valPT.children[0], fullMatch, acc ~ valPT.name);
+                        }
+                    }
+
+                    // Trabampoline
+                    return _getTypeRules(valPT.children[0], valPT.input[valPT.begin .. valPT.end], []);
+                }
+
+                ParseTree firstValPT = arrayValuesPT.children[1];
+                assert(firstValPT.name == "TomlGrammar.val");
+                string[] currTypeRules = getTypeRules(firstValPT);
+                if (typeRules.length == 0)
+                {
+                    typeRules = currTypeRules;
+                }
+                else if (typeRules != currTypeRules)
+                {
+                    throw new Exception(
+                        `Mixed-type arrays not yet supported. Array started with "` ~
+                        typeRules.to!string ~ `" but also contains "` ~ currTypeRules.to!string ~ `".`
+                    );
+                }
+
+                auto restFindResult = arrayValuesPT.children.find!(e => e.name == "TomlGrammar.array_values");
+
+                if (restFindResult.length > 0)
+                {
+                    ParseTree restValPT = restFindResult[0];
+                    return consumeArrayValues(
+                        restValPT,
+                        acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end]
+                    );
+                }
+                else
+                {
+                    return acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end];
+                }
+            }
+
+            auto findResult = valuePT.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
+            if (findResult.length == 0)
+            {
+                putInStruct(dest, address, []);
+                break;
+            }
+
+            string[] valueStrings = consumeArrayValues(findResult[0], []);
+
+            switch (typeRules[0])
+            {
+                case "TomlGrammar.integer":
+                    long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
+                    putInStruct(dest, address, valueLongs);
+                    break;
+
+                case "TomlGrammar.float_":
+                    real[] valueReals = valueStrings.map!(e => parseTomlFloat(e)).array;
+                    putInStruct(dest, address, valueReals);
+                    break;
+
+                case "TomlGrammar.boolean":
+                    bool[] valueBools = valueStrings.map!(e => e.to!bool).array;
+                    putInStruct(dest, address, valueBools);
+                    break;
+
+                case "TomlGrammar.string_":
+                    string[] valueParsedStrings = valueStrings.map!(e => parseTomlString(e)).array;
+                    putInStruct(dest, address, valueParsedStrings);
+                    break;
+
+                case "TomlGrammar.date_time":
+                    auto datesAndOrTimes = valueStrings.map!(e => parseTomlGenericDateTime(e));
+
+                    if (datesAndOrTimes[0].type == typeid(SysTime))
+                    {
+                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
+                    }
+                    else if (datesAndOrTimes[0].type == typeid(Date))
+                    {
+                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
+                    }
+                    else if (datesAndOrTimes[0].type == typeid(TimeOfDay))
+                    {
+                        putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
+                    }
+                    else
+                    {
+                        throw new Exception("Unsupported TOML date_time sub-type: " ~ datesAndOrTimes[0].type.to!string);
+                    }
+
+                    break;
+
+                default:
+                    debug { throw new Exception("Unsupported array value type: \"" ~ typeRules[0] ~ "\""); }
+                    else { break; }
+            }
+
+            break;
+
+        default:
+            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ valuePT.children[0].name ~ "\""); }
+            else { break; }
+    }
 }
 
 
