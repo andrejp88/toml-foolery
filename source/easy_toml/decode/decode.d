@@ -1,10 +1,9 @@
 module easy_toml.decode.decode;
 
 import std.algorithm;
-import std.array : array;
+import std.array;
 import std.exception : enforce;
 import std.range;
-import std.traits : rvalueOf;
 
 version (unittest)
 {
@@ -66,8 +65,7 @@ T parseToml(T)(string toml)
 
                     tableAddress =
                         partOfLine
-                        .children
-                        .find!(e => e.name == "TomlGrammar.std_table")[0]
+                        .children[0]
                         .children
                         .find!(e => e.name == "TomlGrammar.key")[0]
                         .splitDottedKey;
@@ -95,14 +93,17 @@ T parseToml(T)(string toml)
 private void processTomlKeyval(S)(ParseTree pt, ref S dest, string[] tableAddress)
 in (pt.name == "TomlGrammar.keyval")
 {
-    ParseTree keyPT = pt.children.find!(e => e.name == "TomlGrammar.key")[0];
-    ParseTree valuePT = pt.children.find!(e => e.name == "TomlGrammar.val")[0];
+    processTomlVal(pt.children[2], dest, tableAddress ~ splitDottedKey(pt.children[0]));
+}
 
-    string value = valuePT.input[valuePT.begin .. valuePT.end];
+private void processTomlVal(S)(ParseTree pt, ref S dest, string[] address)
+in (pt.name == "TomlGrammar.val")
+{
+    string value = pt.input[pt.begin .. pt.end];
 
-    string[] address = tableAddress ~ splitDottedKey(keyPT);
+    ParseTree typedValPT = pt.children[0];
 
-    switch (valuePT.children[0].name)
+    switch (typedValPT.name)
     {
         case "TomlGrammar.integer":
             putInStruct(dest, address, parseTomlInteger(value));
@@ -121,28 +122,7 @@ in (pt.name == "TomlGrammar.keyval")
             break;
 
         case "TomlGrammar.date_time":
-            string dateTimeType = valuePT.children[0].children[0].name;
-            switch (dateTimeType)
-            {
-                case "TomlGrammar.offset_date_time":
-                    putInStruct(dest, address, parseTomlOffsetDateTime(value));
-                    break;
-
-                case "TomlGrammar.local_date_time":
-                    putInStruct(dest, address, parseTomlLocalDateTime(value));
-                    break;
-
-                case "TomlGrammar.local_date":
-                    putInStruct(dest, address, parseTomlLocalDate(value));
-                    break;
-
-                case "TomlGrammar.local_time":
-                    putInStruct(dest, address, parseTomlLocalTime(value));
-                    break;
-
-                default:
-                    throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
-            }
+            processTomlDateTime(typedValPT, dest, address);
             break;
 
         case "TomlGrammar.array":
@@ -216,7 +196,7 @@ in (pt.name == "TomlGrammar.keyval")
                 }
             }
 
-            auto findResult = valuePT.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
+            auto findResult = pt.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
             if (findResult.length == 0)
             {
                 putInStruct(dest, address, []);
@@ -277,27 +257,57 @@ in (pt.name == "TomlGrammar.keyval")
             break;
 
         case "TomlGrammar.inline_table":
-            processTomlInlineTable(valuePT.children[0], dest, address);
+            processTomlInlineTable(pt.children[0], dest, address);
             break;
 
         default:
-            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ valuePT.children[0].name ~ "\""); }
+            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ pt.children[0].name ~ "\""); }
             else { break; }
     }
 }
 
+
+package void processTomlDateTime(S)(ParseTree pt, ref S dest, string[] address)
+in (pt.name == "TomlGrammar.date_time")
+{
+    string value = pt.input[pt.begin .. pt.end];
+    string dateTimeType = pt.children[0].name;
+    switch (dateTimeType)
+    {
+        case "TomlGrammar.offset_date_time":
+            putInStruct(dest, address, parseTomlOffsetDateTime(value));
+            break;
+
+        case "TomlGrammar.local_date_time":
+            putInStruct(dest, address, parseTomlLocalDateTime(value));
+            break;
+
+        case "TomlGrammar.local_date":
+            putInStruct(dest, address, parseTomlLocalDate(value));
+            break;
+
+        case "TomlGrammar.local_time":
+            putInStruct(dest, address, parseTomlLocalTime(value));
+            break;
+
+        default:
+            throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
+    }
+}
+
+
 private void processTomlInlineTable(S)(ParseTree pt, ref S dest, string[] address)
 in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" but got "` ~ pt.name ~ `".`)
 {
-    ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
-    if (keyvals.empty) return;
-    processTomlInlineTableKeyvals(keyvals[0], dest, address);
-}
+    void processTomlInlineTableKeyvals(S)(ParseTree pt, ref S dest, string[] address)
+    in (pt.name == "TomlGrammar.inline_table_keyvals")
+    {
+        processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address);
+        ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
+        if (keyvals.empty) return;
+        processTomlInlineTableKeyvals(keyvals[0], dest, address);
+    }
 
-private void processTomlInlineTableKeyvals(S)(ParseTree pt, ref S dest, string[] address)
-in (pt.name == "TomlGrammar.inline_table_keyvals")
-{
-    processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address);
     ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
     if (keyvals.empty) return;
     processTomlInlineTableKeyvals(keyvals[0], dest, address);
@@ -1511,4 +1521,37 @@ unittest
     `);
 
     earth.mantle.outer.iñner.heat.should.equal(9001);
+}
+
+@("Table Array")
+unittest
+{
+    struct S
+    {
+        struct Musician
+        {
+            string name;
+            Date dob;
+        }
+
+        Musician[3] musicians;
+    }
+
+    S s = parseToml!S(`
+    [[musicians]]
+    name = "Bob Dylan"
+    dob = 1941-05-24
+
+    [[musicians]]
+    name = "Frank Sinatra"
+    dob = 1915-12-12
+
+    [[musicians]]
+    name = "Scott Joplin"
+    dob = 1868-11-24
+    `);
+
+    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    s.musicians[1].should.equal(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
+    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
