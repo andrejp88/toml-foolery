@@ -3,6 +3,7 @@ module easy_toml.decode.decode;
 import std.algorithm;
 import std.array : array;
 import std.exception : enforce;
+import std.range;
 import std.traits : rvalueOf;
 
 version (unittest)
@@ -58,7 +59,7 @@ T parseToml(T)(string toml)
             switch (partOfLine.name)
             {
                 case "TomlGrammar.keyval":
-                    processTomlKeyVal(partOfLine, dest, tableAddress);
+                    processTomlKeyval(partOfLine, dest, tableAddress);
                     break;
 
                 case "TomlGrammar.table":
@@ -91,7 +92,7 @@ T parseToml(T)(string toml)
     return dest;
 }
 
-private void processTomlKeyVal(S)(ParseTree pt, ref S dest, string[] tableAddress)
+private void processTomlKeyval(S)(ParseTree pt, ref S dest, string[] tableAddress)
 in (pt.name == "TomlGrammar.keyval")
 {
     ParseTree keyPT = pt.children.find!(e => e.name == "TomlGrammar.key")[0];
@@ -275,10 +276,31 @@ in (pt.name == "TomlGrammar.keyval")
 
             break;
 
+        case "TomlGrammar.inline_table":
+            processTomlInlineTable(valuePT.children[0], dest, address);
+            break;
+
         default:
             debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ valuePT.children[0].name ~ "\""); }
             else { break; }
     }
+}
+
+private void processTomlInlineTable(S)(ParseTree pt, ref S dest, string[] address)
+in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" but got "` ~ pt.name ~ `".`)
+{
+    ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
+    if (keyvals.empty) return;
+    processTomlInlineTableKeyvals(keyvals[0], dest, address);
+}
+
+private void processTomlInlineTableKeyvals(S)(ParseTree pt, ref S dest, string[] address)
+in (pt.name == "TomlGrammar.inline_table_keyvals")
+{
+    processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address);
+    ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
+    if (keyvals.empty) return;
+    processTomlInlineTableKeyvals(keyvals[0], dest, address);
 }
 
 
@@ -1456,6 +1478,36 @@ unittest
     [mantle.outer]
     "iñner".heat = 9001
 
+    `);
+
+    earth.mantle.outer.iñner.heat.should.equal(9001);
+}
+
+@("Table - inline")
+unittest
+{
+    struct InnerCore
+    {
+        int heat;
+    }
+
+    struct OuterCore
+    {
+        InnerCore iñner;
+    }
+
+    struct Mantle
+    {
+        OuterCore outer;
+    }
+
+    struct Earth
+    {
+        Mantle mantle;
+    }
+
+    Earth earth = parseToml!Earth(`
+    mantle = { outer = { "iñner" = { heat = 9001 } } }
     `);
 
     earth.mantle.outer.iñner.heat.should.equal(9001);
