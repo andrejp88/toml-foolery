@@ -319,13 +319,13 @@ private void putInStruct(S, T)(ref S dest, string[] address, T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
 {
-    if (address.length == 1)
+    // For each member of S...
+    static foreach (string member; __traits(allMembers, S))
     {
-        // For each member of S...
-        static foreach (string member; __traits(allMembers, S))
+        // ...that isn't a nested struct declaration
+        static if (!is(__traits(getMember, dest, member)))
         {
-            // ...that isn't a nested struct declaration
-            static if (!is(__traits(getMember, dest, member)))
+            if (address.length == 1)
             {
                 if (member == address[0])
                 {
@@ -335,17 +335,9 @@ in (address.length > 0, "`address` may not be empty")
                     }
                 }
             }
-        }
-    }
-    else
-    {
-        // For each member of S...
-        static foreach (string member; __traits(allMembers, S))
-        {
-            // ...that isn't a nested struct declaration...
-            static if (!is(__traits(getMember, dest, member)))
+            else
             {
-                // ...is a struct itself...
+                // ...and is a struct itself...
                 static if(is(typeof(__traits(getMember, dest, member)) == struct))
                 {
                     // ...but isn't a @property
