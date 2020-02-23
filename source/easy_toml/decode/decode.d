@@ -4,6 +4,8 @@ import std.algorithm;
 import std.array;
 import std.exception : enforce;
 import std.range;
+import std.range.primitives;
+import std.traits;
 
 version (unittest)
 {
@@ -63,12 +65,22 @@ T parseToml(T)(string toml)
 
                 case "TomlGrammar.table":
 
-                    tableAddress =
-                        partOfLine
-                        .children[0]
-                        .children
-                        .find!(e => e.name == "TomlGrammar.key")[0]
-                        .splitDottedKey;
+                    string tableType = partOfLine.children[0].name;
+
+                    if (tableType == "TomlGrammar.std_table")
+                    {
+                        tableAddress =
+                            partOfLine
+                            .children[0]
+                            .children
+                            .find!(e => e.name == "TomlGrammar.key")[0]
+                            .splitDottedKey;
+                    }
+                    else
+                    {
+                        assert(tableType == "TomlGrammar.array_table");
+                        throw new Exception(`Arrays of tables are not yet supported (caused by: "` ~ partOfLine.input[partOfLine.begin .. partOfLine.end] ~ `").`);
+                    }
 
                     break;
 
@@ -199,7 +211,6 @@ in (pt.name == "TomlGrammar.val")
             auto findResult = pt.children[0].children.find!(e => e.name == "TomlGrammar.array_values");
             if (findResult.length == 0)
             {
-                putInStruct(dest, address, []);
                 break;
             }
 
@@ -248,6 +259,10 @@ in (pt.name == "TomlGrammar.val")
                     }
 
                     break;
+
+                // case "TomlGrammar.inline_table":
+                //     //
+                //     break;
 
                 default:
                     debug { throw new Exception("Unsupported array value type: \"" ~ typeRules[0] ~ "\""); }
@@ -318,39 +333,80 @@ in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" 
 private void putInStruct(S, T)(ref S dest, string[] address, T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
+in (!address[0].isSizeT)
 {
     // For each member of S...
     static foreach (string member; __traits(allMembers, S))
     {
-        // ...that isn't a nested struct declaration
+        // ...that isn't a nested struct declaration...
         static if (!is(__traits(getMember, dest, member)))
         {
-            if (address.length == 1)
+
+            if (member == address[0])
             {
-                if (member == address[0])
+                if (address.length == 1)
                 {
                     static if (__traits(compiles, __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))))
                     {
                         __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
+                        return;
+                    }
+                    else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
+                    {
+                        throw new Exception(
+                            `Member "` ~ member ~ `" of struct "` ~ S.stringof ~
+                            `" is of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
+                            `", but given value is type "` ~ typeof(value).stringof ~ `".`
+                        );
                     }
                 }
-            }
-            else
-            {
-                // ...and is a struct itself...
-                static if(is(typeof(__traits(getMember, dest, member)) == struct))
+                else
                 {
-                    // ...but isn't a @property
+                    // ...is a struct or array (allowing a recursive call), but isn't a @property
                     // (since those return structs as rvalues which cannot be passed as ref)
                     static if(__traits(compiles, putInStruct(__traits(getMember, dest, member), address[1..$], value)))
                     {
-                        if (member == address[0])
-                        {
-                            putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
-                        }
+                        putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
+                        return;
                     }
                 }
             }
+        }
+    }
+    throw new Exception(`Could not find field "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
+}
+
+private void putInStruct(S, T)(ref S dest, string[] address, T value)
+if (isArray!S)
+in (address.length > 0, "`address` may not be empty")
+in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not convertible to size_t.`)
+{
+    size_t idx = address[0].to!size_t;
+    if (idx >= dest.length)
+    {
+        static if (isStaticArray!S)
+        {
+            throw new Exception("Cannot set index " ~ idx.to!string ~ " of static array with length " ~ dest.length.to!string ~ ".");
+        }
+        else
+        {
+            static assert(isDynamicArray!S);
+            dest.length = idx + 1;
+        }
+    }
+
+    if (address.length == 1)
+    {
+        static if (__traits(compiles, value.to!(ElementType!S)))
+        {
+            dest[idx] = value.to!(ElementType!S);
+        }
+    }
+    else
+    {
+        static if (__traits(compiles, putInStruct(dest[idx], address[1 .. $], value)))
+        {
+            putInStruct(dest[idx], address[1 .. $], value);
         }
     }
 }
@@ -525,8 +581,7 @@ unittest
     S s;
     // C returns an rvalue, which cannot be ref, so it should be ignored by putInStruct.
     // This should compile but c.x can't be changed.
-    putInStruct(s, ["c", "x"], 5);
-    s.c.x.should.equal(s.c.x.init);
+    putInStruct(s, ["c", "x"], 5).should.throwAn!Exception;
 }
 
 @("putInStruct — Static array -> Static array")
@@ -548,6 +603,140 @@ unittest
     int[] dynArr = [33, 22, 11, 99];
     putInStruct(s, ["statArr"], dynArr);
     s.statArr.should.equal(staticArray!(int, 4)([33, 22, 11, 99]));
+}
+
+@("putInStruct — Into Static Array")
+unittest
+{
+    int[5] x;
+
+    putInStruct(x, ["4"], 99);
+    x[4].should.equal(99);
+}
+
+@("putInStruct — Into Static Array (out of range)")
+unittest
+{
+    int[5] x;
+
+    putInStruct(x, ["5"], 99).should.throwAn!Exception;
+}
+
+@("putInStruct — Into Dynamic Array (with resizing)")
+unittest
+{
+    int[] x;
+
+    x.length.should.equal(0);
+    putInStruct(x, ["5"], 88);
+    x.length.should.equal(6);
+    x[5].should.equal(88);
+}
+
+@("putInStruct — Into static array of arrays")
+unittest
+{
+    int[6][4] x;
+
+    putInStruct(x, ["3", "5"], 88);
+    x[3][5].should.equal(88);
+}
+
+@("putInStruct — Into dynamic array of arrays")
+unittest
+{
+    int[][] x;
+
+    putInStruct(x, ["5", "3"], 88);
+    x.length.should.equal(6);
+    x[5].length.should.equal(4);
+    x[5][3].should.equal(88);
+}
+
+@("putInStruct — Into dynamic array of structs")
+unittest
+{
+    struct S
+    {
+        int x;
+    }
+
+    S[] s;
+
+    putInStruct(s, ["5", "x"], 88);
+    s.length.should.equal(6);
+    s[5].x.should.equal(88);
+}
+
+@("putInStruct — Into static array of structs")
+unittest
+{
+    struct S
+    {
+        int x;
+    }
+
+    S[4] s;
+
+    putInStruct(s, ["3", "x"], 88);
+    s[3].x.should.equal(88);
+}
+
+@("putInStruct — Into field that is static array of ints")
+unittest
+{
+    struct S
+    {
+        int[3] i;
+    }
+
+    S s;
+    putInStruct(s, ["i", "2"], 772);
+
+    s.i[2].should.equal(772);
+}
+
+@("putInStruct — Into field that is static array of structs")
+unittest
+{
+    struct Outer
+    {
+        struct Inner
+        {
+            int x;
+        }
+
+        Inner[3] inner;
+    }
+
+    Outer outer;
+    putInStruct(outer, ["inner", "2", "x"], 202);
+
+    outer.inner[2].x.should.equal(202);
+}
+
+@("putInStruct — array of struct with array of array of structs")
+unittest
+{
+    struct A
+    {
+        struct B
+        {
+            struct C
+            {
+                int x;
+            }
+
+            C[4][2] c;
+        }
+
+        B[3] b;
+    }
+
+    A a;
+
+    putInStruct(a, ["b", "2", "c", "1", "3", "x"], 773);
+    a.b[2].c[1][3].x.should.equal(773);
 }
 
 private string[] splitDottedKey(ParseTree pt)
@@ -572,6 +761,34 @@ in (pt.name == "TomlGrammar.key")
                             [ pt.input[pt.begin + 1 .. pt.end - 1] ] :
                             [ pt.input[pt.begin .. pt.end] ]
                         );
+}
+
+debug
+{
+    private bool isSizeT(string s)
+    {
+        import std.conv : ConvException;
+
+        try
+        {
+            s.to!size_t;
+            return true;
+        }
+        catch (ConvException e)
+        {
+            return false;
+        }
+    }
+
+    @("isSizeT")
+    unittest
+    {
+        import std.bigint;
+        size_t.min.to!string.isSizeT.should.equal(true);
+        size_t.max.to!string.isSizeT.should.equal(true);
+        (BigInt(size_t.max) + 1).to!string.isSizeT.should.equal(false);
+        (-1).to!string.isSizeT.should.equal(false);
+    }
 }
 
 
@@ -1366,6 +1583,29 @@ unittest
     s.f.should.equal([]);
     s.s.should.equal([]);
     s.t.should.equal([]);
+}
+
+@("Array of Inline Tables -> Array of Structs")
+unittest
+{
+    struct S
+    {
+        struct Musician
+        {
+            string name;
+            Date dob;
+        }
+
+        Musician[3] musicians;
+    }
+
+    S s = parseToml!S(`
+    musicians = [ { name = "Bob Dylan", dob = 1941-05-24 }, { name = "Frank Sinatra", dob = 1915-12-12 }, { name = "Scott Joplin", dob = 1868-11-24 } ]
+    `);
+
+    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    s.musicians[1].should.equal(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
+    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
 
 @("Table - one level")
