@@ -49,6 +49,9 @@ T parseToml(T)(string toml)
 
     string[] tableAddress = [];
 
+    // Given a dotted key representing an array of tables, how many times has it appeared so far?
+    size_t[string[]] tableArrayCounts;
+
     foreach (ParseTree line; lines)
     {
         assert(line.name == "TomlGrammar.expression",
@@ -65,21 +68,24 @@ T parseToml(T)(string toml)
 
                 case "TomlGrammar.table":
 
-                    string tableType = partOfLine.children[0].name;
+                    tableAddress =
+                        partOfLine
+                        .children[0]
+                        .children
+                        .find!(e => e.name == "TomlGrammar.key")[0]
+                        .splitDottedKey;
 
-                    if (tableType == "TomlGrammar.std_table")
+                    if (partOfLine.children[0].name == "TomlGrammar.array_table")
                     {
-                        tableAddress =
-                            partOfLine
-                            .children[0]
-                            .children
-                            .find!(e => e.name == "TomlGrammar.key")[0]
-                            .splitDottedKey;
-                    }
-                    else
-                    {
-                        assert(tableType == "TomlGrammar.array_table");
-                        throw new Exception(`Arrays of tables are not yet supported (caused by: "` ~ partOfLine.input[partOfLine.begin .. partOfLine.end] ~ `").`);
+                        if (tableAddress !in tableArrayCounts)
+                        {
+                            tableArrayCounts[tableAddress.idup] = 0;
+                        }
+                        else
+                        {
+                            tableArrayCounts[tableAddress.idup]++;
+                        }
+                        tableAddress ~= tableArrayCounts[tableAddress].to!string;
                     }
 
                     break;
@@ -1796,5 +1802,87 @@ unittest
 
     s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
     s.musicians[1].should.equal(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
+    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
+}
+
+@("Table Array — dotted keys")
+unittest
+{
+    struct Country
+    {
+        string nameEnglish;
+        string nameLocal;
+    }
+
+    struct S
+    {
+        struct Countries
+        {
+            Country[2] republics;
+            Country[2] monarchies;
+
+            size_t count;
+        }
+
+        Countries countries;
+    }
+
+    S s = parseToml!S(`
+
+    countries.count = 4
+
+    [[countries.republics]]
+    nameEnglish = "Ireland"
+    nameLocal = "Éire"
+
+    [[countries.republics]]
+    nameEnglish = "Greece"
+    nameLocal = "Ελλάδα"
+
+    [[countries.monarchies]]
+    nameEnglish = "Bhutan"
+    nameLocal = "འབྲུག་ཡུལ་"
+
+    [[countries.monarchies]]
+    nameEnglish = "Denmark"
+    nameLocal = "Danmark"
+
+    `);
+
+    s.countries.count.should.equal(4);
+    s.countries.republics[0].should.equal(Country("Ireland", "Éire"));
+    s.countries.republics[1].should.equal(Country("Greece", "Ελλάδα"));
+    s.countries.monarchies[0].should.equal(Country("Bhutan", "འབྲུག་ཡུལ་"));
+    s.countries.monarchies[1].should.equal(Country("Denmark", "Danmark"));
+}
+
+@("Table Array — empty entry")
+unittest
+{
+    struct S
+    {
+        struct Musician
+        {
+            string name;
+            Date dob;
+        }
+
+        Musician[3] musicians;
+    }
+
+    S s = parseToml!S(`
+    [[musicians]]
+    name = "Bob Dylan"
+    dob = 1941-05-24
+
+    [[musicians]]
+
+    [[musicians]]
+    name = "Scott Joplin"
+    dob = 1868-11-24
+    `);
+
+    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    s.musicians[1].should.equal(S.Musician());
     s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
