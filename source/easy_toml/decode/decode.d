@@ -204,8 +204,10 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
 {
     string[] typeRules;
 
-    string[] consumeArrayValues(ParseTree arrayValuesPT, string[] acc)
+    ParseTree[] consumeArrayValues(ParseTree arrayValuesPT, ParseTree[] acc)
     in (arrayValuesPT.name == "TomlGrammar.array_values")
+    in (acc.all!(e => e.name == "TomlGrammar.val" ))
+    out (ret; ret.all!(e => e.name == "TomlGrammar.val" ))
     {
         string[] getTypeRules(ParseTree valPT)
         {
@@ -262,12 +264,12 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
             ParseTree restValPT = restFindResult[0];
             return consumeArrayValues(
                 restValPT,
-                acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end]
+                acc ~ firstValPT
             );
         }
         else
         {
-            return acc ~ firstValPT.input[firstValPT.begin .. firstValPT.end];
+            return acc ~ firstValPT;
         }
     }
 
@@ -277,7 +279,8 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
         return;
     }
 
-    string[] valueStrings = consumeArrayValues(findResult[0], []);
+    ParseTree[] valuePTs = consumeArrayValues(findResult[0], []);
+    auto valueStrings = valuePTs.map!(e => e.input[e.begin .. e.end]);
 
     switch (typeRules[0])
     {
@@ -324,8 +327,10 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
             break;
 
         case "TomlGrammar.inline_table":
-        import std.stdio : writeln;
-            writeln(pt.name);
+            foreach (size_t i, ParseTree valuePT; valuePTs)
+            {
+                processTomlInlineTable(valuePT.children[0], dest, address ~ i.to!string);
+            }
             break;
 
         default:
@@ -339,7 +344,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
 private void putInStruct(S, T)(ref S dest, string[] address, T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
-in (!address[0].isSizeT)
+in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, not a field name.`)
 {
     // For each member of S...
     static foreach (string member; __traits(allMembers, S))
