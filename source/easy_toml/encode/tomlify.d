@@ -1,13 +1,13 @@
 module easy_toml.encode.tomlify;
 
 import easy_toml.encode;
-import easy_toml.encode.array;
-import easy_toml.encode.boolean;
-import easy_toml.encode.datetime;
-import easy_toml.encode.floating_point;
-import easy_toml.encode.integer;
-import easy_toml.encode.string;
-import easy_toml.encode.table;
+import easy_toml.encode.types.array;
+import easy_toml.encode.types.boolean;
+import easy_toml.encode.types.datetime;
+import easy_toml.encode.types.floating_point;
+import easy_toml.encode.types.integer;
+import easy_toml.encode.types.string;
+import easy_toml.encode.types.table;
 
 import std.algorithm : map, any;
 import std.array : join;
@@ -74,7 +74,7 @@ if (makesTomlKey!K)
     }
 }
 
-package enum bool makesTomlKey(T) = (
+package(easy_toml.encode) enum bool makesTomlKey(T) = (
     isSomeString!T
 );
 

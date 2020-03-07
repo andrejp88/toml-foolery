@@ -1,16 +1,16 @@
-module easy_toml.encode.boolean;
+module easy_toml.encode.types.boolean;
 
 import std.traits : isBoolean;
 
 import easy_toml.encode;
 
 
-package enum bool makesTomlBoolean(T) = (
+package(easy_toml.encode) enum bool makesTomlBoolean(T) = (
     isBoolean!T
 );
 
 /// Serializes bools into TOML boolean values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlBoolean!T)
 {
     buffer.put(value.to!string);

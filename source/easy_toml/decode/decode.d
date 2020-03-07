@@ -14,10 +14,10 @@ version (unittest)
 }
 
 import easy_toml.decode;
-import easy_toml.decode.datetime;
-import easy_toml.decode.floating_point;
-import easy_toml.decode.integer;
-import easy_toml.decode.string;
+import easy_toml.decode.types.datetime;
+import easy_toml.decode.types.floating_point;
+import easy_toml.decode.types.integer;
+import easy_toml.decode.types.string;
 
 import easy_toml.decode.peg_grammar;
 // If you're working on the toml.peg file, comment the previous import and uncomment this:

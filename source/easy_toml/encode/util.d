@@ -1,7 +1,7 @@
 module easy_toml.encode.util;
 
 import std.array : Appender;
-import easy_toml.encode.datetime : makesTomlLocalTime, makesTomlLocalDate, makesTomlLocalDateTime, makesTomlOffsetDateTime;
+import easy_toml.encode.types.datetime : makesTomlLocalTime, makesTomlLocalDate, makesTomlLocalDateTime, makesTomlOffsetDateTime;
 
 package enum bool isSpeciallyHandledStruct(T) = (
     makesTomlLocalDate!T ||

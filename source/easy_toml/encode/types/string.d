@@ -1,4 +1,4 @@
-module easy_toml.encode.string;
+module easy_toml.encode.types.string;
 
 import std.algorithm.iteration : substitute, map;
 import std.array : join;
@@ -10,12 +10,12 @@ import std.uni : isControl;
 import easy_toml.encode;
 
 
-package enum bool makesTomlString(T) = (
+package(easy_toml.encode) enum bool makesTomlString(T) = (
     isSomeChar!T || isSomeString!T
 );
 
 /// Serializes (w/d/)strings and (w/d/)chars into TOML string values, quoted and escaped.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlString!T)
 {
     buffer.put(`"`);

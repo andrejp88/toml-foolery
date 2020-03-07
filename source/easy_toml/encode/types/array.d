@@ -1,15 +1,15 @@
-module easy_toml.encode.array;
+module easy_toml.encode.types.array;
 
 import std.traits : isStaticArray;
 import easy_toml.encode;
 
 
-package enum bool makesTomlArray(T) = (
+package(easy_toml.encode) enum bool makesTomlArray(T) = (
     isStaticArray!T
 );
 
 /// Serializes static arrays into TOML Array values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlArray!T)
 {
     buffer.put("[ ");

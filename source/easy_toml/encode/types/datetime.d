@@ -1,4 +1,4 @@
-module easy_toml.encode.datetime;
+module easy_toml.encode.types.datetime;
 
 import std.datetime.systime : SysTime;
 import std.datetime.date : DateTime, Date, TimeOfDay;
@@ -15,19 +15,19 @@ version(unittest)
 
 
 
-package enum bool makesTomlOffsetDateTime(T) = (
+package(easy_toml.encode) enum bool makesTomlOffsetDateTime(T) = (
     is(T == SysTime)
 );
 
-package enum bool makesTomlLocalDateTime(T) = (
+package(easy_toml.encode) enum bool makesTomlLocalDateTime(T) = (
     is(T == SysTime)
 );
 
-package enum bool makesTomlLocalDate(T) = (
+package(easy_toml.encode) enum bool makesTomlLocalDate(T) = (
     is(T == Date)
 );
 
-package enum bool makesTomlLocalTime(T) = (
+package(easy_toml.encode) enum bool makesTomlLocalTime(T) = (
     is(T == TimeOfDay)
 );
 
@@ -36,7 +36,7 @@ package enum bool makesTomlLocalTime(T) = (
 /// TOML "Offset Date-Time" values.
 /// OR
 /// TOML "Local Date-Time" value, if timezone is LocalTime.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlOffsetDateTime!T || makesTomlLocalDateTime!T)
 {
     // This won't be true if value.timezone happens to be the same as the user's
@@ -52,7 +52,7 @@ if (makesTomlOffsetDateTime!T || makesTomlLocalDateTime!T)
 }
 
 /// Serializes Date into TOML "Local Date" values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlLocalDate!T)
 {
     SysTime phonySysTime = SysTime(value);
@@ -60,7 +60,7 @@ if (makesTomlLocalDate!T)
 }
 
 /// Serializes TimeOfDay into TOML "Local Time" values.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlLocalTime!T)
 {
     SysTime phonySysTime = SysTime(DateTime(Date(), value));

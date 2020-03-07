@@ -1,10 +1,10 @@
-module easy_toml.decode.floating_point;
+module easy_toml.decode.types.floating_point;
 
 import std.algorithm : filter;
 version (unittest) import std.math : isNaN;
 import easy_toml.decode;
 
-package real parseTomlFloat(string value)
+package(easy_toml.decode) real parseTomlFloat(string value)
 {
     if (value[$-3 .. $] == "inf")
     {

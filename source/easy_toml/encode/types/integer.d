@@ -1,4 +1,4 @@
-module easy_toml.encode.integer;
+module easy_toml.encode.types.integer;
 
 import std.traits : isIntegral;
 import std.uni : isNumber;
@@ -6,7 +6,7 @@ import std.uni : isNumber;
 import easy_toml.encode;
 
 
-package enum bool makesTomlInteger(T) = (
+package(easy_toml.encode) enum bool makesTomlInteger(T) = (
     isIntegral!T
 );
 
@@ -15,7 +15,7 @@ package enum bool makesTomlInteger(T) = (
 /// Throws:
 ///     TomlEncodingException when value is out of range of valid TOML Integers
 ///     (can only happen when T is `ulong`).
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlInteger!T)
 {
     static if (is(T == ulong))

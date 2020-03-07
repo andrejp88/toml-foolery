@@ -1,4 +1,4 @@
-module easy_toml.decode.string;
+module easy_toml.decode.types.string;
 
 import std.algorithm;
 import std.array;
@@ -8,7 +8,7 @@ import std.uni;
 
 import easy_toml.decode;
 
-package string parseTomlString(string value)
+package(easy_toml.decode) string parseTomlString(string value)
 {
     return
         value[0..3] == `"""` ? parseTomlBasicMultiLineString(value) :

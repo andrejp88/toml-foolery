@@ -1,4 +1,4 @@
-module easy_toml.decode.datetime;
+module easy_toml.decode.types.datetime;
 
 import std.datetime;
 import std.regex : ctRegex, matchFirst, Captures;
@@ -7,9 +7,9 @@ import std.variant : Algebraic;
 import easy_toml.decode;
 
 
-package alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
+package(easy_toml.decode) alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
 
-package DateAndOrTime parseTomlGenericDateTime(string value)
+package(easy_toml.decode) DateAndOrTime parseTomlGenericDateTime(string value)
 {
     enum auto offsetDateTimeRegEx =
         ctRegex!(`^(\d\d\d\d)-(\d\d)-(\d\d)[Tt ](\d\d):(\d\d):(\d\d)(?:\.(\d+))?(?:[Zz]|([+-])(\d\d):(\d\d))$`);
@@ -51,7 +51,7 @@ package DateAndOrTime parseTomlGenericDateTime(string value)
 
 /// Up to nanosecond precision is supported.
 /// Additional precision is truncated, obeying the TOML spec.
-package SysTime parseTomlOffsetDateTime(string value)
+package(easy_toml.decode) SysTime parseTomlOffsetDateTime(string value)
 {
     DateAndOrTime dt = parseTomlGenericDateTime(value);
     assert(dt.peek!SysTime !is null, "Expected SysTime, but got: " ~ dt.type.to!string);
@@ -59,7 +59,7 @@ package SysTime parseTomlOffsetDateTime(string value)
     return dt.get!SysTime;
 }
 
-package SysTime parseTomlLocalDateTime(string value)
+package(easy_toml.decode) SysTime parseTomlLocalDateTime(string value)
 {
     DateAndOrTime dt = parseTomlGenericDateTime(value);
     assert(dt.peek!SysTime !is null, "Expected SysTime, but got: " ~ dt.type.to!string);
@@ -67,14 +67,14 @@ package SysTime parseTomlLocalDateTime(string value)
     return dt.get!SysTime;
 }
 
-package Date parseTomlLocalDate(string value)
+package(easy_toml.decode) Date parseTomlLocalDate(string value)
 {
     DateAndOrTime dt = parseTomlGenericDateTime(value);
     assert(dt.peek!Date !is null, "Expected Date, but got: " ~ dt.type.to!string);
     return dt.get!Date;
 }
 
-package TimeOfDay parseTomlLocalTime(string value)
+package(easy_toml.decode) TimeOfDay parseTomlLocalTime(string value)
 {
     DateAndOrTime dt = parseTomlGenericDateTime(value);
     assert(dt.peek!TimeOfDay !is null, "Expected TimeOfDay, but got: " ~ dt.type.to!string);

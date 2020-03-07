@@ -1,4 +1,4 @@
-module easy_toml.decode.integer;
+module easy_toml.decode.types.integer;
 
 import std.algorithm : filter, all;
 import std.ascii : isASCII, isHexDigit;
@@ -6,7 +6,7 @@ import std.ascii : isASCII, isHexDigit;
 import easy_toml.decode;
 
 
-package long parseTomlInteger(string value)
+package(easy_toml.decode) long parseTomlInteger(string value)
 {
     bool isCleanedChar(dchar c)
     {

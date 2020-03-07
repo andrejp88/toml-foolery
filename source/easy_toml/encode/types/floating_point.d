@@ -1,4 +1,4 @@
-module easy_toml.encode.floating_point;
+module easy_toml.encode.types.floating_point;
 
 import std.math : modf, isNaN;
 import std.traits : isFloatingPoint;
@@ -6,14 +6,14 @@ import std.traits : isFloatingPoint;
 import easy_toml.encode;
 
 
-package enum bool makesTomlFloat(T) = (
+package(easy_toml.encode) enum bool makesTomlFloat(T) = (
     isFloatingPoint!T
 );
 
 /// Serializes float, double, and real into TOML floating point values.
 /// TOML floats are always 64-bit, floats and reals are converted to doubles
 /// first.
-package void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlFloat!T)
 {
     if (value == T(0.0))
