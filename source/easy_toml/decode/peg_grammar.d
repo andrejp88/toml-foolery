@@ -250,11 +250,11 @@ HEXDIG           <- DIGIT / [A-Fa-f]
 +/
 module easy_toml.decode.peg_grammar;
 
-public import pegged.peg;
+package import pegged.peg;
 import std.algorithm: startsWith;
 import std.functional: toDelegate;
 
-struct GenericTomlGrammar(TParseTree)
+package struct GenericTomlGrammar(TParseTree)
 {
     import std.functional : toDelegate;
     import pegged.dynamic.grammar;
@@ -4434,4 +4434,3 @@ struct GenericTomlGrammar(TParseTree)
 }
 
 alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;
-
