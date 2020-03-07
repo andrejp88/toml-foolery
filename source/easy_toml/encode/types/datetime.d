@@ -108,7 +108,7 @@ unittest
 ///     appendTZ = If true, the resulting string will have the time zone
 ///                 appended at the end. Default true.
 ///
-public string formatTime(SysTime time, string formatStr = "%F %T.%g", bool appendTZ = true)
+private string formatTime(SysTime time, string formatStr = "%F %T.%g", bool appendTZ = true)
 {
     string retVal = datefmt(time, formatStr);
 

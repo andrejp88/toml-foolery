@@ -158,7 +158,7 @@ in (pt.name == "TomlGrammar.val")
 }
 
 
-package void processTomlDateTime(S)(ParseTree pt, ref S dest, string[] address)
+private void processTomlDateTime(S)(ParseTree pt, ref S dest, string[] address)
 in (pt.name == "TomlGrammar.date_time")
 {
     string value = pt.input[pt.begin .. pt.end];

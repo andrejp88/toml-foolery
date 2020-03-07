@@ -78,7 +78,7 @@ package(easy_toml.encode) enum bool makesTomlKey(T) = (
     isSomeString!T
 );
 
-package string tomlifyKey(T)(T key)
+private string tomlifyKey(T)(T key)
 if (makesTomlKey!T)
 {
     if (key == "" || key.any!((dchar e)

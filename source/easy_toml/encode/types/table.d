@@ -7,6 +7,13 @@ import easy_toml.encode.types.datetime : makesTomlOffsetDateTime, makesTomlLocal
 
 version(unittest) import easy_toml.encode.util : equalNoBlanks;
 
+private enum bool isSpeciallyHandledStruct(T) = (
+    makesTomlLocalDate!T ||
+    makesTomlLocalTime!T ||
+    makesTomlLocalDateTime!T ||
+    makesTomlOffsetDateTime!T
+);
+
 package(easy_toml.encode) enum bool makesTomlTable(T) = (
     is(T == struct) &&
     !isSpeciallyHandledStruct!T
