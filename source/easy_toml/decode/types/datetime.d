@@ -62,8 +62,17 @@ package(easy_toml.decode) SysTime parseTomlOffsetDateTime(string value)
 package(easy_toml.decode) SysTime parseTomlLocalDateTime(string value)
 {
     DateAndOrTime dt = parseTomlGenericDateTime(value);
-    assert(dt.peek!SysTime !is null, "Expected SysTime, but got: " ~ dt.type.to!string);
-    assert(dt.get!SysTime.timezone == LocalTime(), "Expected SysTime with LocalTime, but got time zone: " ~ dt.get!SysTime.timezone.to!string);
+
+    assert(
+        dt.peek!SysTime !is null,
+        "Expected SysTime, but got: " ~ dt.type.to!string
+    );
+
+    assert(
+        dt.get!SysTime.timezone == LocalTime(),
+        "Expected SysTime with LocalTime, but got time zone: " ~ dt.get!SysTime.timezone.to!string
+    );
+
     return dt.get!SysTime;
 }
 

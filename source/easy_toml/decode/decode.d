@@ -9,8 +9,8 @@ import std.traits;
 
 version (unittest)
 {
-    import std.datetime;
     import std.array : staticArray;
+    import std.datetime;
 }
 
 import easy_toml.decode;
@@ -26,8 +26,21 @@ import easy_toml.decode.peg_grammar;
 // import pegged.grammar : asModule; asModule("easy_toml.decode.peg_grammar", "source/easy_toml/decode/peg_grammar", import("toml.peg"));
 
 
-/// Decodes a TOML string
+/**
+ *  Decodes a TOML string
+ *
+ *  Params:
+ *      toml = A string containing TOML data.
+ *
+ *      T =    The type of struct to create and return.
+ *
+ *
+ *  Returns:
+ *      An instance of `T` with its fields populated according to the given
+ *      TOML data.
+ */
 T parseToml(T)(string toml)
+if (is(T == struct))
 {
     // version tracer is for debugging a grammar, it comes from pegged.
     version (tracer)
@@ -39,15 +52,26 @@ T parseToml(T)(string toml)
 
     ParseTree tree = TomlGrammar(toml);
 
-    enforce(tree.name == "TomlGrammar", "Expected root of tree to be TomlGrammar, but got: " ~ tree.name);
-    enforce(tree.children.length == 1, "Expected root of tree to have exactly one child, but got: " ~ tree.children.length.to!string);
-    enforce(tree.children[0].name == "TomlGrammar.toml", "Expected only child of tree root to be TomLGrammar.toml, but got: " ~ tree.name);
+    enforce(
+        tree.name == "TomlGrammar",
+        "Expected root of tree to be TomlGrammar, but got: " ~ tree.name
+    );
+
+    enforce(
+        tree.children.length == 1,
+        "Expected root of tree to have exactly one child, but got: " ~ tree.children.length.to!string
+    );
+
+    enforce(
+        tree.children[0].name == "TomlGrammar.toml",
+        "Expected only child of tree root to be TomLGrammar.toml, but got: " ~ tree.name
+    );
 
     ParseTree[] lines = tree.children[0].children;
 
     T dest;
 
-    string[] tableAddress = [];
+    string[] tableAddress;
 
     // Given a dotted key representing an array of tables, how many times has it appeared so far?
     size_t[string[]] tableArrayCounts;
@@ -102,10 +126,57 @@ T parseToml(T)(string toml)
         // want the tracer, you want the HTML.
         // Be warned that toHTML breaks when encountering non-ASCII UTF-8 codepoints.
         import pegged.tohtml : toHTML, Expand;
-        toHTML!(Expand.ifNotMatch, ".comment", ".simple_key", ".basic_string", ".literal_string", ".expression")(tree, "hard_example_toml.html");
+        toHTML!
+            (Expand.ifNotMatch,".comment", ".simple_key", ".basic_string", ".literal_string", ".expression")
+            (tree, "hard_example_toml.html");
     }
 
     return dest;
+}
+
+/// A simple example of `parseToml` with an array of tables.
+unittest
+{
+    struct Configuration
+    {
+        struct Account
+        {
+            string username;
+            ulong id;
+        }
+
+        string serverAddress;
+        int port;
+        Account[] accounts;
+    }
+
+    string data = `
+
+    serverAddress = "127.0.0.1"
+    port = 11000
+
+    [[accounts]]
+    username = "Tom"
+    id = 0x827e7b52
+
+    [[accounts]]
+    username = "Jerry"
+    id = 0x99134cce
+
+    `;
+
+    Configuration config = parseToml!Configuration(data);
+
+    config.should.equal(
+        Configuration(
+            "127.0.0.1",
+            11_000,
+            [
+                Configuration.Account("Tom", 0x827e7b52),
+                Configuration.Account("Jerry", 0x99134cce)
+            ]
+        )
+    );
 }
 
 private void processTomlKeyval(S)(ParseTree pt, ref S dest, string[] tableAddress)
@@ -215,9 +286,9 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
     in (acc.all!(e => e.name == "TomlGrammar.val" ))
     out (ret; ret.all!(e => e.name == "TomlGrammar.val" ))
     {
-        string[] getTypeRules(ParseTree valPT)
+        static string[] getTypeRules(ParseTree valPT)
         {
-            string[] _getTypeRules(ParseTree valPT, string fullMatch, string[] acc)
+            static string[] _getTypeRules(ParseTree valPT, string fullMatch, string[] acc)
             {
                 if (
                     valPT.input[valPT.begin .. valPT.end] != fullMatch ||
@@ -249,7 +320,11 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
         }
 
         ParseTree firstValPT = arrayValuesPT.children[1];
-        assert(firstValPT.name == "TomlGrammar.val");
+        assert(
+            firstValPT.name == "TomlGrammar.val",
+            `Expected array to have a "TomlGrammar.val" child at index 1, but found "` ~ firstValPT.name ~ `".`
+        );
+
         string[] currTypeRules = getTypeRules(firstValPT);
         if (typeRules.length == 0)
         {
@@ -347,7 +422,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
 
 
 /// A magical function which puts `value` into `dest`, inside the field indicated by `address`.
-private void putInStruct(S, T)(ref S dest, string[] address, T value)
+private void putInStruct(S, T)(ref S dest, string[] address, const T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
 in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, not a field name.`)
@@ -363,7 +438,12 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
             {
                 if (address.length == 1)
                 {
-                    static if (__traits(compiles, __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))))
+                    static if (
+                        __traits(
+                            compiles,
+                            __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))
+                        )
+                    )
                     {
                         __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
                         return;
@@ -383,7 +463,10 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
                     // (since those return structs as rvalues which cannot be passed as ref)
                     static if(__traits(compiles, putInStruct(__traits(getMember, dest, member), address[1..$], value)))
                     {
-                        putInStruct!(typeof(__traits(getMember, dest, member)), T)(__traits(getMember, dest, member), address[1..$], value);
+                        putInStruct!
+                            (typeof(__traits(getMember, dest, member)), T)
+                            (__traits(getMember, dest, member), address[1..$], value);
+
                         return;
                     }
                 }
@@ -393,7 +476,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
     throw new Exception(`Could not find field "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
 }
 
-private void putInStruct(S, T)(ref S dest, string[] address, T value)
+private void putInStruct(S, T)(ref S dest, string[] address, const T value)
 if (isArray!S)
 in (address.length > 0, "`address` may not be empty")
 in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not convertible to size_t.`)
@@ -403,11 +486,13 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     {
         static if (isStaticArray!S)
         {
-            throw new Exception("Cannot set index " ~ idx.to!string ~ " of static array with length " ~ dest.length.to!string ~ ".");
+            throw new Exception(
+                "Cannot set index " ~ idx.to!string ~ " of static array with length " ~ dest.length.to!string ~ "."
+            );
         }
         else
         {
-            static assert(isDynamicArray!S);
+            static assert(isDynamicArray!S, "Encountered an array that is neither static nor dynamic (???)");
             dest.length = idx + 1;
         }
     }
@@ -1617,7 +1702,11 @@ unittest
     }
 
     S s = parseToml!S(`
-    musicians = [ { name = "Bob Dylan", dob = 1941-05-24 }, { name = "Frank Sinatra", dob = 1915-12-12 }, { name = "Scott Joplin", dob = 1868-11-24 } ]
+    musicians = [
+        { name = "Bob Dylan", dob = 1941-05-24 },
+        { name = "Frank Sinatra", dob = 1915-12-12 },
+        { name = "Scott Joplin", dob = 1868-11-24 }
+    ]
     `);
 
     s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));

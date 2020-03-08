@@ -4433,4 +4433,4 @@ package struct GenericTomlGrammar(TParseTree)
     }
 }
 
-alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;
+package alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;

@@ -7,21 +7,23 @@ import easy_toml.decode;
 
 
 package(easy_toml.decode) long parseTomlInteger(string value)
+in (
+    value.all!(
+        function bool (e) {
+            return (
+                e.isASCII && (
+                    e.isHexDigit ||
+                    e == 'x' ||
+                    e == 'o' ||
+                    e == 'b' ||
+                    e == '-' ||
+                    e == '+'
+                ) || e == '_'
+            );
+        }
+    )
+)
 {
-    bool isCleanedChar(dchar c)
-    {
-        return c.isASCII && (
-            c.isHexDigit ||
-            c == 'x' ||
-            c == 'o' ||
-            c == 'b' ||
-            c == '-' ||
-            c == '+'
-        );
-    }
-
-    assert(value.all!((e) => isCleanedChar(e) || e == '_'));
-
     int radix = value.length < 3    ?  10  :
                 value[0..2] == "0x" ?  16  :
                 value[0..2] == "0o" ?  8   :
