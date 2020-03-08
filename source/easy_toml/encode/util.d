@@ -20,8 +20,8 @@ version(unittest)
         immutable string expectedClean = expected.clean();
         should.check(
             compareStringsNoBlanks(actualClean, expectedClean),
-            "\n" ~ expected.clean() ~ "\n",
-            "\n" ~ should.got().clean() ~ "\n\n, which differ in more ways than just newlines and indentation.",
+            "\n\n" ~ expected.clean() ~ "\n\n",
+            "\n\n" ~ should.got().clean() ~ "\n\n",
             file, line
         );
     }

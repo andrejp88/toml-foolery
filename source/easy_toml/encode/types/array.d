@@ -1,11 +1,13 @@
 module easy_toml.encode.types.array;
 
-import std.traits : isStaticArray;
+import std.traits : isStaticArray, isDynamicArray;
 import easy_toml.encode;
+import easy_toml.encode.types.string : makesTomlString;
 
 
 package(easy_toml.encode) enum bool makesTomlArray(T) = (
-    isStaticArray!T
+    !makesTomlString!T &&
+    (isStaticArray!T || isDynamicArray!T)
 );
 
 /// Serializes static arrays into TOML Array values.

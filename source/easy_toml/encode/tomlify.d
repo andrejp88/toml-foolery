@@ -8,32 +8,93 @@ import easy_toml.encode.types.floating_point;
 import easy_toml.encode.types.integer;
 import easy_toml.encode.types.string;
 import easy_toml.encode.types.table;
+import easy_toml.encode.util;
 
 import std.algorithm : map, any;
 import std.array : join;
-import std.traits : isSomeString, FieldNameTuple, Fields;
+import std.range.primitives : ElementType;
+import std.traits : isArray, isSomeString, FieldNameTuple, Fields;
 
 version(unittest) import dshould;
 
-
-/// Encodes a struct of type T into a TOML string.
-///
-/// Each field in the struct will be an entry in the resulting TOML string. If a
-/// field is itself a struct, then it will show up as a subtable in the TOML.
+/**
+ *  Encodes a struct of type T into a TOML string.
+ *
+ *  Each field in the struct will be an entry in the resulting TOML string. If a
+ *  field is itself a struct, then it will show up as a subtable in the TOML.
+ *
+ *  Params:
+ *      object = The object to be converted into a TOML file.
+ *      T =      The type of the given object.
+ *
+ *  Returns:
+ *      A string containing TOML data representing the given object.
+ */
 public string tomlify(T)(T object)
+if(is(T == struct))
 {
     Appender!string buffer;
 
     enum auto fieldNames = FieldNameTuple!T;
     static foreach (fieldName; fieldNames)
     {
-        buffer.put(tomlifyKey(fieldName));
-        buffer.put(" = ");
-        tomlifyValue(__traits(getMember, object, fieldName), buffer);
-        buffer.put("\n");
+        tomlifyField(fieldName, __traits(getMember, object, fieldName), buffer, []);
     }
 
     return buffer.data;
+}
+
+/// A simple example of `tomlify` with an array of tables.
+unittest
+{
+    struct Forecast
+    {
+        struct Day
+        {
+            int min;
+            int max;
+        }
+
+        struct Location
+        {
+            string name;
+            real lat;
+            real lon;
+        }
+
+        string temperatureUnit;
+        Location location;
+        Day[] days;
+    }
+
+    Forecast data = Forecast(
+        "℃",
+        Forecast.Location("Pedra Amarela", 38.76417, -9.436667),
+        [
+            Forecast.Day(18, 23),
+            Forecast.Day(15, 21)
+        ]
+    );
+
+    string toml = tomlify(data);
+
+    toml.should.equalNoBlanks(`
+temperatureUnit = "℃"
+
+[location]
+name = "Pedra Amarela"
+lat = 38.76417
+lon = -9.4366670
+
+[[days]]
+min = 18
+max = 23
+
+[[days]]
+min = 15
+max = 21
+`
+    );
 }
 
 
@@ -57,13 +118,27 @@ public class TomlEncodingException : Exception
 package void tomlifyField(K, V)(K key, V value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlKey!K)
 {
-    static if(makesTomlTable!V)
+    static if (makesTomlTable!V)
     {
         buffer.put('[');
         string fullTableName = (parentTables ~ key).map!((e) => tomlifyKey(e)).join(".");
         buffer.put(fullTableName);
         buffer.put("]\n");
         tomlifyValue(value, buffer, parentTables ~ key);
+    }
+    else static if (
+        isArray!V &&
+        is(ElementType!V == struct)
+    )
+    {
+        foreach (ElementType!V entry; value)
+        {
+            buffer.put("[[");
+            string fullTableName = (parentTables ~ key).map!((e) => tomlifyKey(e)).join(".");
+            buffer.put(fullTableName);
+            buffer.put("]]\n");
+            tomlifyValue(entry, buffer, parentTables ~ key);
+        }
     }
     else
     {
