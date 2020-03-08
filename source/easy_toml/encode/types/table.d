@@ -3,7 +3,11 @@ module easy_toml.encode.types.table;
 import std.traits : isAssociativeArray, KeyType, isSomeString, FieldNameTuple;
 import easy_toml.encode;
 import easy_toml.encode.tomlify : makesTomlKey, tomlifyKey;
-import easy_toml.encode.types.datetime : makesTomlOffsetDateTime, makesTomlLocalDateTime, makesTomlLocalTime, makesTomlLocalDate;
+import easy_toml.encode.types.datetime :
+    makesTomlOffsetDateTime,
+    makesTomlLocalDateTime,
+    makesTomlLocalTime,
+    makesTomlLocalDate;
 
 version(unittest) import easy_toml.encode.util : equalNoBlanks;
 
@@ -20,7 +24,11 @@ package(easy_toml.encode) enum bool makesTomlTable(T) = (
 );
 
 /// Serializes structs into TOML tables.
-package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(
+    const T value,
+    ref Appender!string buffer,
+    immutable string[] parentTables
+)
 if (makesTomlTable!T)
 {
     enum auto fieldNames = FieldNameTuple!T;

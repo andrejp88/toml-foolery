@@ -9,18 +9,16 @@ import easy_toml.decode;
 package(easy_toml.decode) long parseTomlInteger(string value)
 in (
     value.all!(
-        function bool (e) {
-            return (
-                e.isASCII && (
-                    e.isHexDigit ||
-                    e == 'x' ||
-                    e == 'o' ||
-                    e == 'b' ||
-                    e == '-' ||
-                    e == '+'
-                ) || e == '_'
-            );
-        }
+        (e) => (
+            (e.isASCII && (
+                e.isHexDigit ||
+                e == 'x' ||
+                e == 'o' ||
+                e == 'b' ||
+                e == '-' ||
+                e == '+'
+            )) || e == '_'
+        )
     )
 )
 {

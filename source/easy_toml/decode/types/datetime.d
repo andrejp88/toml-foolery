@@ -195,7 +195,7 @@ private TimeOfDay parseRFC3339TimeOnly(Captures!string captures)
     string hourStr         = captures[1];
     string minuteStr       = captures[2];
     string secondStr       = captures[3];
-    string fracStr         = captures[4]  != "" ? captures[7]  :  "0";
+    // string fracStr         = captures[4]  != "" ? captures[7]  :  "0";
 
     return TimeOfDay(
         hourStr.to!int,

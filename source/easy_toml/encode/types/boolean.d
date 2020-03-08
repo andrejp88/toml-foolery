@@ -10,7 +10,11 @@ package(easy_toml.encode) enum bool makesTomlBoolean(T) = (
 );
 
 /// Serializes bools into TOML boolean values.
-package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(
+    const T value,
+    ref Appender!string buffer,
+    immutable string[] parentTables
+)
 if (makesTomlBoolean!T)
 {
     buffer.put(value.to!string);
@@ -22,6 +26,6 @@ unittest
     bool bt = true;
     _tomlifyValue(bt).should.equal(`true`);
 
-    bool bf = false;
+    bool bf;
     _tomlifyValue(bf).should.equal(`false`);
 }

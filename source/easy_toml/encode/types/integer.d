@@ -15,14 +15,20 @@ package(easy_toml.encode) enum bool makesTomlInteger(T) = (
 /// Throws:
 ///     TomlEncodingException when value is out of range of valid TOML Integers
 ///     (can only happen when T is `ulong`).
-package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(
+    const T value,
+    ref Appender!string buffer,
+    immutable string[] parentTables
+)
 if (makesTomlInteger!T)
 {
     static if (is(T == ulong))
     {
         if (value > long.max.to!ulong)
         {
-            throw new TomlEncodingException("ulong value is out of TOML integer range (-2^63, 2^63 - 1): " ~ value.to!string);
+            throw new TomlEncodingException(
+                "ulong value is out of TOML integer range (-2^63, 2^63 - 1): " ~ value.to!string
+            );
         }
     }
 
@@ -46,7 +52,7 @@ if (makesTomlInteger!T)
 @("Encode `byte` fields")
 unittest
 {
-    byte b1 = 0;
+    byte b1;
     _tomlifyValue(b1).should.equal(`0`);
 
     byte b2 = byte.max;
@@ -59,7 +65,7 @@ unittest
 @("Encode `ubyte` fields")
 unittest
 {
-    ubyte ub1 = 0;
+    ubyte ub1;
     _tomlifyValue(ub1).should.equal(`0`);
 
     ubyte ub2 = 127;
@@ -72,7 +78,7 @@ unittest
 @("Encode `short` fields")
 unittest
 {
-    short s1 = 0;
+    short s1;
     _tomlifyValue(s1).should.equal(`0`);
 
     short s2 = short.max;
@@ -85,7 +91,7 @@ unittest
 @("Encode `ushort` fields")
 unittest
 {
-    ushort us1 = 0;
+    ushort us1;
     _tomlifyValue(us1).should.equal(`0`);
 
     ushort us2 = 32_768;
@@ -98,7 +104,7 @@ unittest
 @("Encode `int` fields")
 unittest
 {
-    int i1 = 0;
+    int i1;
     _tomlifyValue(i1).should.equal(`0`);
 
     int i2 = int.min;
@@ -124,7 +130,7 @@ unittest
 @("Encode `long` fields")
 unittest
 {
-    long l1 = 0;
+    long l1;
     _tomlifyValue(l1).should.equal(`0`);
 
     long l2 = long.min;
@@ -137,7 +143,7 @@ unittest
 @("Encode `ulong` fields")
 unittest
 {
-    ulong ul1 = 0;
+    ulong ul1;
     _tomlifyValue(ul1).should.equal(`0`);
 
     ulong ul2 = long.max.to!ulong;

@@ -13,7 +13,11 @@ package(easy_toml.encode) enum bool makesTomlFloat(T) = (
 /// Serializes float, double, and real into TOML floating point values.
 /// TOML floats are always 64-bit, floats and reals are converted to doubles
 /// first.
-package(easy_toml.encode) void tomlifyValueImpl(T)(const T value, ref Appender!string buffer, immutable string[] parentTables)
+package(easy_toml.encode) void tomlifyValueImpl(T)(
+    const T value,
+    ref Appender!string buffer,
+    immutable string[] parentTables
+)
 if (makesTomlFloat!T)
 {
     if (value == T(0.0))
