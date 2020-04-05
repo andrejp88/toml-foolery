@@ -46,8 +46,7 @@ version(unittest)
     @("Test compareStringsNoBlanks")
     unittest
     {
-        assert(compareStringsNoBlanks(
-`a
+    string a = `a
 
     b
 
@@ -55,8 +54,9 @@ c
   d
  e
 
-f`,
-`
+f`;
+
+    string b = `
 
      a
   b
@@ -68,11 +68,12 @@ d
 f
 
 
-`
-        ),
-        "The following two strings differ in more ways than just line breaks " ~
-        "and leading/trailing whitespace: \n\n\Expected:\n\n" ~
-        expecef
+`;
+        assert(compareStringsNoBlanks(a, b),
+            "The following two strings differ in more ways than just line breaks " ~
+            "and leading/trailing whitespace: \n\nExpected:\n\n" ~
+            a ~ "\n\n" ~
+            b
         );
     }
 }
