@@ -52,17 +52,17 @@ if (is(T == struct))
 
     ParseTree tree = TomlGrammar(toml);
 
-    enforce(
+    assert(
         tree.name == "TomlGrammar",
         "Expected root of tree to be TomlGrammar, but got: " ~ tree.name
     );
 
-    enforce(
+    assert(
         tree.children.length == 1,
         "Expected root of tree to have exactly one child, but got: " ~ tree.children.length.to!string
     );
 
-    enforce(
+    assert(
         tree.children[0].name == "TomlGrammar.toml",
         "Expected only child of tree root to be TomLGrammar.toml, but got: " ~ tree.name
     );

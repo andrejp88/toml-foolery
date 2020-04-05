@@ -69,6 +69,10 @@ f
 
 
 `
-        ));
+        ),
+        "The following two strings differ in more ways than just line breaks " ~
+        "and leading/trailing whitespace: \n\n\Expected:\n\n" ~
+        expecef
+        );
     }
 }
