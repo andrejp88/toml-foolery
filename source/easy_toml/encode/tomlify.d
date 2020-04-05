@@ -13,7 +13,7 @@ import easy_toml.encode.util;
 import std.algorithm : map, any;
 import std.array : join;
 import std.range.primitives : ElementType;
-import std.traits : isArray, isSomeString, FieldNameTuple, Fields;
+import std.traits : isArray, isSomeString, FieldNameTuple, Fields, isPointer;
 
 version(unittest) import dshould;
 
@@ -174,6 +174,16 @@ if (makesTomlKey!K)
     }
     else
     {
+        static assert(
+            !is(V == class),
+            `Encoding classes into TOML is not yet supported.`
+        );
+
+        static assert(
+            !isPointer!V,
+            `Encoding pointers into TOML is not yet supported.`
+        );
+
         buffer.put(tomlifyKey(key));
         buffer.put(" = ");
         tomlifyValue(value, buffer, parentTables);
