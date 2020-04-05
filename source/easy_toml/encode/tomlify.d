@@ -23,6 +23,10 @@ version(unittest) import dshould;
  *  Each field in the struct will be an entry in the resulting TOML string. If a
  *  field is itself a struct, then it will show up as a subtable in the TOML.
  *
+ *  The struct may not contain any fields that are classes or pointers, because
+ *  circular references are currently not checked for. This restriction may be
+ *  lifted in the future.
+ *
  *  Params:
  *      object = The object to be converted into a TOML file.
  *      T =      The type of the given object.
@@ -95,6 +99,32 @@ min = 15
 max = 21
 `
     );
+}
+
+/// A struct containing classes cannot be encoded.
+unittest
+{
+    class C {}
+
+    struct S
+    {
+        C c;
+    }
+
+    S s;
+    static assert(!__traits(compiles, tomlify(s)), "Should not be able to compile when struct contains a class field.");
+}
+
+/// A struct with a pointer to anything cannot be encoded.
+unittest
+{
+    struct S
+    {
+        int* i;
+    }
+
+    S s;
+    static assert(!__traits(compiles, tomlify(s)), "Should not be able to compile when struct contains a pointer field.");
 }
 
 
