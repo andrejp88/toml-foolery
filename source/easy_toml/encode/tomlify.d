@@ -103,14 +103,14 @@ max = 21
 public class TomlEncodingException : Exception
 {
     /// See `Exception.this()`
-    this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
+    package this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
     @nogc @safe pure nothrow
     {
         super(msg, file, line, nextInChain);
     }
 
     /// ditto
-    this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
+    package this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
     @nogc @safe pure nothrow
     {
         super(msg, file, line, nextInChain);

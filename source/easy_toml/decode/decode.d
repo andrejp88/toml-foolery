@@ -476,6 +476,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
     throw new Exception(`Could not find field "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
 }
 
+/// ditto
 private void putInStruct(S, T)(ref S dest, string[] address, const T value)
 if (isArray!S)
 in (address.length > 0, "`address` may not be empty")
