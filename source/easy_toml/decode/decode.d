@@ -340,6 +340,46 @@ unittest
     }
 }
 
+@("super-table declared after sub-tables is ok (from TOML readme)")
+unittest
+{
+    struct S
+    {
+        struct X
+        {
+            struct Y
+            {
+                struct Z
+                {
+                    struct W
+                    {
+                        int test1;
+                    }
+                    W w;
+                }
+                Z z;
+            }
+            Y y; // y, delilah?
+            int test2;
+        }
+        X x;
+    }
+
+    S s = parseToml!S(`
+        # [x] you
+        # [x.y] don't
+        # [x.y.z] need these
+        [x.y.z.w] # for this to work
+        test1 = 1
+
+        [x] # defining a super-table afterwards is ok
+        test2 = 2
+    `);
+
+    s.x.y.z.w.test1.should.equal(1);
+    s.x.test2.should.equal(2);
+}
+
 private void processTomlKeyval(S)(
     ParseTree pt,
     ref S dest,
