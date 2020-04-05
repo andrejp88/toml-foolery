@@ -94,6 +94,7 @@ if (is(T == struct))
 
     T dest;
 
+    bool[string[]] alreadyDefinedTables;
     bool[string[]] seenSoFar;
     string[] tableAddress;
 
@@ -139,6 +140,17 @@ if (is(T == struct))
                             tableArrayCounts[tableAddress.idup]++;
                         }
                         tableAddress ~= tableArrayCounts[tableAddress].to!string;
+                    }
+                    else
+                    {
+                        if (tableAddress in alreadyDefinedTables)
+                        {
+                            throw new TomlDecodingException(
+                                `Table "` ~ tableAddress.join('.') ~ `" has been declared twice.;`
+                            );
+                        }
+
+                        alreadyDefinedTables[tableAddress.idup] = true;
                     }
 
                     break;
@@ -265,6 +277,33 @@ unittest
 
             [i]
             x = 10
+        `);
+        assert(false, "Expected a TomlDecodingException to be thrown.");
+    }
+    catch (TomlDecodingException e)
+    {
+        // As expected
+    }
+}
+
+@("re-declared table from TOML readme")
+unittest
+{
+    struct S
+    {
+        struct Fruit { string apple; string orange; }
+
+        Fruit fruit;
+    }
+
+    try
+    {
+        S s = parseToml!S(`
+            [fruit]
+            apple = "red"
+
+            [fruit]
+            orange = "orange"
         `);
         assert(false, "Expected a TomlDecodingException to be thrown.");
     }
