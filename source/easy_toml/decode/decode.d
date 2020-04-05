@@ -340,6 +340,37 @@ unittest
     }
 }
 
+@("table re-declared as key")
+unittest
+{
+    struct S
+    {
+        struct Fruit
+        {
+            struct Apple { string texture; }
+            Apple apple;
+        }
+
+        Fruit fruit;
+    }
+
+    try
+    {
+        S s = parseToml!S(`
+            [fruit.apple]
+            texture = "smooth"
+
+            [fruit]
+            apple = "red"
+        `);
+        assert(false, "Expected a TomlDecodingException to be thrown.");
+    }
+    catch (TomlDecodingException e)
+    {
+        // As expected
+    }
+}
+
 @("super-table declared after sub-tables is ok (from TOML readme)")
 unittest
 {
