@@ -26,6 +26,25 @@ import easy_toml.decode.peg_grammar;
 // import pegged.grammar : asModule; asModule("easy_toml.decode.peg_grammar", "source/easy_toml/decode/peg_grammar", import("toml.peg"));
 
 
+/// Thrown by `parseToml` if the given data is invalid TOML.
+public class TomlDecodingException : Exception
+{
+    /// See `Exception.this()`
+    package this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
+    @nogc @safe pure nothrow
+    {
+        super(msg, file, line, nextInChain);
+    }
+
+    /// ditto
+    package this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
+    @nogc @safe pure nothrow
+    {
+        super(msg, file, line, nextInChain);
+    }
+}
+
+
 /**
  *  Decodes a TOML string
  *
@@ -38,8 +57,12 @@ import easy_toml.decode.peg_grammar;
  *  Returns:
  *      An instance of `T` with its fields populated according to the given
  *      TOML data.
+ *
+ *  Throws:
+ *      TomlDecodingException if the given data is invalid TOML.
+ *
  */
-T parseToml(T)(string toml)
+public T parseToml(T)(string toml)
 if (is(T == struct))
 {
     // version tracer is for debugging a grammar, it comes from pegged.
@@ -64,13 +87,14 @@ if (is(T == struct))
 
     assert(
         tree.children[0].name == "TomlGrammar.toml",
-        "Expected only child of tree root to be TomLGrammar.toml, but got: " ~ tree.name
+        "Expected only child of tree root to be TomlGrammar.toml, but got: " ~ tree.name
     );
 
     ParseTree[] lines = tree.children[0].children;
 
     T dest;
 
+    bool[string[]] seenSoFar;
     string[] tableAddress;
 
     // Given a dotted key representing an array of tables, how many times has it appeared so far?
@@ -78,8 +102,13 @@ if (is(T == struct))
 
     foreach (ParseTree line; lines)
     {
-        assert(line.name == "TomlGrammar.expression",
-               "Expected a TomlGrammar.expression, got: " ~ line.name ~ ". Full tree:\n" ~ tree.toString());
+        if(line.name != "TomlGrammar.expression")
+        {
+            throw new TomlDecodingException(
+                "Invalid TOML data. Expected a TomlGrammar.expression, but got: " ~
+                line.name ~ "\n Full tree:\n" ~ tree.toString()
+            );
+        }
 
         lineLoop:
         foreach (ParseTree partOfLine; line.children)
@@ -87,7 +116,7 @@ if (is(T == struct))
             switch (partOfLine.name)
             {
                 case "TomlGrammar.keyval":
-                    processTomlKeyval(partOfLine, dest, tableAddress);
+                    processTomlKeyval(partOfLine, dest, tableAddress, seenSoFar);
                     break;
 
                 case "TomlGrammar.table":
@@ -179,15 +208,93 @@ unittest
     );
 }
 
-private void processTomlKeyval(S)(ParseTree pt, ref S dest, string[] tableAddress)
-in (pt.name == "TomlGrammar.keyval")
+
+/// Syntactically invalid TOML results in an exception.
+unittest
 {
-    processTomlVal(pt.children[2], dest, tableAddress ~ splitDottedKey(pt.children[0]));
+    struct S {}
+
+    try
+    {
+        parseToml!S(`[[[bad`);
+        assert(false, "Expected a TomlDecodingException to be thrown.");
+    }
+    catch (TomlDecodingException e)
+    {
+        // As expected.
+    }
 }
 
-private void processTomlVal(S)(ParseTree pt, ref S dest, string[] address)
+/// Duplicate key names result in an exception.
+unittest
+{
+    struct S
+    {
+        int x;
+    }
+
+    try
+    {
+        S s = parseToml!S(`
+            x = 5
+            x = 10
+        `);
+        assert(false, "Expected a TomlDecodingException to be thrown.");
+    }
+    catch (TomlDecodingException e)
+    {
+        // As expected
+    }
+}
+
+/// Duplicate table names result in an exception.
+unittest
+{
+    struct S
+    {
+        struct Inner { int x; }
+
+        Inner i;
+    }
+
+    try
+    {
+        S s = parseToml!S(`
+            [i]
+            x = 5
+
+            [i]
+            x = 10
+        `);
+        assert(false, "Expected a TomlDecodingException to be thrown.");
+    }
+    catch (TomlDecodingException e)
+    {
+        // As expected
+    }
+}
+
+private void processTomlKeyval(S)(
+    ParseTree pt,
+    ref S dest,
+    string[] tableAddress,
+    ref bool[string[]] seenSoFar
+)
+in (pt.name == "TomlGrammar.keyval")
+{
+    processTomlVal(pt.children[2], dest, tableAddress ~ splitDottedKey(pt.children[0]), seenSoFar);
+}
+
+private void processTomlVal(S)(ParseTree pt, ref S dest, string[] address, ref bool[string[]] seenSoFar)
 in (pt.name == "TomlGrammar.val")
 {
+    if (address in seenSoFar)
+    {
+        throw new TomlDecodingException(`Duplicate key: "` ~ address.join('.') ~ `"`);
+    }
+
+    seenSoFar[address.idup] = true;
+
     string value = pt.input[pt.begin .. pt.end];
 
     ParseTree typedValPT = pt.children[0];
@@ -215,11 +322,11 @@ in (pt.name == "TomlGrammar.val")
             break;
 
         case "TomlGrammar.array":
-            processTomlArray(typedValPT, dest, address);
+            processTomlArray(typedValPT, dest, address, seenSoFar);
             break;
 
         case "TomlGrammar.inline_table":
-            processTomlInlineTable(typedValPT, dest, address);
+            processTomlInlineTable(typedValPT, dest, address, seenSoFar);
             break;
 
         default:
@@ -258,25 +365,25 @@ in (pt.name == "TomlGrammar.date_time")
 }
 
 
-private void processTomlInlineTable(S)(ParseTree pt, ref S dest, string[] address)
+private void processTomlInlineTable(S)(ParseTree pt, ref S dest, string[] address, ref bool[string[]] seenSoFar)
 in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" but got "` ~ pt.name ~ `".`)
 {
-    void processTomlInlineTableKeyvals(S)(ParseTree pt, ref S dest, string[] address)
+    void processTomlInlineTableKeyvals(S)(ParseTree pt, ref S dest, string[] address, ref bool[string[]] seenSoFar)
     in (pt.name == "TomlGrammar.inline_table_keyvals")
     {
-        processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address);
+        processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address, seenSoFar);
         ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
         if (keyvals.empty) return;
-        processTomlInlineTableKeyvals(keyvals[0], dest, address);
+        processTomlInlineTableKeyvals(keyvals[0], dest, address, seenSoFar);
     }
 
     ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
     if (keyvals.empty) return;
-    processTomlInlineTableKeyvals(keyvals[0], dest, address);
+    processTomlInlineTableKeyvals(keyvals[0], dest, address, seenSoFar);
 }
 
 
-private void processTomlArray(S)(ParseTree pt, ref S dest, string[] address)
+private void processTomlArray(S)(ParseTree pt, ref S dest, string[] address, ref bool[string[]] seenSoFar)
 in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ pt.name ~ `".`)
 {
     string[] typeRules;
@@ -410,7 +517,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
         case "TomlGrammar.inline_table":
             foreach (size_t i, ParseTree valuePT; valuePTs)
             {
-                processTomlInlineTable(valuePT.children[0], dest, address ~ i.to!string);
+                processTomlInlineTable(valuePT.children[0], dest, address ~ i.to!string, seenSoFar);
             }
             break;
 

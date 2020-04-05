@@ -112,7 +112,10 @@ unittest
     }
 
     S s;
-    static assert(!__traits(compiles, tomlify(s)), "Should not be able to compile when struct contains a class field.");
+    static assert(
+        !__traits(compiles, tomlify(s)),
+        "Should not be able to compile when struct contains a class field."
+    );
 }
 
 /// A struct with a pointer to anything cannot be encoded.
@@ -124,7 +127,10 @@ unittest
     }
 
     S s;
-    static assert(!__traits(compiles, tomlify(s)), "Should not be able to compile when struct contains a pointer field.");
+    static assert(
+        !__traits(compiles, tomlify(s)),
+        "Should not be able to compile when struct contains a pointer field."
+    );
 }
 
 
