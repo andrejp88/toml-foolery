@@ -4,12 +4,16 @@ authors "Andrej Petrovic"
 copyright "Copyright © 2020, Andrej Petrovic"
 license "MIT"
 targetType "library"
+
 dependency "datefmt" version="1.0.4"
 dependency "pegged" version="0.4.4"
+
 dflags "-J=."
+
 configuration "library" {
 	targetType "library"
 }
+
 configuration "unittest" {
 	dependency "silly" version="~>1.0.0"
 	dependency "dshould" version="~>1.1.0"
