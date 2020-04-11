@@ -62,7 +62,10 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
                         }
                         else
                         {
-                            throw new TomlDecodingException(`Could not place value into "` ~ member ~ `" (maybe it's a property?)`);
+                            throw new TomlDecodingException(
+                                `Could not place value inside field ` ~ member ~
+                                ` of struct ` ~ S.stringof ~ ` (maybe it's a property?)`
+                            );
                         }
                     }
                 }
@@ -99,15 +102,23 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
 
     if (address.length == 1)
     {
-        static if (__traits(compiles, value.to!(ElementType!S)))
+        // Defined as a function so that it can go inside a __traits(compiles, ...)
+        static void setIndex(S, T)(ref S dest, size_t idx, T value)
         {
-            dest[idx] = value.to!(ElementType!S);
+            dest[idx] = value;
+        }
+
+        static if (__traits(compiles, setIndex(dest, idx, value.to!(ElementType!S))))
+        {
+            setIndex(dest, idx, value.to!(ElementType!S));
         }
         else
         {
             assert (
                 false,
-                `Invalid operation: ` ~ value.to!string ~ `.to!` ~ (ElementType!S).stringof
+                `Invalid operation: ` ~
+                dest.to!string ~ `[` ~ idx.to!string ~ `] =
+                ` ~ value.to!string ~ `.to!` ~ (ElementType!S).stringof
             );
         }
     }

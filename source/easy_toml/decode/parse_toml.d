@@ -385,7 +385,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
     ParseTree[] consumeArrayValues(ParseTree arrayValuesPT, ParseTree[] acc)
     in (arrayValuesPT.name == "TomlGrammar.array_values")
     in (acc.all!(e => e.name == "TomlGrammar.val" ))
-    out (ret; ret.all!(e => e.name == "TomlGrammar.val" ))
+    out (ret; ret.all!(e => e.name == "TomlGrammar.val"))
     {
         static string[] getTypeRules(ParseTree valPT)
         {
@@ -462,62 +462,9 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
     }
 
     ParseTree[] valuePTs = consumeArrayValues(findResult[0], []);
-    auto valueStrings = valuePTs.map!(e => e.input[e.begin .. e.end]);
-
-    switch (typeRules[0])
+    foreach (size_t i, ParseTree valuePT; valuePTs)
     {
-        case "TomlGrammar.integer":
-            long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
-            setData(dest, address, valueLongs);
-            break;
-
-        case "TomlGrammar.float_":
-            real[] valueReals = valueStrings.map!(e => parseTomlFloat(e)).array;
-            setData(dest, address, valueReals);
-            break;
-
-        case "TomlGrammar.boolean":
-            bool[] valueBools = valueStrings.map!(e => e.to!bool).array;
-            setData(dest, address, valueBools);
-            break;
-
-        case "TomlGrammar.string_":
-            string[] valueParsedStrings = valueStrings.map!(e => parseTomlString(e)).array;
-            setData(dest, address, valueParsedStrings);
-            break;
-
-        case "TomlGrammar.date_time":
-            auto datesAndOrTimes = valueStrings.map!(e => parseTomlGenericDateTime(e));
-
-            if (datesAndOrTimes[0].type == typeid(SysTime))
-            {
-                setData(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
-            }
-            else if (datesAndOrTimes[0].type == typeid(Date))
-            {
-                setData(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
-            }
-            else if (datesAndOrTimes[0].type == typeid(TimeOfDay))
-            {
-                setData(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
-            }
-            else
-            {
-                throw new Exception("Unsupported TOML date_time sub-type: " ~ datesAndOrTimes[0].type.to!string);
-            }
-
-            break;
-
-        case "TomlGrammar.inline_table":
-            foreach (size_t i, ParseTree valuePT; valuePTs)
-            {
-                processTomlInlineTable(valuePT.children[0], dest, address ~ i.to!string, seenSoFar);
-            }
-            break;
-
-        default:
-            debug { throw new Exception("Unsupported array value type: \"" ~ typeRules[0] ~ "\""); }
-            else { break; }
+        processTomlVal(valuePT, dest, address ~ i.to!string, seenSoFar);
     }
 }
 
