@@ -1,14 +1,14 @@
-module easy_toml.decode.put_in_struct_test;
+module easy_toml.decode.set_data_dest;
 
 version(unittest)
 {
     import std.array : staticArray;
     import dshould;
-    import easy_toml.decode.put_in_struct;
+    import easy_toml.decode.set_data;
 }
 
 
-@("putInStruct — simple as beans")
+@("setData — simple as beans")
 unittest
 {
     struct S
@@ -17,11 +17,11 @@ unittest
     }
 
     S s;
-    putInStruct(s, ["a"], -44);
+    setData(s, ["a"], -44);
     s.a.should.equal(-44);
 }
 
-@("putInStruct — rather more complex")
+@("setData — rather more complex")
 unittest
 {
     struct X
@@ -36,11 +36,11 @@ unittest
     }
 
     S target;
-    putInStruct(target, ["box", "abc"], 525_600);
+    setData(target, ["box", "abc"], 525_600);
     target.box.abc.should.equal(525_600);
 }
 
-@("putInStruct — bloody complex")
+@("setData — bloody complex")
 unittest
 {
     struct Surprise
@@ -77,13 +77,13 @@ unittest
 
     S s;
 
-    putInStruct(s, ["ogres", "are", "like", "onions", "bye"], Surprise(827, 912, 9));
+    setData(s, ["ogres", "are", "like", "onions", "bye"], Surprise(827, 912, 9));
     s.ogres.are.like.onions.bye.a.should.equal(827);
     s.ogres.are.like.onions.bye.b.should.equal(912);
     s.ogres.are.like.onions.bye.c.should.equal(9);
 }
 
-@("putInStruct — now with methods")
+@("setData — now with methods")
 unittest
 {
     struct S
@@ -126,13 +126,13 @@ unittest
 
     S s;
 
-    putInStruct(s, ["c", "x"], 5);
-    putInStruct(s, ["a"], 9);
+    setData(s, ["c", "x"], 5);
+    setData(s, ["a"], 9);
     s.c.x.should.equal(5);
     s.a.should.equal(9);
 }
 
-@("putInStruct — properties")
+@("setData — properties")
 unittest
 {
     struct S
@@ -143,11 +143,11 @@ unittest
     }
 
     S s;
-    putInStruct(s, ["x"], 5);
+    setData(s, ["x"], 5);
     s.x.should.equal(5);
 }
 
-@("putInStruct — read-only properties")
+@("setData — read-only properties")
 unittest
 {
     struct S
@@ -158,10 +158,10 @@ unittest
 
     S s;
     // Just needs to compile:
-    putInStruct(s, ["y"], 5);
+    setData(s, ["y"], 5);
 }
 
-@("putInStruct — do not insert into read-only struct @properties.")
+@("setData — do not insert into read-only struct @properties.")
 unittest
 {
     struct S
@@ -176,12 +176,12 @@ unittest
     }
 
     S s;
-    // C returns an rvalue, which cannot be ref, so it should be ignored by putInStruct.
+    // C returns an rvalue, which cannot be ref, so it should be ignored by setData.
     // This should compile but c.x can't be changed.
-    putInStruct(s, ["c", "x"], 5).should.throwAn!Exception;
+    setData(s, ["c", "x"], 5).should.throwAn!Exception;
 }
 
-@("putInStruct — Static array -> Static array")
+@("setData — Static array -> Static array")
 unittest
 {
     struct S
@@ -192,65 +192,65 @@ unittest
 
     S s;
 
-    putInStruct(s, ["statArr"], staticArray!(int, 4)([27, 92, 71, -34]));
+    setData(s, ["statArr"], staticArray!(int, 4)([27, 92, 71, -34]));
     s.statArr.should.equal(staticArray!(int, 4)([27, 92, 71, -34]));
 
-    putInStruct(s, ["badSizeStatArr"], staticArray!(int, 4)([62, 12, 92, 10])).should.throwAn!Exception;
+    setData(s, ["badSizeStatArr"], staticArray!(int, 4)([62, 12, 92, 10])).should.throwAn!Exception;
 
     int[] dynArr = [33, 22, 11, 99];
-    putInStruct(s, ["statArr"], dynArr);
+    setData(s, ["statArr"], dynArr);
     s.statArr.should.equal(staticArray!(int, 4)([33, 22, 11, 99]));
 }
 
-@("putInStruct — Into Static Array")
+@("setData — Into Static Array")
 unittest
 {
     int[5] x;
 
-    putInStruct(x, ["4"], 99);
+    setData(x, ["4"], 99);
     x[4].should.equal(99);
 }
 
-@("putInStruct — Into Static Array (out of range)")
+@("setData — Into Static Array (out of range)")
 unittest
 {
     int[5] x;
 
-    putInStruct(x, ["5"], 99).should.throwAn!Exception;
+    setData(x, ["5"], 99).should.throwAn!Exception;
 }
 
-@("putInStruct — Into Dynamic Array (with resizing)")
+@("setData — Into Dynamic Array (with resizing)")
 unittest
 {
     int[] x;
 
     x.length.should.equal(0);
-    putInStruct(x, ["5"], 88);
+    setData(x, ["5"], 88);
     x.length.should.equal(6);
     x[5].should.equal(88);
 }
 
-@("putInStruct — Into static array of arrays")
+@("setData — Into static array of arrays")
 unittest
 {
     int[6][4] x;
 
-    putInStruct(x, ["3", "5"], 88);
+    setData(x, ["3", "5"], 88);
     x[3][5].should.equal(88);
 }
 
-@("putInStruct — Into dynamic array of arrays")
+@("setData — Into dynamic array of arrays")
 unittest
 {
     int[][] x;
 
-    putInStruct(x, ["5", "3"], 88);
+    setData(x, ["5", "3"], 88);
     x.length.should.equal(6);
     x[5].length.should.equal(4);
     x[5][3].should.equal(88);
 }
 
-@("putInStruct — Into dynamic array of structs")
+@("setData — Into dynamic array of structs")
 unittest
 {
     struct S
@@ -260,12 +260,12 @@ unittest
 
     S[] s;
 
-    putInStruct(s, ["5", "x"], 88);
+    setData(s, ["5", "x"], 88);
     s.length.should.equal(6);
     s[5].x.should.equal(88);
 }
 
-@("putInStruct — Into static array of structs")
+@("setData — Into static array of structs")
 unittest
 {
     struct S
@@ -275,11 +275,11 @@ unittest
 
     S[4] s;
 
-    putInStruct(s, ["3", "x"], 88);
+    setData(s, ["3", "x"], 88);
     s[3].x.should.equal(88);
 }
 
-@("putInStruct — Into field that is static array of ints")
+@("setData — Into field that is static array of ints")
 unittest
 {
     struct S
@@ -288,12 +288,12 @@ unittest
     }
 
     S s;
-    putInStruct(s, ["i", "2"], 772);
+    setData(s, ["i", "2"], 772);
 
     s.i[2].should.equal(772);
 }
 
-@("putInStruct — Into field that is static array of structs")
+@("setData — Into field that is static array of structs")
 unittest
 {
     struct Outer
@@ -307,12 +307,12 @@ unittest
     }
 
     Outer outer;
-    putInStruct(outer, ["inner", "2", "x"], 202);
+    setData(outer, ["inner", "2", "x"], 202);
 
     outer.inner[2].x.should.equal(202);
 }
 
-@("putInStruct — array of struct with array of array of structs")
+@("setData — array of struct with array of array of structs")
 unittest
 {
     struct A
@@ -332,6 +332,6 @@ unittest
 
     A a;
 
-    putInStruct(a, ["b", "2", "c", "1", "3", "x"], 773);
+    setData(a, ["b", "2", "c", "1", "3", "x"], 773);
     a.b[2].c[1][3].x.should.equal(773);
 }

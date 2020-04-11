@@ -1,4 +1,4 @@
-module easy_toml.decode.put_in_struct;
+module easy_toml.decode.set_data;
 
 import std.conv;
 import std.traits;
@@ -8,7 +8,7 @@ import easy_toml.decode.toml_decoding_exception;
 
 
 /// A magical function which puts `value` into `dest`, inside the field indicated by `address`.
-package void putInStruct(S, T)(ref S dest, string[] address, const T value)
+package void setData(S, T)(ref S dest, string[] address, const T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
 in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, not a field name.`)
@@ -52,9 +52,9 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
                     {
                         // ...is a struct or array (allowing a recursive call), but isn't a @property
                         // (since those return structs as rvalues which cannot be passed as ref)
-                        static if(__traits(compiles, putInStruct(__traits(getMember, dest, member), address[1..$], value)))
+                        static if(__traits(compiles, setData(__traits(getMember, dest, member), address[1..$], value)))
                         {
-                            putInStruct!
+                            setData!
                                 (typeof(__traits(getMember, dest, member)), T)
                                 (__traits(getMember, dest, member), address[1..$], value);
 
@@ -76,7 +76,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
 }
 
 /// ditto
-package void putInStruct(S, T)(ref S dest, string[] address, const T value)
+package void setData(S, T)(ref S dest, string[] address, const T value)
 if (isArray!S)
 in (address.length > 0, "`address` may not be empty")
 in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not convertible to size_t.`)
@@ -115,7 +115,7 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     {
         static if (isArray!(typeof(dest[idx])) || is(typeof(dest[idx]) == struct))
         {
-            putInStruct(dest[idx], address[1 .. $], value);
+            setData(dest[idx], address[1 .. $], value);
         }
     }
 }

@@ -11,7 +11,7 @@ import std.traits;
 
 version(unittest) import dshould;
 
-import easy_toml.decode.put_in_struct;
+import easy_toml.decode.set_data;
 import easy_toml.decode.toml_decoding_exception;
 import easy_toml.decode.types.datetime;
 import easy_toml.decode.types.floating_point;
@@ -296,19 +296,19 @@ in (pt.name == "TomlGrammar.val")
     switch (typedValPT.name)
     {
         case "TomlGrammar.integer":
-            putInStruct(dest, address, parseTomlInteger(value));
+            setData(dest, address, parseTomlInteger(value));
             break;
 
         case "TomlGrammar.float_":
-            putInStruct(dest, address, parseTomlFloat(value));
+            setData(dest, address, parseTomlFloat(value));
             break;
 
         case "TomlGrammar.boolean":
-            putInStruct(dest, address, value.to!bool);
+            setData(dest, address, value.to!bool);
             break;
 
         case "TomlGrammar.string_":
-            putInStruct(dest, address, parseTomlString(value));
+            setData(dest, address, parseTomlString(value));
             break;
 
         case "TomlGrammar.date_time":
@@ -338,19 +338,19 @@ in (pt.name == "TomlGrammar.date_time")
     switch (dateTimeType)
     {
         case "TomlGrammar.offset_date_time":
-            putInStruct(dest, address, parseTomlOffsetDateTime(value));
+            setData(dest, address, parseTomlOffsetDateTime(value));
             break;
 
         case "TomlGrammar.local_date_time":
-            putInStruct(dest, address, parseTomlLocalDateTime(value));
+            setData(dest, address, parseTomlLocalDateTime(value));
             break;
 
         case "TomlGrammar.local_date":
-            putInStruct(dest, address, parseTomlLocalDate(value));
+            setData(dest, address, parseTomlLocalDate(value));
             break;
 
         case "TomlGrammar.local_time":
-            putInStruct(dest, address, parseTomlLocalTime(value));
+            setData(dest, address, parseTomlLocalTime(value));
             break;
 
         default:
@@ -468,22 +468,22 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
     {
         case "TomlGrammar.integer":
             long[] valueLongs = valueStrings.map!(e => parseTomlInteger(e)).array;
-            putInStruct(dest, address, valueLongs);
+            setData(dest, address, valueLongs);
             break;
 
         case "TomlGrammar.float_":
             real[] valueReals = valueStrings.map!(e => parseTomlFloat(e)).array;
-            putInStruct(dest, address, valueReals);
+            setData(dest, address, valueReals);
             break;
 
         case "TomlGrammar.boolean":
             bool[] valueBools = valueStrings.map!(e => e.to!bool).array;
-            putInStruct(dest, address, valueBools);
+            setData(dest, address, valueBools);
             break;
 
         case "TomlGrammar.string_":
             string[] valueParsedStrings = valueStrings.map!(e => parseTomlString(e)).array;
-            putInStruct(dest, address, valueParsedStrings);
+            setData(dest, address, valueParsedStrings);
             break;
 
         case "TomlGrammar.date_time":
@@ -491,15 +491,15 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
 
             if (datesAndOrTimes[0].type == typeid(SysTime))
             {
-                putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
+                setData(dest, address, datesAndOrTimes.map!(e => e.get!SysTime).array);
             }
             else if (datesAndOrTimes[0].type == typeid(Date))
             {
-                putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
+                setData(dest, address, datesAndOrTimes.map!(e => e.get!Date).array);
             }
             else if (datesAndOrTimes[0].type == typeid(TimeOfDay))
             {
-                putInStruct(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
+                setData(dest, address, datesAndOrTimes.map!(e => e.get!TimeOfDay).array);
             }
             else
             {
