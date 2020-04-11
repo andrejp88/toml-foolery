@@ -125,7 +125,7 @@ if (is(T == struct))
                         if (tableAddress in seenSoFar)
                         {
                             throw new TomlDecodingException(
-                                `Key/table "` ~ tableAddress.join('.') ~ `" has been declared twice.;`
+                                `Key/table "` ~ tableAddress.join('.') ~ `" has been declared twice.`
                             );
                         }
 
