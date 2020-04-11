@@ -1,5 +1,5 @@
 /// Just some tests to make sure the grammar is good..
-module easy_toml.decode.grammar_tests;
+module easy_toml.decode.peg_grammar_test;
 
 import easy_toml.decode.peg_grammar;
 
