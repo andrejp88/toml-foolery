@@ -1,7 +1,10 @@
-module easy_toml.decode.decode_test;
+module easy_toml.decode.parse_toml_test;
 
 import std.conv;
-import easy_toml.decode.decode;
+
+import easy_toml.decode.parse_toml;
+import easy_toml.decode.toml_decoding_exception;
+
 
 version (unittest)
 {
@@ -10,8 +13,6 @@ version (unittest)
 
     import dshould;
 }
-
-
 
 
 @("key re-declared as table from TOML readme")
@@ -352,7 +353,6 @@ Abc\t''de
 
     result.s.should.equal("Abc\\t''de\n");
 }
-
 
 @("String Unicode test (string, wstring, and dstring)")
 unittest

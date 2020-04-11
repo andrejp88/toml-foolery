@@ -1,8 +1,14 @@
 module easy_toml.decode.types.floating_point;
 
 import std.algorithm : filter;
-version (unittest) import std.math : isNaN;
-import easy_toml.decode;
+import std.conv : to;
+
+version (unittest)
+{
+    import std.math : isNaN;
+    import dshould;
+}
+
 
 package(easy_toml.decode) real parseTomlFloat(string value)
 {

@@ -2,8 +2,9 @@ module easy_toml.decode.types.integer;
 
 import std.algorithm : filter, all;
 import std.ascii : isASCII, isHexDigit;
+import std.conv : to;
 
-import easy_toml.decode;
+version(unittest) import dshould;
 
 
 package(easy_toml.decode) long parseTomlInteger(string value)

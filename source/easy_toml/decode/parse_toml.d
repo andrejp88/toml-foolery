@@ -1,15 +1,18 @@
-module easy_toml.decode.decode;
+module easy_toml.decode.parse_toml;
 
 import std.algorithm;
 import std.array;
+import std.conv;
 import std.datetime;
 import std.exception : enforce;
 import std.range;
 import std.range.primitives;
 import std.traits;
 
-import easy_toml.decode;
+version(unittest) import dshould;
+
 import easy_toml.decode.put_in_struct;
+import easy_toml.decode.toml_decoding_exception;
 import easy_toml.decode.types.datetime;
 import easy_toml.decode.types.floating_point;
 import easy_toml.decode.types.integer;
@@ -20,25 +23,6 @@ import easy_toml.decode.peg_grammar;
 // import pegged.grammar; mixin(grammar(import("toml.peg")));
 // To turn it into a D module again, run the following code once:
 // import pegged.grammar : asModule; asModule("easy_toml.decode.peg_grammar", "source/easy_toml/decode/peg_grammar", import("toml.peg"));
-
-
-/// Thrown by `parseToml` if the given data is invalid TOML.
-public class TomlDecodingException : Exception
-{
-    /// See `Exception.this()`
-    package this(string msg, string file = __FILE__, size_t line = __LINE__, Throwable nextInChain = null)
-    @nogc @safe pure nothrow
-    {
-        super(msg, file, line, nextInChain);
-    }
-
-    /// ditto
-    package this(string msg, Throwable nextInChain, string file = __FILE__, size_t line = __LINE__)
-    @nogc @safe pure nothrow
-    {
-        super(msg, file, line, nextInChain);
-    }
-}
 
 
 /**
@@ -542,21 +526,21 @@ pure
 in (pt.name == "TomlGrammar.key")
 {
     return pt.children[0].name == "TomlGrammar.dotted_key" ?
-                        (
-                            pt.children[0]
-                                .children
-                                .filter!(e => e.name == "TomlGrammar.simple_key")
-                                .map!(e =>
-                                    e.children[0].name == "TomlGrammar.quoted_key" ?
-                                    e.input[e.begin + 1 .. e.end - 1] :
-                                    e.input[e.begin .. e.end]
-                                )
-                                .array
-                        )
-                        :
-                        (
-                            pt.children[0].children[0].name == "TomlGrammar.quoted_key" ?
-                            [ pt.input[pt.begin + 1 .. pt.end - 1] ] :
-                            [ pt.input[pt.begin .. pt.end] ]
-                        );
+        (
+            pt.children[0]
+                .children
+                .filter!(e => e.name == "TomlGrammar.simple_key")
+                .map!(e =>
+                    e.children[0].name == "TomlGrammar.quoted_key" ?
+                    e.input[e.begin + 1 .. e.end - 1] :
+                    e.input[e.begin .. e.end]
+                )
+                .array
+        )
+        :
+        (
+            pt.children[0].children[0].name == "TomlGrammar.quoted_key" ?
+            [ pt.input[pt.begin + 1 .. pt.end - 1] ] :
+            [ pt.input[pt.begin .. pt.end] ]
+        );
 }

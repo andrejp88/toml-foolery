@@ -1,10 +1,11 @@
 module easy_toml.decode.types.datetime;
 
+import std.conv : to;
 import std.datetime;
 import std.regex : ctRegex, matchFirst, Captures;
 import std.variant : Algebraic;
 
-import easy_toml.decode;
+version(unittest) import dshould;
 
 
 package(easy_toml.decode) alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);

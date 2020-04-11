@@ -2,11 +2,13 @@ module easy_toml.decode.types.string;
 
 import std.algorithm;
 import std.array;
+import std.conv : to;
 import std.regex;
 import std.string : strip;
 import std.uni;
 
-import easy_toml.decode;
+version(unittest) import dshould;
+
 
 package(easy_toml.decode) string parseTomlString(string value)
 {
