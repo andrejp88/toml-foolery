@@ -1194,3 +1194,69 @@ unittest
     s.musicians[1].should.equal(S.Musician());
     s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
+
+@("Integer can't fit into a byte")
+unittest
+{
+    struct S
+    {
+        byte i;
+    }
+
+    parseToml!S(`i = 128`).should.throwA!TomlDecodingException;
+}
+
+@("Integer can't fit into a ubyte")
+unittest
+{
+    struct S
+    {
+        byte i;
+    }
+
+    parseToml!S(`i = 256`).should.throwA!TomlDecodingException;
+}
+
+@("Integer can't fit into a short")
+unittest
+{
+    struct S
+    {
+        short i;
+    }
+
+    parseToml!S(`i = 32768`).should.throwA!TomlDecodingException;
+}
+
+@("Integer can't fit into a ushort")
+unittest
+{
+    struct S
+    {
+        ushort i;
+    }
+
+    parseToml!S(`i = 65536`).should.throwA!TomlDecodingException;
+}
+
+@("Integer too small (ushort)")
+unittest
+{
+    struct S
+    {
+        ushort i;
+    }
+
+    parseToml!S(`i = -1`).should.throwA!TomlDecodingException;
+}
+
+@("Integer too small (short)")
+unittest
+{
+    struct S
+    {
+        ushort i;
+    }
+
+    parseToml!S(`i = -32769`).should.throwA!TomlDecodingException;
+}

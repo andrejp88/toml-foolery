@@ -33,7 +33,20 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
                             )
                         )
                         {
-                            __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
+                            try
+                            {
+                                __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
+                            }
+                            catch (ConvOverflowException e)
+                            {
+                                throw new TomlDecodingException(
+                                    `Key "` ~ dFieldToTomlKey!(S, member) ~ `"` ~
+                                    ` has value ` ~ value.to!string ~ ` which cannot fit in field ` ~
+                                    S.stringof ~ `.` ~ member ~
+                                    ` of type ` ~ typeof(__traits(getMember, dest, member)).stringof,
+                                    e
+                                );
+                            }
                             return;
                         }
                         else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
