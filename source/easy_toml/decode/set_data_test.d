@@ -1,4 +1,4 @@
-module easy_toml.decode.set_data_dest;
+module easy_toml.decode.set_data_test;
 
 version(unittest)
 {

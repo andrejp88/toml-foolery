@@ -1,5 +1,6 @@
 module easy_toml.encode.tomlify;
 
+import easy_toml.attributes;
 import easy_toml.encode;
 import easy_toml.encode.types.array;
 import easy_toml.encode.types.boolean;
@@ -42,7 +43,7 @@ if(is(T == struct))
     enum auto fieldNames = FieldNameTuple!T;
     static foreach (fieldName; fieldNames)
     {
-        tomlifyField(fieldName, __traits(getMember, object, fieldName), buffer, []);
+        tomlifyField(dFieldToTomlKey!(T, fieldName), __traits(getMember, object, fieldName), buffer, []);
     }
 
     return buffer.data;

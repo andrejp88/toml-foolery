@@ -7,7 +7,7 @@ version(unittest)
 {
     import dshould.ShouldType;
 
-    package void equalNoBlanks(Should, T)(
+    package(easy_toml) void equalNoBlanks(Should, T)(
         Should should,
         T expected,
         Fence _ = Fence(),

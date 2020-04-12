@@ -4,6 +4,7 @@ import std.conv;
 import std.traits;
 import std.range.primitives;
 
+import easy_toml.attributes.toml_name;
 import easy_toml.decode.toml_decoding_exception;
 
 
@@ -21,7 +22,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
             // ...that isn't a nested struct declaration...
             static if (!is(__traits(getMember, dest, member)))
             {
-                case member:
+                case dFieldToTomlKey!(S, member):
                 {
                     if (address.length == 1)
                     {
@@ -73,7 +74,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
         }
 
         default:
-            throw new Exception(`Could not find field "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
+            throw new Exception(`Could not find field corresponding to "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
     }
 
 }
