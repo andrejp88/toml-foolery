@@ -240,7 +240,7 @@ package void tomlifyValue(T)(const T value, ref Appender!string buffer, immutabl
     tomlifyValueImpl(value, buffer, parentTables);
 }
 
-private bool hasDuplicateKeys(S)()
+package bool hasDuplicateKeys(S)()
 {
     bool[string] keys;
 

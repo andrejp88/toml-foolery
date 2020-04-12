@@ -60,6 +60,30 @@ unittest
     );
 }
 
+@("Complex rename on encoding")
+unittest
+{
+    struct S
+    {
+        struct Inner
+        {
+            @TomlName("why") string y;
+            @TomlName("y") float why;
+        }
+
+        @TomlName("eye") int i;
+        @TomlName("i") Inner inner;
+    }
+
+    tomlify(S(5, S.Inner("hello world", 0.5))).should.equalNoBlanks(`
+        eye = 5
+
+        [i]
+        why = "hello world"
+        y = 0.5
+    `);
+}
+
 @("Fail on compilation if field names conflict")
 unittest
 {
@@ -131,4 +155,36 @@ unittest
         name = "test"
         `
     ).should.equal(S(S.Inner("test")));
+}
+
+@("Complex rename on decoding")
+unittest
+{
+    struct S
+    {
+        struct Inner
+        {
+            @TomlName("why") string y;
+            @TomlName("y") float why;
+        }
+
+        @TomlName("eye") int i;
+        @TomlName("i") Inner inner;
+    }
+
+    parseToml!S(`
+        eye = 5
+
+        [i]
+        why = "hello world"
+        y = 0.5
+    `).should.equal(
+        S(
+            5,
+            S.Inner(
+                "hello world",
+                0.5
+            )
+        )
+    );
 }

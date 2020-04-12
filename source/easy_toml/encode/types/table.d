@@ -1,8 +1,10 @@
 module easy_toml.encode.types.table;
 
 import std.traits : isAssociativeArray, KeyType, isSomeString, FieldNameTuple;
+
+import easy_toml.attributes.toml_name;
 import easy_toml.encode;
-import easy_toml.encode.tomlify : makesTomlKey, tomlifyKey;
+import easy_toml.encode.tomlify;
 import easy_toml.encode.types.datetime :
     makesTomlOffsetDateTime,
     makesTomlLocalDateTime,
@@ -10,6 +12,7 @@ import easy_toml.encode.types.datetime :
     makesTomlLocalDate;
 
 version(unittest) import easy_toml.encode.util : equalNoBlanks;
+
 
 private enum bool isSpeciallyHandledStruct(T) = (
     makesTomlLocalDate!T ||
@@ -33,9 +36,14 @@ if (makesTomlTable!T)
 {
     enum auto fieldNames = FieldNameTuple!T;
 
+    static assert (
+        !hasDuplicateKeys!T,
+        "Struct " ~ T.stringof ~ "contains some duplicate key names."
+    );
+
     static foreach (fieldName; fieldNames)
     {
-        tomlifyField(fieldName, __traits(getMember, value, fieldName), buffer, parentTables);
+        tomlifyField(dFieldToTomlKey!(T, fieldName), __traits(getMember, value, fieldName), buffer, parentTables);
     }
 }
 
