@@ -324,7 +324,7 @@ in (pt.name == "TomlGrammar.val")
             break;
 
         default:
-            debug { throw new Exception("Unsupported TomlGrammar rule: \"" ~ pt.children[0].name ~ "\""); }
+            debug { assert(false, "Unsupported TomlGrammar rule: \"" ~ pt.children[0].name ~ "\""); }
             else { break; }
     }
 }
@@ -354,7 +354,7 @@ in (pt.name == "TomlGrammar.date_time")
             break;
 
         default:
-            throw new Exception("Unsupported TOML date_time sub-type: " ~ dateTimeType);
+            assert(false, "Unsupported TOML date_time sub-type: " ~ dateTimeType);
     }
 }
 
@@ -433,7 +433,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
         }
         else if (typeRules != currTypeRules)
         {
-            throw new Exception(
+            throw new TomlDecodingException(
                 `Mixed-type arrays not yet supported. Array started with "` ~
                 typeRules.to!string ~ `" but also contains "` ~ currTypeRules.to!string ~ `".`
             );

@@ -38,7 +38,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
                         }
                         else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
                         {
-                            throw new Exception(
+                            throw new TomlDecodingException(
                                 `Member "` ~ member ~ `" of struct "` ~ S.stringof ~
                                 `" is of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
                                 `", but given value is type "` ~ typeof(value).stringof ~ `".`
@@ -74,7 +74,7 @@ in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, n
         }
 
         default:
-            throw new Exception(`Could not find field corresponding to "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
+            throw new TomlDecodingException(`Could not find field corresponding to "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
     }
 
 }
@@ -90,7 +90,7 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     {
         static if (isStaticArray!S)
         {
-            throw new Exception(
+            throw new TomlDecodingException(
                 "Cannot set index " ~ idx.to!string ~ " of static array with length " ~ dest.length.to!string ~ "."
             );
         }
