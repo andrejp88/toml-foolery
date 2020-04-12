@@ -60,6 +60,27 @@ unittest
     );
 }
 
+@("Fail on compilation if field names conflict")
+unittest
+{
+    struct S
+    {
+        int i;
+
+        @TomlName("i")
+        int i2;
+    }
+
+    static assert (
+        !__traits(compiles, tomlify(S())),
+        "tomlifying a struct with conflicting keys should fail."
+    );
+
+    static assert (
+        !__traits(compiles, parseToml!S(`i = 2`)),
+        "parsing when destination struct has conflicting keys should fail."
+    );
+}
 
 @("Rename a field when decoding")
 unittest

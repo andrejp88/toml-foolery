@@ -14,7 +14,7 @@ import easy_toml.encode.util;
 import std.algorithm : map, any;
 import std.array : join;
 import std.range.primitives : ElementType;
-import std.traits : isArray, isSomeString, FieldNameTuple, Fields, isPointer;
+import std.traits;
 
 version(unittest) import dshould;
 
@@ -39,6 +39,11 @@ public string tomlify(T)(T object)
 if(is(T == struct))
 {
     Appender!string buffer;
+
+    static assert (
+        !hasDuplicateKeys!T,
+        "Struct " ~ T.stringof ~ "contains some duplicate key names."
+    );
 
     enum auto fieldNames = FieldNameTuple!T;
     static foreach (fieldName; fieldNames)
@@ -235,6 +240,25 @@ package void tomlifyValue(T)(const T value, ref Appender!string buffer, immutabl
     tomlifyValueImpl(value, buffer, parentTables);
 }
 
+private bool hasDuplicateKeys(S)()
+{
+    bool[string] keys;
+
+    static foreach (field; FieldNameTuple!S)
+    {
+        static if (hasUDA!(mixin("S." ~ field), TomlName))
+        {
+            if (getUDAs!(mixin("S." ~ field), TomlName)[0].tomlName in keys) return true;
+            keys[getUDAs!(mixin("S." ~ field), TomlName)[0].tomlName] = true;
+        }
+        else
+        {
+            if (field in keys) return true;
+            keys[field] = true;
+        }
+    }
+    return false;
+}
 
 version(unittest)
 {
