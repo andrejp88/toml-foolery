@@ -1351,3 +1351,14 @@ unittest
     parseToml!S(`time = 24:01:00`).should.throwA!TomlDecodingException;
     parseToml!S(`time = 22:01:60`).should.throwA!TomlDecodingException;
 }
+
+@("Overly precise floating point")
+unittest
+{
+    struct S
+    {
+        float f;
+    }
+
+    parseToml!S(`f = 3.1415926535897932384626`).should.not.throwAn!Exception;
+}
