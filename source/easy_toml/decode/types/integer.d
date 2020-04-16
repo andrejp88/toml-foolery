@@ -2,7 +2,9 @@ module easy_toml.decode.types.integer;
 
 import std.algorithm : filter, all;
 import std.ascii : isASCII, isHexDigit;
-import std.conv : to;
+import std.conv;
+
+import easy_toml.decode : TomlDecodingException;
 
 version(unittest) import dshould;
 
@@ -29,7 +31,17 @@ in (
                 value[0..2] == "0b" ?  2   :
                 10;
 
-    return (radix != 10 ? value[2..$] : value).filter!(e => e != '_').to!long(radix);
+    try
+    {
+        return (radix != 10 ? value[2..$] : value).filter!(e => e != '_').to!long(radix);
+    }
+    catch (ConvOverflowException e)
+    {
+        throw new TomlDecodingException(
+            `Integer ` ~ value ~
+            ` is outside permitted range for TOML integers [-2^⁶³, 2^⁶³ - 1]`
+        );
+    }
 }
 
 @("Positive")

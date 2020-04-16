@@ -1362,3 +1362,15 @@ unittest
 
     parseToml!S(`f = 3.1415926535897932384626`).should.not.throwAn!Exception;
 }
+
+@("Integer outside of [long.max, long.min]")
+unittest
+{
+    struct S
+    {
+        ulong x;
+    }
+
+    parseToml!S(`x = 18446744073709551615`).should.throwA!TomlDecodingException;
+    parseToml!S(`x = -18446744073709551615`).should.throwA!TomlDecodingException;
+}
