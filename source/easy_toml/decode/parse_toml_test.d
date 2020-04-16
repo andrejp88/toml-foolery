@@ -1338,3 +1338,16 @@ unittest
 
     parseToml!S(`date = 2011-02-29`).should.throwA!TomlDecodingException;
 }
+
+@("Invalid time")
+unittest
+{
+    struct S
+    {
+        TimeOfDay time;
+    }
+
+    parseToml!S(`time = 22:61:00`).should.throwA!TomlDecodingException;
+    parseToml!S(`time = 24:01:00`).should.throwA!TomlDecodingException;
+    parseToml!S(`time = 22:01:60`).should.throwA!TomlDecodingException;
+}

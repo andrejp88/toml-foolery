@@ -333,28 +333,40 @@ in (pt.name == "TomlGrammar.val")
 private void processTomlDateTime(S)(ParseTree pt, ref S dest, string[] address)
 in (pt.name == "TomlGrammar.date_time")
 {
+    import core.time : TimeException;
+
     string value = pt.input[pt.begin .. pt.end];
-    string dateTimeType = pt.children[0].name;
-    switch (dateTimeType)
+
+    try
     {
-        case "TomlGrammar.offset_date_time":
-            setData(dest, address, parseTomlOffsetDateTime(value));
-            break;
+        string dateTimeType = pt.children[0].name;
+        switch (dateTimeType)
+        {
+            case "TomlGrammar.offset_date_time":
+                setData(dest, address, parseTomlOffsetDateTime(value));
+                break;
 
-        case "TomlGrammar.local_date_time":
-            setData(dest, address, parseTomlLocalDateTime(value));
-            break;
+            case "TomlGrammar.local_date_time":
+                setData(dest, address, parseTomlLocalDateTime(value));
+                break;
 
-        case "TomlGrammar.local_date":
-            setData(dest, address, parseTomlLocalDate(value));
-            break;
+            case "TomlGrammar.local_date":
+                setData(dest, address, parseTomlLocalDate(value));
+                break;
 
-        case "TomlGrammar.local_time":
-            setData(dest, address, parseTomlLocalTime(value));
-            break;
+            case "TomlGrammar.local_time":
+                setData(dest, address, parseTomlLocalTime(value));
+                break;
 
-        default:
-            assert(false, "Unsupported TOML date_time sub-type: " ~ dateTimeType);
+            default:
+                assert(false, "Unsupported TOML date_time sub-type: " ~ dateTimeType);
+        }
+    }
+    catch (TimeException e)
+    {
+        throw new TomlDecodingException(
+            "Invalid date/time: " ~ value, e
+        );
     }
 }
 

@@ -184,20 +184,11 @@ private Date parseRFC3339DateOnly(Captures!string captures)
     string monthStr        = captures[2];
     string dayStr          = captures[3];
 
-    try
-    {
-        return Date(
-            yearStr.to!int,
-            monthStr.to!int,
-            dayStr.to!int
-        );
-    }
-    catch (TimeException e)
-    {
-        throw new TomlDecodingException(
-            "Received an invalid date.", e
-        );
-    }
+    return Date(
+        yearStr.to!int,
+        monthStr.to!int,
+        dayStr.to!int
+    );
 }
 
 private TimeOfDay parseRFC3339TimeOnly(Captures!string captures)
