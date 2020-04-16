@@ -5,6 +5,8 @@ import std.datetime;
 import std.regex : ctRegex, matchFirst, Captures;
 import std.variant : Algebraic;
 
+import easy_toml.decode : TomlDecodingException;
+
 version(unittest) import dshould;
 
 
@@ -182,11 +184,20 @@ private Date parseRFC3339DateOnly(Captures!string captures)
     string monthStr        = captures[2];
     string dayStr          = captures[3];
 
-    return Date(
-        yearStr.to!int,
-        monthStr.to!int,
-        dayStr.to!int
-    );
+    try
+    {
+        return Date(
+            yearStr.to!int,
+            monthStr.to!int,
+            dayStr.to!int
+        );
+    }
+    catch (TimeException e)
+    {
+        throw new TomlDecodingException(
+            "Received an invalid date.", e
+        );
+    }
 }
 
 private TimeOfDay parseRFC3339TimeOnly(Captures!string captures)

@@ -1,6 +1,7 @@
 module easy_toml.decode.parse_toml_test;
 
 import std.conv;
+import std.datetime;
 
 import easy_toml.decode.parse_toml;
 import easy_toml.decode.toml_decoding_exception;
@@ -1259,4 +1260,81 @@ unittest
     }
 
     parseToml!S(`i = -32769`).should.throwA!TomlDecodingException;
+}
+
+@("Offset date-time before year 0")
+unittest
+{
+    struct S
+    {
+        SysTime timestamp;
+    }
+
+    parseToml!S(`timestamp = -0001-01-01 00:00:00Z`).should.throwA!TomlDecodingException;
+}
+
+@("Offset date-time after year 9999")
+unittest
+{
+    struct S
+    {
+        SysTime timestamp;
+    }
+
+    parseToml!S(`timestamp = 10000-01-01 00:00:00Z`).should.throwA!TomlDecodingException;
+}
+
+@("Date before year 0")
+unittest
+{
+    struct S
+    {
+        SysTime date;
+    }
+
+    parseToml!S(`date = -0001-01-01`).should.throwA!TomlDecodingException;
+}
+
+@("Date after year 9999")
+unittest
+{
+    struct S
+    {
+        Date date;
+    }
+
+    parseToml!S(`date = 10000-01-01`).should.throwA!TomlDecodingException;
+}
+
+@("Invalid month 0")
+unittest
+{
+    struct S
+    {
+        Date date;
+    }
+
+    parseToml!S(`date = 2020-00-01`).should.throwA!TomlDecodingException;
+}
+
+@("Invalid month 13")
+unittest
+{
+    struct S
+    {
+        Date date;
+    }
+
+    parseToml!S(`date = 2020-13-01`).should.throwA!TomlDecodingException;
+}
+
+@("Invalid day of month")
+unittest
+{
+    struct S
+    {
+        Date date;
+    }
+
+    parseToml!S(`date = 2011-02-29`).should.throwA!TomlDecodingException;
 }
