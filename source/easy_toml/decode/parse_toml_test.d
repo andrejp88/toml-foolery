@@ -1450,3 +1450,47 @@ unittest
         b = 6
     `).should.equal(S(5));
 }
+
+@("A key corresponding to a non-struct property should work")
+unittest
+{
+    struct S
+    {
+        private int _a;
+        int a() @property const { return _a; }
+        void a(int newA) @property { _a = newA; }
+    }
+
+    S s;
+
+    parseToml!S(`
+        a = 5
+    `, s);
+
+    s.should.equal(S(5));
+}
+
+@("A key corresponding to a public property of a struct type should not compile")
+unittest
+{
+    struct S
+    {
+        private struct Inner
+        {
+            int x;
+        }
+
+        private Inner _inner;
+        Inner inner() @property const { return _inner; }
+        void inner(Inner newInner) @property { _inner = newInner; }
+    }
+
+    S s;
+
+    static assert(
+        !__traits(compiles, parseToml!S(`
+            blah
+        `, s)),
+        "Expected compilation to fail when struct contains public property that is itself a struct."
+    );
+}

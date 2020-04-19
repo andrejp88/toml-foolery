@@ -161,7 +161,7 @@ unittest
     setData(s, ["y"], 5);
 }
 
-@("setData — do not insert into read-only struct @properties.")
+@("setData — fail compilation if struct contains a @property of type struct")
 unittest
 {
     struct S
@@ -178,7 +178,7 @@ unittest
     S s;
     // C returns an rvalue, which cannot be ref, so it should be ignored by setData.
     // This should compile but c.x can't be changed.
-    setData(s, ["c", "x"], 5).should.throwAn!Exception;
+    static assert (!__traits(compiles, setData(s, ["c", "x"], 5)));
 }
 
 @("setData — Static array -> Static array")

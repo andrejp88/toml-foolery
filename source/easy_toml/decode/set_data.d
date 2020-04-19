@@ -18,67 +18,88 @@ in (address.length > 0, "`address` may not be empty")
         // For each member of S...
         static foreach (string member; __traits(allMembers, S))
         {
-            // ...that isn't a nested struct declaration...
-            static if (!is(__traits(getMember, dest, member)))
+            // ... that isn't "this", and...
+            static if (member == "this")
             {
-                case dFieldToTomlKey!(S, member):
+                // do nothing
+            }
+            else
+            {
+                // ...that isn't a nested struct declaration...
+                static if (!is(__traits(getMember, dest, member)))
                 {
-                    if (address.length == 1)
+                    case dFieldToTomlKey!(S, member):
                     {
-                        static if (
-                            __traits(
-                                compiles,
-                                __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))
-                            )
-                        )
+                        static assert(
+                            !(
+                                isCallable!(__traits(getMember, S, member)) &&
+                                is(ReturnType!(__traits(getMember, S, member)) == struct) &&
+                                hasFunctionAttributes!(__traits(getMember, S, member), "@property")
+                            ),
+                            `Field "` ~ member ~ `" of struct "` ~ S.stringof ~ `" is a public property. ` ~
+                            `Make it private to ignore it, or make it a regular field to allow placing data inside.`
+                        );
+
+                        if (address.length == 1)
                         {
-                            try
+                            static if (
+                                __traits(
+                                    compiles,
+                                    __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)))
+                                )
+                            )
                             {
-                                __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
+                                try
+                                {
+                                    __traits(getMember, dest, member) = value.to!(typeof(__traits(getMember, dest, member)));
+                                }
+                                catch (ConvOverflowException e)
+                                {
+                                    throw new TomlTypeException(
+                                        `Key "` ~ dFieldToTomlKey!(S, member) ~ `"` ~
+                                        ` has value ` ~ value.to!string ~ ` which cannot fit in field ` ~
+                                        S.stringof ~ `.` ~ member ~
+                                        ` of type ` ~ typeof(__traits(getMember, dest, member)).stringof,
+                                        e
+                                    );
+                                }
+                                return;
                             }
-                            catch (ConvOverflowException e)
+                            else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
                             {
                                 throw new TomlTypeException(
-                                    `Key "` ~ dFieldToTomlKey!(S, member) ~ `"` ~
-                                    ` has value ` ~ value.to!string ~ ` which cannot fit in field ` ~
-                                    S.stringof ~ `.` ~ member ~
-                                    ` of type ` ~ typeof(__traits(getMember, dest, member)).stringof,
-                                    e
+                                    `Member "` ~ member ~ `" of struct "` ~ S.stringof ~
+                                    `" is of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
+                                    `", but given value is type "` ~ typeof(value).stringof ~ `".`
                                 );
                             }
-                            return;
-                        }
-                        else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
-                        {
-                            throw new TomlTypeException(
-                                `Member "` ~ member ~ `" of struct "` ~ S.stringof ~
-                                `" is of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
-                                `", but given value is type "` ~ typeof(value).stringof ~ `".`
-                            );
+                            else
+                            {
+                                throw new TomlDecodingException(`Member "` ~ member ~ `" is not a valid destination.`);
+                            }
                         }
                         else
                         {
-                            throw new TomlDecodingException(`Member "` ~ member ~ `" is not a valid destination.`);
-                        }
-                    }
-                    else
-                    {
-                        // ...is a struct or array (allowing a recursive call), but isn't a @property
-                        // (since those return structs as rvalues which cannot be passed as ref)
-                        static if(__traits(compiles, setData(__traits(getMember, dest, member), address[1..$], value)))
-                        {
-                            setData!
-                                (typeof(__traits(getMember, dest, member)), T)
-                                (__traits(getMember, dest, member), address[1..$], value);
+                            // ...is a struct or array (allowing a recursive call), but isn't a @property
+                            // (since those return structs as rvalues which cannot be passed as ref)
+                            static if(__traits(compiles, setData(__traits(getMember, dest, member), address[1..$], value)))
+                            {
+                                setData!
+                                    (typeof(__traits(getMember, dest, member)), T)
+                                    (__traits(getMember, dest, member), address[1..$], value);
 
-                            return;
-                        }
-                        else
-                        {
-                            throw new TomlDecodingException(
-                                `Could not place value inside field ` ~ member ~
-                                ` of struct ` ~ S.stringof ~ ` (maybe it's a property?)`
-                            );
+                                return;
+                            }
+                            else
+                            {
+                                throw new TomlDecodingException(
+                                    `Could not place value "` ~ value.to!string ~
+                                    `" of type "` ~ T.stringof ~
+                                    `" inside field "` ~ member ~
+                                    `" of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
+                                    `" in struct "` ~ S.stringof ~ `".`
+                                );
+                            }
                         }
                     }
                 }
