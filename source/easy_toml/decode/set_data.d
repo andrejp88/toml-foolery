@@ -38,7 +38,7 @@ in (address.length > 0, "`address` may not be empty")
                             }
                             catch (ConvOverflowException e)
                             {
-                                throw new TomlDecodingException(
+                                throw new TomlTypeException(
                                     `Key "` ~ dFieldToTomlKey!(S, member) ~ `"` ~
                                     ` has value ` ~ value.to!string ~ ` which cannot fit in field ` ~
                                     S.stringof ~ `.` ~ member ~
@@ -50,7 +50,7 @@ in (address.length > 0, "`address` may not be empty")
                         }
                         else static if (__traits(compiles, typeof(__traits(getMember, dest, member))))
                         {
-                            throw new TomlDecodingException(
+                            throw new TomlTypeException(
                                 `Member "` ~ member ~ `" of struct "` ~ S.stringof ~
                                 `" is of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
                                 `", but given value is type "` ~ typeof(value).stringof ~ `".`

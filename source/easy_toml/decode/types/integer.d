@@ -4,7 +4,7 @@ import std.algorithm : filter, all;
 import std.ascii : isASCII, isHexDigit;
 import std.conv;
 
-import easy_toml.decode : TomlDecodingException;
+import easy_toml.decode.exceptions;
 
 version(unittest) import dshould;
 
@@ -37,7 +37,7 @@ in (
     }
     catch (ConvOverflowException e)
     {
-        throw new TomlDecodingException(
+        throw new TomlTypeException(
             `Integer ` ~ value ~
             ` is outside permitted range for TOML integers [-2^⁶³, 2^⁶³ - 1]`
         );

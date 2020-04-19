@@ -43,6 +43,7 @@ import easy_toml.decode.peg_grammar;
  *      TomlDuplicateNameException if the given data contains duplicate key or table names.
  *      TomlUnsupportedException if the given data contains TOML features not yet supported by the library.
  *      TomlInvalidValueException if the given data contains invalid values (e.g. a date with an invalid month).
+ *      TomlTypeException if a declared key's value does not match the destination value.
  *
  */
 public T parseToml(T)(string toml)
