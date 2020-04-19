@@ -12,7 +12,7 @@ import std.traits;
 version(unittest) import dshould;
 
 import easy_toml.decode.set_data;
-import easy_toml.decode.toml_decoding_exception;
+import easy_toml.decode.exceptions;
 import easy_toml.decode.types.datetime;
 import easy_toml.decode.types.floating_point;
 import easy_toml.decode.types.integer;

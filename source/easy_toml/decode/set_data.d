@@ -5,7 +5,7 @@ import std.traits;
 import std.range.primitives;
 
 import easy_toml.attributes.toml_name;
-import easy_toml.decode.toml_decoding_exception;
+import easy_toml.decode.exceptions;
 
 
 /// A magical function which puts `value` into `dest`, inside the field indicated by `address`.

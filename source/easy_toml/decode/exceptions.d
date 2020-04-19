@@ -1,7 +1,7 @@
-module easy_toml.decode.toml_decoding_exception;
+module easy_toml.decode.exceptions;
 
 
-/// Thrown by `parseToml` if the given data is invalid TOML.
+/// Thrown by `parseToml` if the given data is in any way invalid.
 public class TomlDecodingException : Exception
 {
     /// See `Exception.this()`

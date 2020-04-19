@@ -5,7 +5,7 @@ import std.datetime;
 
 import easy_toml.attributes.toml_name;
 import easy_toml.decode.parse_toml;
-import easy_toml.decode.toml_decoding_exception;
+import easy_toml.decode.exceptions;
 
 
 version (unittest)
