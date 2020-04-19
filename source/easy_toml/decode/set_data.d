@@ -1,6 +1,7 @@
 module easy_toml.decode.set_data;
 
 import std.conv;
+import std.datetime;
 import std.traits;
 import std.range.primitives;
 
@@ -82,7 +83,18 @@ in (address.length > 0, "`address` may not be empty")
                         {
                             // ...is a struct or array (allowing a recursive call), but isn't a @property
                             // (since those return structs as rvalues which cannot be passed as ref)
-                            static if(__traits(compiles, setData(__traits(getMember, dest, member), address[1..$], value)))
+
+                            // Do nothing if it's a specially-handled struct.
+                            static if (
+                                (is(typeof(__traits(getMember, dest, member)) == TimeOfDay)) ||
+                                (is(typeof(__traits(getMember, dest, member)) == SysTime)) ||
+                                (is(typeof(__traits(getMember, dest, member)) == DateTime)) ||
+                                (is(typeof(__traits(getMember, dest, member)) == Date))
+                            )
+                            {
+                                return;
+                            }
+                            else static if(__traits(compiles, setData(__traits(getMember, dest, member), address[1..$], value)))
                             {
                                 setData!
                                     (typeof(__traits(getMember, dest, member)), T)
@@ -96,8 +108,8 @@ in (address.length > 0, "`address` may not be empty")
                                     `Could not place value "` ~ value.to!string ~
                                     `" of type "` ~ T.stringof ~
                                     `" inside field "` ~ member ~
-                                    `" of type "` ~ typeof(__traits(getMember, dest, member)).stringof ~
-                                    `" in struct "` ~ S.stringof ~ `".`
+                                    `" of type "` ~ typeof(__traits(getMember, S, member)).stringof ~
+                                    `" in struct "` ~ S.stringof ~ `". This might be a bug — please file a report.`
                                 );
                             }
                         }
@@ -160,7 +172,16 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     {
         static if (isArray!(typeof(dest[idx])) || is(typeof(dest[idx]) == struct))
         {
-            setData(dest[idx], address[1 .. $], value);
+            // Do nothing if it's a specially-handled struct.
+            static if (
+                !(is(typeof(dest[idx]) == TimeOfDay)) &&
+                !(is(typeof(dest[idx]) == SysTime)) &&
+                !(is(typeof(dest[idx]) == DateTime)) &&
+                !(is(typeof(dest[idx]) == Date))
+            )
+            {
+                setData(dest[idx], address[1 .. $], value);
+            }
         }
     }
 }
