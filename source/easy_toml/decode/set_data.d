@@ -19,8 +19,11 @@ in (address.length > 0, "`address` may not be empty")
         // For each member of S...
         static foreach (string member; __traits(allMembers, S))
         {
-            // ... that isn't "this", and...
-            static if (member == "this")
+            // ... that isn't "this", and is public, and...
+            static if (
+                member == "this" ||
+                __traits(getProtection, __traits(getMember, dest, member)) != "public"
+            )
             {
                 // do nothing
             }

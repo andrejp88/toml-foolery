@@ -1507,3 +1507,14 @@ unittest
         arr = [11, 22, 33, 44, 55, 66, 77, 88]
     `).should.equal(S([11, 22, 33, 44, 55]));
 }
+
+@("Don't assign non-public fields")
+unittest
+{
+    struct S
+    {
+        private int x;
+    }
+
+    parseToml!S(`x = 3`).should.equal(S());
+}
