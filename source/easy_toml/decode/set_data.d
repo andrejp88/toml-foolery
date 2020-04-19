@@ -86,7 +86,7 @@ in (address.length > 0, "`address` may not be empty")
         }
 
         default:
-            throw new TomlDecodingException(`Could not find field corresponding to "` ~ address[0] ~ `" in struct "` ~ S.stringof ~ `".`);
+            break;
     }
 
 }

@@ -1420,3 +1420,33 @@ unittest
         5 = 55
     `).should.equal(S(S.X(11, 22, 33, 44, 55)));
 }
+
+@("Non-existent keys should be ignored")
+unittest
+{
+    struct S
+    {
+        int a;
+    }
+
+    parseToml!S(`
+        a = 5
+        b = 6
+    `).should.equal(S(5));
+}
+
+@("Non-existent tables should be ignored")
+unittest
+{
+    struct S
+    {
+        int a;
+    }
+
+    parseToml!S(`
+        a = 5
+
+        [x]
+        b = 6
+    `).should.equal(S(5));
+}
