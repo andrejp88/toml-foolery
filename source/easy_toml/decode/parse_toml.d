@@ -441,7 +441,12 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
             return _getTypeRules(valPT.children[0], valPT.input[valPT.begin .. valPT.end], []);
         }
 
-        ParseTree firstValPT = arrayValuesPT.children[1];
+        auto foundVal = arrayValuesPT.children.find!(e => e.name == "TomlGrammar.val");
+        assert(
+            foundVal.length != 0,
+            `Expected array to have a "TomlGrammar.val" child, but found: ` ~ arrayValuesPT.children.to!string
+        );
+        ParseTree firstValPT = foundVal[0];
         assert(
             firstValPT.name == "TomlGrammar.val",
             `Expected array to have a "TomlGrammar.val" child at index 1, but found "` ~ firstValPT.name ~ `".`
