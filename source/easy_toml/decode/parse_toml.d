@@ -39,7 +39,10 @@ import easy_toml.decode.peg_grammar;
  *      TOML data.
  *
  *  Throws:
- *      TomlDecodingException if the given data is invalid TOML.
+ *      TomlSyntaxException if the given data is invalid TOML.
+ *      TomlDuplicateNameException if the given data contains duplicate key or table names.
+ *      TomlUnsupportedException if the given data contains TOML features not yet supported by the library.
+ *      TomlInvalidValueException if the given data contains invalid values (e.g. a date with an invalid month).
  *
  */
 public T parseToml(T)(string toml)
@@ -84,7 +87,7 @@ if (is(T == struct))
     {
         if(line.name != "TomlGrammar.expression")
         {
-            throw new TomlDecodingException(
+            throw new TomlSyntaxException(
                 "Invalid TOML data. Expected a TomlGrammar.expression, but got: " ~
                 line.name ~ "\n Full tree:\n" ~ tree.toString()
             );
@@ -124,7 +127,7 @@ if (is(T == struct))
                     {
                         if (tableAddress in seenSoFar)
                         {
-                            throw new TomlDecodingException(
+                            throw new TomlDuplicateNameException(
                                 `Key/table "` ~ tableAddress.join('.') ~ `" has been declared twice.`
                             );
                         }
@@ -284,7 +287,7 @@ in (pt.name == "TomlGrammar.val")
 {
     if (address in seenSoFar)
     {
-        throw new TomlDecodingException(`Duplicate key: "` ~ address.join('.') ~ `"`);
+        throw new TomlDuplicateNameException(`Duplicate key: "` ~ address.join('.') ~ `"`);
     }
 
     seenSoFar[address.idup] = true;
@@ -364,7 +367,7 @@ in (pt.name == "TomlGrammar.date_time")
     }
     catch (TimeException e)
     {
-        throw new TomlDecodingException(
+        throw new TomlInvalidValueException(
             "Invalid date/time: " ~ value, e
         );
     }
@@ -445,7 +448,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
         }
         else if (typeRules != currTypeRules)
         {
-            throw new TomlDecodingException(
+            throw new TomlUnsupportedException(
                 `Mixed-type arrays not yet supported. Array started with "` ~
                 typeRules.to!string ~ `" but also contains "` ~ currTypeRules.to!string ~ `".`
             );
