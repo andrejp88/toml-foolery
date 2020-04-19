@@ -19,9 +19,13 @@ in (address.length > 0, "`address` may not be empty")
         // For each member of S...
         static foreach (string member; __traits(allMembers, S))
         {
-            // ... that isn't "this", and is public, and...
+            // ... that isn't "this", isn't a non-property function, and is public, and...
             static if (
                 member == "this" ||
+                (
+                    isCallable!(__traits(getMember, dest, member)) &&
+                    !hasFunctionAttributes!(__traits(getMember, dest, member), "@property")
+                ) ||
                 __traits(getProtection, __traits(getMember, dest, member)) != "public"
             )
             {
