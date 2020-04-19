@@ -31,12 +31,13 @@ import easy_toml.decode.peg_grammar;
  *  Params:
  *      toml = A string containing TOML data.
  *
+ *      dest = The struct into which the parsed TOML data should be placed.
+ *
  *      T =    The type of struct to create and return.
  *
  *
  *  Returns:
- *      An instance of `T` with its fields populated according to the given
- *      TOML data.
+ *      The `dest` parameter, populated with data read from `toml`.
  *
  *  Throws:
  *      TomlSyntaxException if the given data is invalid TOML.
@@ -46,7 +47,7 @@ import easy_toml.decode.peg_grammar;
  *      TomlTypeException if a declared key's value does not match the destination value.
  *
  */
-public T parseToml(T)(string toml)
+public void parseToml(T)(string toml, ref T dest)
 if (is(T == struct))
 {
     // version tracer is for debugging a grammar, it comes from pegged.
@@ -75,8 +76,6 @@ if (is(T == struct))
     );
 
     ParseTree[] lines = tree.children[0].children;
-
-    T dest;
 
     bool[string[]] seenSoFar;
     string[] tableAddress;
@@ -154,7 +153,13 @@ if (is(T == struct))
             (Expand.ifNotMatch,".comment", ".simple_key", ".basic_string", ".literal_string", ".expression")
             (tree, "hard_example_toml.html");
     }
+}
 
+/// ditto
+public T parseToml(T)(string toml)
+{
+    T dest;
+    parseToml(toml, dest);
     return dest;
 }
 
