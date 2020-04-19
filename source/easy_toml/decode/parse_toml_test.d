@@ -3,6 +3,7 @@ module easy_toml.decode.parse_toml_test;
 import std.conv;
 import std.datetime;
 
+import easy_toml.attributes.toml_name;
 import easy_toml.decode.parse_toml;
 import easy_toml.decode.toml_decoding_exception;
 
@@ -1373,4 +1374,49 @@ unittest
 
     parseToml!S(`x = 18446744073709551615`).should.throwA!TomlDecodingException;
     parseToml!S(`x = -18446744073709551615`).should.throwA!TomlDecodingException;
+}
+
+@("Integer keys as array indices")
+unittest
+{
+    struct S
+    {
+        int[5] x;
+    }
+
+    parseToml!S(`
+        [x]
+        0 = 11
+        1 = 22
+        2 = 33
+        3 = 44
+        4 = 55
+    `).should.equal(S([11, 22, 33, 44, 55]));
+}
+
+@("Integer keys as named fields")
+unittest
+{
+    struct S
+    {
+        struct X
+        {
+            @TomlName("1") int a;
+            @TomlName("2") int b;
+            @TomlName("3") int c;
+            @TomlName("4") int d;
+            @TomlName("5") int e;
+        }
+
+        X x;
+    }
+
+    parseToml!S(`
+        [x]
+        1 = 11
+        2 = 22
+        3 = 33
+        4 = 44
+        5 = 55
+    `).should.equal(S(S.X(11, 22, 33, 44, 55)));
 }

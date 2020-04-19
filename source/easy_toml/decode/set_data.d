@@ -12,7 +12,6 @@ import easy_toml.decode.toml_decoding_exception;
 package void setData(S, T)(ref S dest, string[] address, const T value)
 if (is(S == struct))
 in (address.length > 0, "`address` may not be empty")
-in (!address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is a number, not a field name.`)
 {
     switch (address[0])
     {
