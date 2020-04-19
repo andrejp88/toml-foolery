@@ -135,9 +135,8 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     {
         static if (isStaticArray!S)
         {
-            throw new TomlDecodingException(
-                "Cannot set index " ~ idx.to!string ~ " of static array with length " ~ dest.length.to!string ~ "."
-            );
+            // ignore
+            return;
         }
         else
         {

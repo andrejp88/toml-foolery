@@ -216,7 +216,9 @@ unittest
 {
     int[5] x;
 
-    setData(x, ["5"], 99).should.throwAn!Exception;
+    setData(x, ["5"], 99);
+
+    x.should.equal((int[5]).init);
 }
 
 @("setData — Into Dynamic Array (with resizing)")

@@ -1494,3 +1494,16 @@ unittest
         "Expected compilation to fail when struct contains public property that is itself a struct."
     );
 }
+
+@("If TOML array length exceeds static array length, ignore additional entries.")
+unittest
+{
+    struct S
+    {
+        int[5] arr;
+    }
+
+    parseToml!S(`
+        arr = [11, 22, 33, 44, 55, 66, 77, 88]
+    `).should.equal(S([11, 22, 33, 44, 55]));
+}
