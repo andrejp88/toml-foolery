@@ -164,6 +164,7 @@ if (makesTomlKey!K)
 {
     static if (makesTomlTable!V)
     {
+        buffer.put('\n');
         buffer.put('[');
         string fullTableName = (parentTables ~ key).map!((e) => tomlifyKey(e)).join(".");
         buffer.put(fullTableName);
@@ -177,6 +178,7 @@ if (makesTomlKey!K)
     {
         foreach (ElementType!V entry; value)
         {
+            buffer.put('\n');
             buffer.put("[[");
             string fullTableName = (parentTables ~ key).map!((e) => tomlifyKey(e)).join(".");
             buffer.put(fullTableName);

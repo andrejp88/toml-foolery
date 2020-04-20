@@ -10,6 +10,7 @@ toml-foolery.so
 toml-foolery.dylib
 toml-foolery.dll
 toml-foolery.a
+libtoml-foolery.a
 toml-foolery.lib
 toml-foolery-test-*
 *.exe
