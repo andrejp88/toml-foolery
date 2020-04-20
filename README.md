@@ -1,6 +1,6 @@
-# easy_toml
+# toml-foolery
 
-easy_toml is a library for the D programming language which simplifies encoding and decoding of TOML-formatted data. There are no intermediate types — TOML data is parsed right into any given struct, and all structs can be converted into TOML.
+toml-foolery is a library for the D programming language which simplifies encoding and decoding of TOML-formatted data. There are no intermediate types — TOML data is parsed right into any given struct, and all structs can be converted into TOML.
 
 ## Example
 
@@ -9,7 +9,7 @@ import std.datetime.systime;
 import std.stdio;
 import std.uuid;
 
-import easy_toml;
+import toml_foolery;
 
 struct Vector2D
 {

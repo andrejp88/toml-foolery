@@ -1,5 +1,5 @@
-name "easy_toml"
-description "Provides conversion of any struct into TOML data (and vice-versa) through just one function call."
+name "toml-foolery"
+description "Populates any given D struct with data read from a TOML string."
 authors "Andrej Petrovic"
 copyright "Copyright © 2020, Andrej Petrovic"
 license "MIT"
