@@ -147,7 +147,6 @@ unittest
     parseTomlBasicMultiLineString("\"\"\"Hello \\\n    World!\"\"\"").should.equal("Hello World!");
 }
 
-// TODO: Document that no EOL conversion ever happens.
 @("ML Basic — CRLF")
 unittest
 {
@@ -184,7 +183,6 @@ unittest
     parseTomlLiteralMultiLineString("'''Hello \\\n    World!'''").should.equal("Hello \\\n    World!");
 }
 
-// TODO: Document that no EOL conversion ever happens.
 @("ML Literal — CRLF")
 unittest
 {

@@ -2,118 +2,173 @@
 
 ![toml-foolery logo](./assets/logo.svg)
 
-toml-foolery is a library for the D programming language which simplifies encoding and decoding of TOML-formatted data. There are no intermediate types — TOML data is parsed right into any given struct, and all structs can be converted into TOML.
+toml-foolery is a library for the D programming language which simplifies
+encoding and decoding of TOML-formatted data. There are no intermediate types —
+TOML data is parsed directly into any struct, and structs can be converted
+into TOML.
+
+toml-foolery v1.0.0 is compatible with TOML v1.0.0-rc1.
 
 ## Example
 
 ```d
-import std.datetime.systime;
+import std.datetime;
+import std.file;
 import std.stdio;
-import std.uuid;
 
 import toml_foolery;
 
-struct Vector2D
-{
-    real x;
-    real y;
-}
 
-struct Address
+private struct Person
 {
-    string town;
-    string region;
-    string planet;
-}
+    private enum Profession
+    {
+        Professor,
+        Witch,
+        Wizard,
+        Thief,
+        Patrician,
+        Death
+    }
 
-struct Entity
-{
+    private struct Animal
+    {
+        string name;
+        string species;
+        Profession profession;
+    }
+
+    private struct Establishment
+    {
+        string name;
+        string city;
+    }
+
     string name;
-    Address address;
-    UUID id;
 
-    @KeyName("creation-time")
-    SysTime creationTime;
+    @TomlName("date-of-birth")
+    Date dateOfBirth;
 
-    @DottedTable
-    Vector2D position;
+    Profession profession;
+
+    @TomlName("alma-mater")
+    Establishment almaMater;
+
+    Animal[] pets;
 }
 
-Entity e = Entity(
-    "Esmerelda Weatherwax",
-    Address("Bad Ass", "Ramtops", "The Disc"),
-    randomUUID(),
-    Clock.currTime(),
-    Vector2D(3.14159, 5.0),
-);
 
-string toml = tomlify(e);
-writeln(toml);
+void main()
+{
+    string tomlSource = `
+        name = "Rincewind"
+        dateOfBirth = 2032-10-23
+        profession = "Wizard"
+
+        [alma-mater]
+        name = "Unseen University"
+        city = "Ankh-Morpork"
+
+        [[pets]]
+        name = "Luggage"
+        species = "Arca vulgaris"
+        profession = "Thief"
+    `;
+
+    Person person = parseToml!Person(tomlSource);
+
+    writeln(person);
+    writeln();
+    writeln("And back into TOML:");
+    writeln();
+    writeln(tomlify(person));
+}
 ```
 
-Result:
+Prints:
 
-```toml
-name = "Esmerelda Weatherwax"
-uuid = "58b2eda5-43ac-426b-84a8-86875799a7b2"
-creation-time = 2020-01-04 17:11:44.713+00:00
-position.x = 3.14159
-position.y = 5
+```
+Person("Rincewind", 0001-Jan-01, Wizard, Establishment("Unseen University", "Ankh-Morpork"), [Animal("Luggage", "Arca vulgaris", Thief)])
 
-[address]
-town = "Bad Ass"
-region = "Ramtops"
-planet = "The Disc"
+And back into TOML:
+
+name = "Rincewind"
+date-of-birth = 0001-01-01
+profession = "Wizard"
+
+[alma-mater]
+name = "Unseen University"
+city = "Ankh-Morpork"
+
+[[pets]]
+name = "Luggage"
+species = "Arca vulgaris"
+profession = "Thief"
+
 ```
 
-## TOML-to-D conversions
 
-Each TOML type has one or more corresponding types in D.
+## Usage
 
-### String
-- `string`
-- `wstring`
-- `dstring`
-- `char` — Decoder will throw an exception if the value in the TOML contains more than one UTF-8 code unit.
-- `wchar` — 〃 more than one UTF-16 code unit.
-- `dchar` — 〃 more than one UTF-32 code unit.
-- [`std.uuid.UUID`](https://dlang.org/library/std/uuid/uuid.html) — Decoder uses [`parseUUID`](https://dlang.org/library/std/uuid/parse_uuid.html) and may throw [`UUIDParsingException`](https://dlang.org/library/std/uuid/uuid_parsing_exception.html).
+Decoding is done using the `parseToml` template function. It may optionally
+receive a pre-made instance of that struct as its second argument.
 
-### Integer
-- `byte`
-- `short`
-- `int`
-- `long`
-- `ubyte`
-- `ushort`
-- `uint`
-- `ulong` — The TOML spec says integer values must fit within `[long.min .. long.max]`. ulong fields are allowed but encoding will fail if the contained value is greater than `long.max`.
+Encoding is done using the `tomlify` function, which can accept any struct,
+and returns a string containing TOML data.
 
-### Float
-- `float`
-- `double`
-- `real`
+Note that toml-foolery doesn't do any file I/O.
 
-### Boolean
-- `bool`
-- [`std.typecons.Flag`](https://dlang.org/library/std/typecons/flag.html)
+Each field of the given struct is converted to a TOML key-value pair, where the
+key is the name of the field in D. This can be customized by applying the
+`@TomlName` attribute to a field. The string passed to this attribute is the
+name of the key to look for when parsing TOML data, and the name to use when
+tomlify-ing the struct.
 
-### Offset Date-Time
-- [`std.datetime.systime.SysTime`](https://dlang.org/library/std/datetime/systime/sys_time.html)
 
-### Local Date-Time
-- [`std.datetime.date.SysTime`](https://dlang.org/library/std/datetime/date/date_time.html) with `timezone` equal to [`LocalTime`](https://dlang.org/library/std/datetime/timezone/local_time.html).
+## TOML–D type correspondence
 
-### Local Date
-- [`std.datetime.date.Date`](https://dlang.org/library/std/datetime/date/date.html)
+| Type of field                                                       | Resulting TOML type                         |
+|---------------------------------------------------------------------|---------------------------------------------|
+| `string`, `wstring`, `dstring`, `char`, `wchar`, `dchar`            | String                                      |
+| `byte`, `short`, `int`, `long`, `ubyte`, `ushort`, `uint`, `ulong`¹ | Integer                                     |
+| `float`, `double`, `real`                                           | Floating point                              |
+| `bool`                                                              | Boolean                                     |
+| `enum`                                                              | String²                                     |
+| [`std.datetime.systime.SysTime`](https://dlang.org/library/std/datetime/systime/sys_time.html) | Offset Date-Time |                   
+| [`std.datetime.date.DateTime`](https://dlang.org/library/std/datetime/date/date_time.html)     | Local Date-Time³ |
+| [`std.datetime.date.Date`](https://dlang.org/library/std/datetime/date/date.html)              | Local Date       |
+| [`std.datetime.date.TimeOfDay`](https://dlang.org/library/std/datetime/date/time_of_day.html)  | Local Time³      |
+| Array of any of the types above                                     | Array of the corresponding TOML type        |
+| `struct`                                                            | Table                                       |
+| Array of `struct`s                                                  | Array of tables                             |
 
-### Local Time
-- [`std.datetime.date.TimeOfDay`](https://dlang.org/library/std/datetime/date/time_of_day.html)
+¹ The TOML specification requires Integers to be in the range
+`[long.min, long.max]`, so toml-foolery will throw a `TomlTypeException` if the
+input contains an integer outside of that range.
 
-### Array
-- Static arrays
-- In future, dynamic arrays will also be supported.
+² Parsing is case-sensitive.
 
-### Table
-- Structs
-- Associative arrays
+³ The TOML specification expects at least millisecond precision for local
+date-times and local times, but the D standard library's corresponding data
+structures are precise only to the second. Any fractional-second precision will
+be lost upon parsing.
+
+
+## Notes
+
+- If the parsed TOML data contains keys that don't match any fields in the given
+struct, those keys are ignored.
+- Similarly, if a destination field is a static array but the
+parsed array is too big to fit, additional entires will be ignored. Dynamic
+arrays will be resized as needed.
+- Mixed-type arrays are allowed by the TOML specification, but are not yet
+supported by toml-foolery.
+- Classes are not supported.
+- Pointers are not supported.
+- Line-separator conversion is **not** performed when decoding a TOML multi-line string.
+- The library can parse all features of TOML, but when encoding data into TOML,
+some formats will not be created:
+    - Inline tables (Regular `[]`-syntax is always used)
+    - Dotted keys (same as above)
+    - Literal strings (regular `"strings"` used instead)
+    - Multi-line strings (same as above)

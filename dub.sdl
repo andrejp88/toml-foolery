@@ -1,7 +1,7 @@
 name "toml-foolery"
 description "Populates any given D struct with data read from a TOML string, and vice-versa."
-authors "Andrej Petrovic"
-copyright "Copyright © 2020, Andrej Petrovic"
+authors "Andrej Petrović"
+copyright "Copyright © 2020, Andrej Petrović"
 license "MIT"
 targetType "library"
 
