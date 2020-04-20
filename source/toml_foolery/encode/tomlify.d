@@ -5,6 +5,7 @@ import toml_foolery.encode;
 import toml_foolery.encode.types.array;
 import toml_foolery.encode.types.boolean;
 import toml_foolery.encode.types.datetime;
+import toml_foolery.encode.types.enum_;
 import toml_foolery.encode.types.floating_point;
 import toml_foolery.encode.types.integer;
 import toml_foolery.encode.types.string;

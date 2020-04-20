@@ -7,7 +7,7 @@ import toml_foolery.encode;
 
 
 package(toml_foolery.encode) enum bool makesTomlInteger(T) = (
-    isIntegral!T
+    isIntegral!T && !(is(T == enum))
 );
 
 
