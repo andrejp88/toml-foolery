@@ -36,45 +36,6 @@ import std.stdio;
 import toml_foolery;
 
 
-private struct Person
-{
-    private enum Profession
-    {
-        Professor,
-        Witch,
-        Wizard,
-        Thief,
-        Patrician,
-        Death
-    }
-
-    private struct Animal
-    {
-        string name;
-        string species;
-        Profession profession;
-    }
-
-    private struct Establishment
-    {
-        string name;
-        string city;
-    }
-
-    string name;
-
-    @TomlName("date-of-birth")
-    Date dateOfBirth;
-
-    Profession profession;
-
-    @TomlName("alma-mater")
-    Establishment almaMater;
-
-    Animal[] pets;
-}
-
-
 void main()
 {
     string tomlSource = `
@@ -100,17 +61,52 @@ void main()
     writeln();
     writeln(tomlify(person));
 }
+
+struct Person
+{
+    enum Profession
+    {
+        Professor,
+        Witch,
+        Wizard,
+        Thief,
+        Patrician,
+        Death
+    }
+
+    struct Animal
+    {
+        string name;
+        string species;
+        Profession profession;
+    }
+
+    struct Establishment
+    {
+        string name;
+        string city;
+    }
+
+    string name;
+    Date dateOfBirth;
+    Profession profession;
+
+    @TomlName("alma-mater")
+    Establishment almaMater;
+
+    Animal[] pets;
+}
 ```
 
 Prints:
 
 ```
-Person("Rincewind", 0001-Jan-01, Wizard, Establishment("Unseen University", "Ankh-Morpork"), [Animal("Luggage", "Arca vulgaris", Thief)])
+Person("Rincewind", 2032-Oct-23, Wizard, Establishment("Unseen University", "Ankh-Morpork"), [Animal("Luggage", "Arca vulgaris", Thief)])
 
 And back into TOML:
 
 name = "Rincewind"
-date-of-birth = 0001-01-01
+dateOfBirth = 2032-10-23
 profession = "Wizard"
 
 [alma-mater]
@@ -157,17 +153,18 @@ be lost upon parsing.
 ## Notes
 
 - If the parsed TOML data contains keys that don't match any fields in the given
-struct, those keys are ignored.
+  struct, those keys are ignored.
 - Similarly, if a destination field is a static array but the
-parsed array is too big to fit, additional entires will be ignored. Dynamic
-arrays will be resized as needed.
+  parsed array is too big to fit, additional entires will be ignored. Dynamic
+  arrays will be resized as needed.
 - Mixed-type arrays are allowed by the TOML specification, but are not yet
-supported by toml-foolery.
+  supported by toml-foolery.
 - Classes are not supported.
 - Pointers are not supported.
-- Line-separator conversion is **not** performed when decoding a TOML multi-line string.
+- Line-separator conversion is **not** performed when decoding a TOML multi-line
+  string.
 - The library can parse all features of TOML, but when encoding data into TOML,
-some formats will not be created:
+  some formats will not be created:
     - Inline tables (Regular `[]`-syntax is always used)
     - Dotted keys (same as above)
     - Literal strings (regular `"strings"` used instead)
