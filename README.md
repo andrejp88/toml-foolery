@@ -9,6 +9,23 @@ into TOML.
 
 toml-foolery v1.0.0 is compatible with TOML v1.0.0-rc1.
 
+## Usage
+
+Decoding is done using the `parseToml` template function. It may optionally
+receive a pre-made instance of that struct as its second argument.
+
+Encoding is done using the `tomlify` function, which can accept any struct,
+and returns a string containing TOML data.
+
+Note that toml-foolery doesn't do any file I/O.
+
+Each field of the given struct is converted to a TOML key-value pair, where the
+key is the name of the field in D. This can be customized by applying the
+`@TomlName` attribute to a field. The string passed to this attribute is the
+name of the key to look for when parsing TOML data, and the name to use when
+tomlify-ing the struct.
+
+
 ## Example
 
 ```d
@@ -106,23 +123,6 @@ species = "Arca vulgaris"
 profession = "Thief"
 
 ```
-
-
-## Usage
-
-Decoding is done using the `parseToml` template function. It may optionally
-receive a pre-made instance of that struct as its second argument.
-
-Encoding is done using the `tomlify` function, which can accept any struct,
-and returns a string containing TOML data.
-
-Note that toml-foolery doesn't do any file I/O.
-
-Each field of the given struct is converted to a TOML key-value pair, where the
-key is the name of the field in D. This can be customized by applying the
-`@TomlName` attribute to a field. The string passed to this attribute is the
-name of the key to look for when parsing TOML data, and the name to use when
-tomlify-ing the struct.
 
 
 ## TOML–D type correspondence
