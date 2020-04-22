@@ -1,6 +1,6 @@
 # toml-foolery
 
-![toml-foolery logo](./assets/logo.svg)
+![toml-foolery logo](./assets/logo.png)
 
 toml-foolery is a library for the D programming language which simplifies
 encoding and decoding of TOML-formatted data. There are no intermediate types —
