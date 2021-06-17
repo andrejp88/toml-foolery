@@ -18,6 +18,7 @@ toml-foolery-test-*
 *.obj
 *.lst
 /toml-foolery-test-library
+/toml-foolery-sample-test
 
 # Editor-specific stuff
 /.vscode/

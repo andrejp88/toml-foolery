@@ -3,6 +3,7 @@
 	"versions": {
 		"botan": "1.12.12",
 		"botan-math": "1.0.3",
+		"colorize": "1.0.5",
 		"datefmt": "1.0.4",
 		"ddmp": "0.0.1-0.dev.3",
 		"diet-ng": "1.6.1",
@@ -15,7 +16,7 @@
 		"memutils": "1.0.1",
 		"mir-linux-kernel": "1.0.1",
 		"openssl": "1.1.6+1.0.1g",
-		"pegged": "0.4.4",
+		"pegged": "0.4.5",
 		"quirks": "0.6.1",
 		"silly": "1.0.2",
 		"stdx-allocator": "2.77.5",

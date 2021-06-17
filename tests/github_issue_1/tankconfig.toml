@@ -1,0 +1,9 @@
+[[tanks]]
+mqttTopic = "sensors/MusicRoomTank/depthCm"
+tankDepthCm = 48
+microsToCmFactor = 55.0
+
+[[tanks]]
+mqttTopic = "sensors/MainTank/depthCm"
+tankDepthCm = 200
+microsToCmFactor = 55.0

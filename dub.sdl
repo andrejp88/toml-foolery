@@ -17,3 +17,10 @@ configuration "unittest" {
 	dependency "dshould" version="~>1.1.0"
 	stringImportPaths "."
 }
+
+configuration "sample-test" {
+	targetType "executable"
+	targetName "toml-foolery-sample-test"
+	mainSourceFile "tests/run.d"
+	dependency "colorize" version="~>1.0"
+}

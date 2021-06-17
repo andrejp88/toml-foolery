@@ -1,0 +1,3 @@
+# https://github.com/andrejp88/toml-foolery/issues/1
+description = "Decoding nested struct works in debug (default) build, fails in release build"
+dubFlags = ["--build=release"]
