@@ -68,6 +68,13 @@ if (is(T == struct))
 
     ParseTree tree = TomlGrammar(toml);
 
+    if (!tree.successful)
+    {
+        throw new TomlSyntaxException(
+            "Failed to parse TOML data"
+        );
+    }
+
     assert(
         tree.name == "TomlGrammar",
         "Expected root of tree to be TomlGrammar, but got: " ~ tree.name
