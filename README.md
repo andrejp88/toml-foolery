@@ -9,7 +9,7 @@ encoding and decoding of TOML-formatted data. There are no intermediate types â€
 TOML data is parsed directly into any struct, and structs can be converted
 into TOML.
 
-toml-foolery v1.0.0 is compatible with TOML v1.0.0-rc1.
+toml-foolery v1.0.1 is compatible with TOML v1.0.0-rc1.
 
 ## Usage
 
