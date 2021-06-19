@@ -188,33 +188,30 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     }
 }
 
-debug
+private bool isSizeT(string s)
 {
-    private bool isSizeT(string s)
-    {
-        import std.conv : ConvException;
+    import std.conv : ConvException;
 
-        try
-        {
-            s.to!size_t;
-            return true;
-        }
-        catch (ConvException e)
-        {
-            return false;
-        }
-    }
-
-    @("isSizeT")
-    unittest
+    try
     {
-        import std.bigint;
-        import dshould;
-        size_t.min.to!string.isSizeT.should.equal(true);
-        size_t.max.to!string.isSizeT.should.equal(true);
-        (BigInt(size_t.max) + 1).to!string.isSizeT.should.equal(false);
-        (-1).to!string.isSizeT.should.equal(false);
+        s.to!size_t;
+        return true;
     }
+    catch (ConvException e)
+    {
+        return false;
+    }
+}
+
+@("isSizeT")
+unittest
+{
+    import std.bigint;
+    import dshould;
+    size_t.min.to!string.isSizeT.should.equal(true);
+    size_t.max.to!string.isSizeT.should.equal(true);
+    (BigInt(size_t.max) + 1).to!string.isSizeT.should.equal(false);
+    (-1).to!string.isSizeT.should.equal(false);
 }
 
 private enum isFieldOrProperty(alias dest, string member) = (
