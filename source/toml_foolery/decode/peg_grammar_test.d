@@ -7,12 +7,12 @@ import toml_foolery.decode.peg_grammar;
 unittest
 {
     // Don't throw
-    TomlGrammar(import("tests/hard_example.toml"));
+    TomlGrammar(import("tests/example_hard/example_hard.toml"));
 }
 
 @("PEG parser test - https://github.com/toml-lang/toml/blob/master/tests/example.toml")
 unittest
 {
     // Don't throw
-    TomlGrammar(import("tests/example.toml"));
+    TomlGrammar(import("tests/example/example.toml"));
 }

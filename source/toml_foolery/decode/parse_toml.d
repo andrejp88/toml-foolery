@@ -53,9 +53,17 @@ if (is(T == struct))
     // version tracer is for debugging a grammar, it comes from pegged.
     version (tracer)
     {
-        import std.experimental.logger : sharedLog;
-        sharedLog = new TraceLogger("TraceLog " ~ __TIMESTAMP__ ~ ".txt");
-        traceAll();
+        import pegged.peg : setTraceConditionFunction;
+
+        bool cond(string ruleName, const ref ParseTree p)
+        {
+            static startTrace = false;
+            if (ruleName.startsWith("Eris.Function"))
+                startTrace = true;
+            return  /* startTrace &&  */ ruleName.startsWith("TomlGrammar");
+        }
+
+        setTraceConditionFunction(&cond);
     }
 
     ParseTree tree = TomlGrammar(toml);
