@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:sketch="http://www.bohemiancoding.com/sketch/ns"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 64.000283 58.946998"
+   xml:space="preserve"
+   id="svg37"
+   sodipodi:docname="gitlab-icon-rgb.svg"
+   inkscape:export-filename="/home/andrej/Documents/Projects/exceeds-expectations/readme-resources/gitlab-icon-rgb.png"
+   inkscape:export-xdpi="8.9527397"
+   inkscape:export-ydpi="8.9527397"
+   width="16.000071"
+   height="14.73675"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"><metadata
+   id="metadata43"><rdf:RDF><cc:Work
+       rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+         rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+   id="defs41" /><sodipodi:namedview
+   pagecolor="#ffffff"
+   bordercolor="#666666"
+   borderopacity="1"
+   objecttolerance="10"
+   gridtolerance="10"
+   guidetolerance="10"
+   inkscape:pageopacity="0"
+   inkscape:pageshadow="2"
+   inkscape:window-width="1920"
+   inkscape:window-height="1009"
+   id="namedview39"
+   showgrid="false"
+   inkscape:pagecheckerboard="true"
+   lock-margins="false"
+   fit-margin-top="0"
+   fit-margin-left="0"
+   fit-margin-right="0"
+   fit-margin-bottom="0"
+   inkscape:zoom="4"
+   inkscape:cx="5.4497478"
+   inkscape:cy="2.4415312"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg37"
+   inkscape:document-rotation="0"
+   scale-x="12" />
+<style
+   type="text/css"
+   id="style2">
+	.st0{fill:#FAFAFA;}
+	.st1{fill:#F0F0F0;}
+	.st2{fill:#FFFFFF;}
+	.st3{fill:#E24329;}
+	.st4{fill:#FCA326;}
+	.st5{fill:#FC6D26;}
+	.st6{fill:#8C929D;}
+	.st7{fill:#2E2E2E;}
+	.st8{fill:none;stroke:#FCA326;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+	.st9{fill:none;stroke:#FC6D26;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+	.st10{fill:none;stroke:#E24329;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+	.st11{fill:none;stroke:#F0F0F0;stroke-miterlimit:10;}
+	.st12{fill:#231F20;}
+	.st13{fill:none;stroke:#231F20;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}
+	.st14{display:none;}
+	.st15{display:inline;opacity:0.1;fill:#E828E3;}
+	.st16{display:inline;}
+	.st17{opacity:0.1;fill:#E828E3;}
+	.st18{font-family:'SourceSansPro-Semibold';}
+	.st19{font-size:24px;}
+	.st20{display:inline;fill:#DB3B21;}
+	.st21{display:inline;fill:#FC6D26;}
+	.st22{display:inline;fill:#2E2E2E;}
+	.st23{display:inline;fill:#6E49CB;}
+	.st24{display:inline;fill:#380D75;}
+	.st25{display:inline;fill:#FCA121;}
+	.st26{opacity:0.6;fill:none;stroke:#231F20;stroke-width:2;stroke-miterlimit:10;stroke-dasharray:12,6;}
+	.st27{fill:none;stroke:#444444;stroke-width:1.5339;stroke-miterlimit:10;}
+</style>
+<g
+   id="logo_art"
+   transform="matrix(0.18956076,0,0,0.18956076,-23.548368,-23.508709)"
+   style="stroke-width:5.27535">
+	<g
+   id="g13"
+   style="stroke-width:5.27535">
+		<path
+   id="path50_2_"
+   class="st3"
+   d="m 293.026,434.983 v 0 L 355.225,243.661 H 230.918 Z"
+   style="stroke-width:5.27535" />
+		<path
+   id="path66_6_"
+   class="st4"
+   d="m 143.798,243.662 v 0 l -18.941,58.126 c -1.714,5.278 0.137,11.104 4.661,14.394 l 163.509,118.801 z"
+   style="stroke-width:5.27535" />
+		<path
+   id="path74_2_"
+   class="st3"
+   d="m 143.798,243.662 h 87.12 L 193.424,128.438 c -1.919,-5.895 -10.282,-5.895 -12.27,0 z"
+   style="stroke-width:5.27535" />
+		<path
+   id="path82_6_"
+   class="st4"
+   d="m 442.346,243.662 v 0 l 18.873,58.126 c 1.714,5.278 -0.137,11.104 -4.661,14.394 L 293.026,434.983 Z"
+   style="stroke-width:5.27535" />
+		<path
+   id="path86_2_"
+   class="st3"
+   d="m 442.346,243.662 h -87.12 l 37.425,-115.224 c 1.919,-5.895 10.282,-5.895 12.27,0 z"
+   style="stroke-width:5.27535" />
+		<polygon
+   class="st5"
+   points="442.346,243.662 293.026,434.983 355.225,243.662 "
+   id="polygon9"
+   style="stroke-width:5.27535" />
+		<polygon
+   class="st5"
+   points="230.918,243.662 293.026,434.983 143.798,243.662 "
+   id="polygon11"
+   style="stroke-width:5.27535" />
+	</g>
+</g>
+<g
+   id="spacing_guides"
+   class="st14"
+   transform="translate(-261.03786,-250.02638)">
+	<path
+   id="path40_18_"
+   sketch:type="MSShapeGroup"
+   class="st15"
+   d="m 0,0.5 v 124 H 586 V 0.5 Z" />
+	<path
+   id="path40_16_"
+   sketch:type="MSShapeGroup"
+   class="st15"
+   d="m 0,435.5 v 124 h 586 v -124 z" />
+	<path
+   id="path40_15_"
+   sketch:type="MSShapeGroup"
+   class="st15"
+   d="m 462.2,560 h 124 V 0 h -124 z" />
+	<g
+   class="st16"
+   id="g21">
+		<text
+   transform="translate(511.2881,283.3319)"
+   class="st18 st19"
+   id="text19">1x</text>
+	</g>
+	<g
+   class="st16"
+   id="g25">
+		<text
+   transform="translate(281.2881,500.9978)"
+   class="st18 st19"
+   id="text23">1x</text>
+	</g>
+	<g
+   class="st16"
+   id="g29">
+		<text
+   transform="translate(281.2881,65.998)"
+   class="st18 st19"
+   id="text27">1x</text>
+	</g>
+	<path
+   id="path40_5_"
+   sketch:type="MSShapeGroup"
+   class="st15"
+   d="M 0,560 H 124 V 0 H 0 Z" />
+	<g
+   class="st16"
+   id="g34">
+		<text
+   transform="translate(51.2881,283.3319)"
+   class="st18 st19"
+   id="text32">1x</text>
+	</g>
+</g>
+</svg>

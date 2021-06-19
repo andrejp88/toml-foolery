@@ -1,6 +1,8 @@
+[![](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/gitlab-icon-rgb.svg) Main Repo](https://gitlab.com/andrej88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/github-icon.svg) Mirror](https://github.com/andrejp88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/dub-logo-small.png) Dub Package Registry](https://code.dlang.org/packages/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/documentation-icon.svg) Documentation](https://toml-foolery.dpldocs.info/exceeds_expectations.expect.Expect.html)
+
 # toml-foolery
 
-![toml-foolery logo](./assets/logo.png)
+![toml-foolery logo](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/logo.svg)
 
 toml-foolery is a library for the D programming language which simplifies
 encoding and decoding of TOML-formatted data. There are no intermediate types —
