@@ -112,11 +112,11 @@ in (address.length > 0, "`address` may not be empty")
                             else
                             {
                                 throw new TomlDecodingException(
-                                    `Could not place value "` ~ value.to!string ~
-                                    `" of type "` ~ T.stringof ~
-                                    `" inside field "` ~ member ~
-                                    `" of type "` ~ typeof(__traits(getMember, S, member)).stringof ~
-                                    `" in struct "` ~ S.stringof ~ `". This might be a bug — please file a report.`
+                                    `Could not place ` ~ T.stringof ~ ` "` ~ value.to!string ~
+                                    `" into ` ~ S.stringof ~
+                                    `'s field "` ~ typeof(__traits(getMember, S, member)).stringof ~ ` ` ~ member ~
+                                    `" at address ` ~ address.to!string ~
+                                    `. This might be a bug — please file a report.`
                                 );
                             }
                         }
