@@ -1,0 +1,3 @@
+[submodule "abnf2peg"]
+	path = abnf2peg
+	url = git@github.com:andrejp88/abnf2peg.git
