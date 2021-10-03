@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/encoder
+encoder.so
+encoder.dylib
+encoder.dll
+encoder.a
+encoder.lib
+encoder-test-*
+*.exe
+*.o
+*.obj
+*.lst

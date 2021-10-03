@@ -1,0 +1,7 @@
+name "decoder"
+description "For use with toml-test"
+authors "Andrej Petrović"
+copyright "Copyright © 2021, Andrej Petrović"
+license "MIT"
+
+dependency "toml-foolery" path="../.."

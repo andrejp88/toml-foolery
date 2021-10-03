@@ -1,3 +1,6 @@
 [submodule "abnf2peg"]
 	path = abnf2peg
 	url = git@github.com:andrejp88/abnf2peg.git
+[submodule "validator/toml-test"]
+	path = validator/toml-test
+	url = git@github.com:BurntSushi/toml-test.git
