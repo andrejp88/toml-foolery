@@ -22,3 +22,6 @@ toml-foolery-test-*
 
 # Editor-specific stuff
 /.vscode/
+
+# Temporary files
+/tmp/

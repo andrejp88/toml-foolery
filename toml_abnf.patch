@@ -1,0 +1,101 @@
+--- toml.original.abnf	2021-10-02 21:01:06.738311412 +0100
++++ toml.abnf	2021-10-02 20:49:34.168776183 +0100
+@@ -17,20 +17,16 @@
+ 
+ toml = expression *( newline expression )
+ 
+-expression =  ws [ comment ]
+-expression =/ ws keyval ws [ comment ]
+-expression =/ ws table ws [ comment ]
++expression =  ws [ comment ] / ws keyval ws [ comment ] / ws table ws [ comment ]
+ 
+ ;; Whitespace
+ 
+ ws = *wschar
+-wschar =  %x20  ; Space
+-wschar =/ %x09  ; Horizontal tab
++wschar =  %x20 / %x09  ; Space / Horizontal tab
+ 
+ ;; Newline
+ 
+-newline =  %x0A     ; LF
+-newline =/ %x0D.0A  ; CRLF
++newline =  %x0A / %x0D %x0A  ; LF / CRLF
+ 
+ ;; Comment
+ 
+@@ -54,11 +50,11 @@
+ dot-sep   = ws %x2E ws  ; . Period
+ keyval-sep = ws %x3D ws ; =
+ 
+-val = string / boolean / array / inline-table / date-time / float / integer
++val = string- / boolean / array / inline-table / date-time / float- / integer
+ 
+ ;; String
+ 
+-string = ml-basic-string / basic-string / ml-literal-string / literal-string
++string- = ml-basic-string / basic-string / ml-literal-string / literal-string
+ 
+ ;; Basic String
+ 
+@@ -71,15 +67,17 @@
+ escaped = escape escape-seq-char
+ 
+ escape = %x5C                   ; \
+-escape-seq-char =  %x22         ; "    quotation mark  U+0022
+-escape-seq-char =/ %x5C         ; \    reverse solidus U+005C
+-escape-seq-char =/ %x62         ; b    backspace       U+0008
+-escape-seq-char =/ %x66         ; f    form feed       U+000C
+-escape-seq-char =/ %x6E         ; n    line feed       U+000A
+-escape-seq-char =/ %x72         ; r    carriage return U+000D
+-escape-seq-char =/ %x74         ; t    tab             U+0009
+-escape-seq-char =/ %x75 4HEXDIG ; uXXXX                U+XXXX
+-escape-seq-char =/ %x55 8HEXDIG ; UXXXXXXXX            U+XXXXXXXX
++
++; %x22              "    quotation mark  U+0022
++; %x5C              \    reverse solidus U+005C
++; %x62              b    backspace       U+0008
++; %x66              f    form feed       U+000C
++; %x6E              n    line feed       U+000A
++; %x72              r    carriage return U+000D
++; %x74              t    tab             U+0009
++; %x75 4HEXDIG      uXXXX                U+XXXX
++; %x55 8HEXDIG      UXXXXXXXX            U+XXXXXXXX
++escape-seq-char =  %x22 / %x5C / %x62 / %x66 / %x6E / %x72 / %x74 / %x75 4HEXDIG / %x55 8HEXDIG
+ 
+ ;; Multiline Basic String
+ 
+@@ -137,8 +135,7 @@
+ 
+ ;; Float
+ 
+-float = float-int-part ( exp / frac [ exp ] )
+-float =/ special-float
++float- = float-int-part ( exp / frac [ exp ] ) / special-float
+ 
+ float-int-part = dec-int
+ frac = decimal-point zero-prefixable-int
+@@ -154,10 +151,10 @@
+ 
+ ;; Boolean
+ 
+-boolean = true / false
++boolean = true- / false-
+ 
+-true    = %x74.72.75.65     ; true
+-false   = %x66.61.6C.73.65  ; false
++true-    = %x74.72.75.65     ; true
++false-   = %x66.61.6C.73.65  ; false
+ 
+ ;; Date and Time (as defined in RFC 3339)
+ 
+@@ -201,8 +198,7 @@
+ array-open =  %x5B ; [
+ array-close = %x5D ; ]
+ 
+-array-values =  ws-comment-newline val ws-comment-newline array-sep array-values
+-array-values =/ ws-comment-newline val ws-comment-newline [ array-sep ]
++array-values =  ws-comment-newline val ws-comment-newline array-sep array-values / ws-comment-newline val ws-comment-newline [ array-sep ]
+ 
+ array-sep = %x2C  ; , Comma
+ 
