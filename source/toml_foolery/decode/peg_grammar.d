@@ -1,26 +1,16 @@
 /++
 This module was automatically generated from the following grammar:
 
-#; This is a slightly modified copy of https://github.com/toml-lang/toml/blob/master/toml.abnf
+#; This document describes TOML's syntax, using the ABNF format (defined in
+#; RFC 5234 -- https://www.ietf.org/rfc/rfc5234.txt).
 #;
-#; - '=/' has been removed, so all alternatives are defined using regular '/'.
-#;
-#; - Rules that share their names with keywords in D have their names appended
-#;   with a hyphen (e.g., "float" becomes "float-"), which gets translated to an
-#;   underscore in PEG.
-#;
-#; - https://github.com/sanjayss/abnf2peg has been used to translate the ABNF to
-#;   PEG.
-#;
-#; - The PEG version also has `TomlGrammar:` added before the first rule.
+#; All valid TOML documents will match this description, however certain
+#; invalid documents would need to be rejected as per the semantics described
+#; in the supporting text description.
 
-#; WARNING: This document is a work-in-progress and should not be considered
-#; authoritative until further notice.
-
-#; This is an attempt to define TOML in ABNF according to the grammar defined
-#; in RFC 5234 (http://www.ietf.org/rfc/rfc5234.txt).
-
-#; You can try out this grammar using http://instaparse.mojombo.com/
+#; It is possible to try this grammar interactively, using instaparse.
+#;     http://instaparse.mojombo.com/
+#;
 #; To do so, in the lower right, click on Options and change `:input-format` to
 #; ':abnf'. Then paste this entire ABNF document into the grammar entry box
 #; (above the options). Then you can type or paste a sample TOML document into
@@ -31,26 +21,24 @@ This module was automatically generated from the following grammar:
 
 TomlGrammar:
 
+toml             <- expression ( newline expression )* :eoi
 
-toml             <  expression+ :eoi
-expression       <- ws (table / keyval)? ws comment?
-
-# expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
+expression       <- ws table ws ( comment )? / ws keyval ws ( comment )? / ws ( comment )?
 
 #; Whitespace
 
 ws               <- wschar*
-wschar           <-  [ \t]   # Space / Horizontal tab
+wschar           <-  [ ]  /  [\t]   # Space / Horizontal tab
 
 #; Newline
 
-newline          <-  "\r"? "\n"   # LF / CRLF
+newline          <:  [\n]  /  [\r]   [\n]   # LF / CRLF
 
 #; Comment
 
 comment_start_symbol <-  [#]  # #
-non_ascii        <-  [\x80-\uD7FF\uE000-\U0010FFFF]
-non_eol          <-  [\t -\x7F]  / non_ascii
+non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF]
+non_eol          <-  [\t]  /  [ -\x7F]  / non_ascii
 
 comment          <- comment_start_symbol non_eol*
 
@@ -61,7 +49,7 @@ keyval           <- key keyval_sep val
 key              <- dotted_key / simple_key
 simple_key       <- quoted_key / unquoted_key
 
-unquoted_key     <- ( ALPHA / DIGIT /  [-_]  )+ # A-Z / a-z / 0-9 / - / _
+unquoted_key     <- ( ALPHA / DIGIT /  [-]  /  [_]  )+ # A-Z / a-z / 0-9 / - / _
 quoted_key       <- basic_string / literal_string
 dotted_key       <- simple_key ( dot_sep simple_key )+
 
@@ -81,24 +69,33 @@ basic_string     <- quotation_mark basic_char* quotation_mark
 quotation_mark   <-  ["]             # "
 
 basic_char       <- basic_unescaped / escaped
-basic_unescaped  <- wschar /  [!#-\[\]-~]  / non_ascii
+basic_unescaped  <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
 escaped          <- escape escape_seq_char
 
-escape           <-  [\\]                    # \ backslash
-# " / \ / b / f / n / r / t / uXXXX / UXXXXXXXX
+escape           <-  [\\]                    # \
 
-escape_seq_char  <-  ["\\bfnrt]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
+# %x22              "    quotation mark  U+0022
+# %x5C              \    reverse solidus U+005C
+# %x62              b    backspace       U+0008
+# %x66              f    form feed       U+000C
+# %x6E              n    line feed       U+000A
+# %x72              r    carriage return U+000D
+# %x74              t    tab             U+0009
+# %x75 4HEXDIG      uXXXX                U+XXXX
+# %x55 8HEXDIG      UXXXXXXXX            U+XXXXXXXX
+escape_seq_char  <-  ["]  /  [\\]  /  [b]  /  [f]  /  [n]  /  [r]  /  [t]  /  [u]  HEXDIG HEXDIG HEXDIG HEXDIG /  [U]  HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG HEXDIG
 
 #; Multiline Basic String
 
-ml_basic_string  <- ml_basic_string_delim ml_basic_body ml_basic_string_delim
+ml_basic_string  <- ml_basic_string_delim ( newline )? ml_basic_body
+                  ml_basic_string_delim
 ml_basic_string_delim <- quotation_mark quotation_mark quotation_mark
 ml_basic_body    <- mlb_content* ( mlb_quotes mlb_content+ )* ( mlb_quotes )?
 
 mlb_content      <- mlb_char / newline / mlb_escaped_nl
 mlb_char         <- mlb_unescaped / escaped
 mlb_quotes       <- quotation_mark quotation_mark? !quotation_mark
-mlb_unescaped    <- wschar /  [!#-\[\]-~]  / non_ascii
+mlb_unescaped    <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
 mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
 
 #; Literal String
@@ -107,16 +104,17 @@ literal_string   <- apostrophe literal_char* apostrophe
 
 apostrophe       <-  [']  # ' apostrophe
 
-literal_char     <-  [\t -&(-~]  / non_ascii
+literal_char     <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
 
 #; Multiline Literal String
 
-ml_literal_string <- ml_literal_string_delim ml_literal_body ml_literal_string_delim
+ml_literal_string <- ml_literal_string_delim ( newline )? ml_literal_body
+                    ml_literal_string_delim
 ml_literal_string_delim <- apostrophe apostrophe apostrophe
 ml_literal_body  <- mll_content* ( mll_quotes mll_content+ )* ( mll_quotes )?
 
 mll_content      <- mll_char / newline
-mll_char         <-  [\t -&(-~]  / non_ascii
+mll_char         <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
 mll_quotes       <- apostrophe apostrophe? !apostrophe
 
 #; Integer
@@ -206,7 +204,7 @@ array            <- array_open ( array_values )? ws_comment_newline array_close
 array_open       <-  [\[]  # [
 array_close      <-  [\]]  # ]
 
-array_values     <- ws_comment_newline val ws array_sep array_values / ws_comment_newline val ws ( array_sep )?
+array_values     <- ws_comment_newline val ws_comment_newline array_sep array_values / ws_comment_newline val ws_comment_newline ( array_sep )?
 
 array_sep        <-  [,]   # , Comma
 
@@ -242,7 +240,7 @@ array_table_close <- ws "]]"  # ]] Double right square bracket
 
 #; Built-in ABNF terms, reproduced here for clarity
 
-ALPHA            <-  [A-Za-z]  # A-Z / a-z
+ALPHA            <-  [A-Z]  /  [a-z]  # A-Z / a-z
 DIGIT            <-  [0-9]  # 0-9
 HEXDIG           <- DIGIT / [A-Fa-f]
 
@@ -250,11 +248,11 @@ HEXDIG           <- DIGIT / [A-Fa-f]
 +/
 module toml_foolery.decode.peg_grammar;
 
-package import pegged.peg;
+public import pegged.peg;
 import std.algorithm: startsWith;
 import std.functional: toDelegate;
 
-package struct GenericTomlGrammar(TParseTree)
+struct GenericTomlGrammar(TParseTree)
 {
     import std.functional : toDelegate;
     import pegged.dynamic.grammar;
@@ -423,17 +421,17 @@ package struct GenericTomlGrammar(TParseTree)
     {
         // enum name is the current grammar named
         DynamicGrammar dg = pegged.dynamic.grammar.grammar(name ~ ": " ~ ruleSyntax, rules);
-        foreach(name,rule; dg.rules)
+        foreach(ruleName,rule; dg.rules)
         {
-            if (name != "Spacing")
-                rules[name] = rule;
+            if (ruleName != "Spacing")
+                rules[ruleName] = rule;
         }
         after[parentRule] = rules[dg.startingRule];
     }
 
     static bool isRule(string s)
     {
-		import std.algorithm : startsWith;
+        import std.algorithm : startsWith;
         return s.startsWith("TomlGrammar.");
     }
     mixin decimateTree;
@@ -444,7 +442,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.oneOrMore!(pegged.peg.wrapAround!(Spacing, expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, eoi, Spacing))), "TomlGrammar.toml")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(expression, pegged.peg.zeroOrMore!(pegged.peg.and!(newline, expression)), pegged.peg.discard!(eoi)), "TomlGrammar.toml")(p);
         }
         else
         {
@@ -452,7 +450,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.oneOrMore!(pegged.peg.wrapAround!(Spacing, expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, eoi, Spacing))), "TomlGrammar.toml"), "toml")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(expression, pegged.peg.zeroOrMore!(pegged.peg.and!(newline, expression)), pegged.peg.discard!(eoi)), "TomlGrammar.toml"), "toml")(p);
                 memo[tuple(`toml`, p.end)] = result;
                 return result;
             }
@@ -463,12 +461,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.oneOrMore!(pegged.peg.wrapAround!(Spacing, expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, eoi, Spacing))), "TomlGrammar.toml")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(expression, pegged.peg.zeroOrMore!(pegged.peg.and!(newline, expression)), pegged.peg.discard!(eoi)), "TomlGrammar.toml")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.oneOrMore!(pegged.peg.wrapAround!(Spacing, expression, Spacing)), pegged.peg.discard!(pegged.peg.wrapAround!(Spacing, eoi, Spacing))), "TomlGrammar.toml"), "toml")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(expression, pegged.peg.zeroOrMore!(pegged.peg.and!(newline, expression)), pegged.peg.discard!(eoi)), "TomlGrammar.toml"), "toml")(TParseTree("", false,[], s));
         }
     }
     static string toml(GetName g)
@@ -480,7 +478,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ws, pegged.peg.option!(pegged.peg.or!(table, keyval)), ws, pegged.peg.option!(comment)), "TomlGrammar.expression")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws, table, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, keyval, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, pegged.peg.option!(comment))), "TomlGrammar.expression")(p);
         }
         else
         {
@@ -488,7 +486,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(ws, pegged.peg.option!(pegged.peg.or!(table, keyval)), ws, pegged.peg.option!(comment)), "TomlGrammar.expression"), "expression")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws, table, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, keyval, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, pegged.peg.option!(comment))), "TomlGrammar.expression"), "expression")(p);
                 memo[tuple(`expression`, p.end)] = result;
                 return result;
             }
@@ -499,12 +497,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ws, pegged.peg.option!(pegged.peg.or!(table, keyval)), ws, pegged.peg.option!(comment)), "TomlGrammar.expression")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws, table, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, keyval, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, pegged.peg.option!(comment))), "TomlGrammar.expression")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(ws, pegged.peg.option!(pegged.peg.or!(table, keyval)), ws, pegged.peg.option!(comment)), "TomlGrammar.expression"), "expression")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws, table, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, keyval, ws, pegged.peg.option!(comment)), pegged.peg.and!(ws, pegged.peg.option!(comment))), "TomlGrammar.expression"), "expression")(TParseTree("", false,[], s));
         }
     }
     static string expression(GetName g)
@@ -588,7 +586,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.literal!("\r")), pegged.peg.literal!("\n")), "TomlGrammar.newline")(p);
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(pegged.peg.literal!("\n"), pegged.peg.and!(pegged.peg.literal!("\r"), pegged.peg.literal!("\n")))), "TomlGrammar.newline")(p);
         }
         else
         {
@@ -596,7 +594,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.literal!("\r")), pegged.peg.literal!("\n")), "TomlGrammar.newline"), "newline")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(pegged.peg.literal!("\n"), pegged.peg.and!(pegged.peg.literal!("\r"), pegged.peg.literal!("\n")))), "TomlGrammar.newline"), "newline")(p);
                 memo[tuple(`newline`, p.end)] = result;
                 return result;
             }
@@ -607,12 +605,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.literal!("\r")), pegged.peg.literal!("\n")), "TomlGrammar.newline")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(pegged.peg.literal!("\n"), pegged.peg.and!(pegged.peg.literal!("\r"), pegged.peg.literal!("\n")))), "TomlGrammar.newline")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(pegged.peg.option!(pegged.peg.literal!("\r")), pegged.peg.literal!("\n")), "TomlGrammar.newline"), "newline")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.discard!(pegged.peg.or!(pegged.peg.literal!("\n"), pegged.peg.and!(pegged.peg.literal!("\r"), pegged.peg.literal!("\n")))), "TomlGrammar.newline"), "newline")(TParseTree("", false,[], s));
         }
     }
     static string newline(GetName g)
@@ -696,7 +694,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F')), non_ascii), "TomlGrammar.non_eol")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol")(p);
         }
         else
         {
@@ -704,7 +702,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F')), non_ascii), "TomlGrammar.non_eol"), "non_eol")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(p);
                 memo[tuple(`non_eol`, p.end)] = result;
                 return result;
             }
@@ -715,12 +713,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F')), non_ascii), "TomlGrammar.non_eol")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F')), non_ascii), "TomlGrammar.non_eol"), "non_eol")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(TParseTree("", false,[], s));
         }
     }
     static string non_eol(GetName g)
@@ -876,7 +874,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.or!(pegged.peg.literal!("-"), pegged.peg.literal!("_")))), "TomlGrammar.unquoted_key")(p);
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.literal!("-"), pegged.peg.literal!("_"))), "TomlGrammar.unquoted_key")(p);
         }
         else
         {
@@ -884,7 +882,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.or!(pegged.peg.literal!("-"), pegged.peg.literal!("_")))), "TomlGrammar.unquoted_key"), "unquoted_key")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.literal!("-"), pegged.peg.literal!("_"))), "TomlGrammar.unquoted_key"), "unquoted_key")(p);
                 memo[tuple(`unquoted_key`, p.end)] = result;
                 return result;
             }
@@ -895,12 +893,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.or!(pegged.peg.literal!("-"), pegged.peg.literal!("_")))), "TomlGrammar.unquoted_key")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.literal!("-"), pegged.peg.literal!("_"))), "TomlGrammar.unquoted_key")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.or!(pegged.peg.literal!("-"), pegged.peg.literal!("_")))), "TomlGrammar.unquoted_key"), "unquoted_key")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.oneOrMore!(pegged.peg.or!(ALPHA, DIGIT, pegged.peg.literal!("-"), pegged.peg.literal!("_"))), "TomlGrammar.unquoted_key"), "unquoted_key")(TParseTree("", false,[], s));
         }
     }
     static string unquoted_key(GetName g)
@@ -1236,7 +1234,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.basic_unescaped")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.basic_unescaped")(p);
         }
         else
         {
@@ -1244,7 +1242,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.basic_unescaped"), "basic_unescaped")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.basic_unescaped"), "basic_unescaped")(p);
                 memo[tuple(`basic_unescaped`, p.end)] = result;
                 return result;
             }
@@ -1255,12 +1253,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.basic_unescaped")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.basic_unescaped")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.basic_unescaped"), "basic_unescaped")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.basic_unescaped"), "basic_unescaped")(TParseTree("", false,[], s));
         }
     }
     static string basic_unescaped(GetName g)
@@ -1344,7 +1342,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t")), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t"), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char")(p);
         }
         else
         {
@@ -1352,7 +1350,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t")), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char"), "escape_seq_char")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t"), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char"), "escape_seq_char")(p);
                 memo[tuple(`escape_seq_char`, p.end)] = result;
                 return result;
             }
@@ -1363,12 +1361,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t")), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t"), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t")), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char"), "escape_seq_char")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!(`"`), pegged.peg.literal!(`\`), pegged.peg.literal!("b"), pegged.peg.literal!("f"), pegged.peg.literal!("n"), pegged.peg.literal!("r"), pegged.peg.literal!("t"), pegged.peg.and!(pegged.peg.literal!("u"), HEXDIG, HEXDIG, HEXDIG, HEXDIG), pegged.peg.and!(pegged.peg.literal!("U"), HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG, HEXDIG)), "TomlGrammar.escape_seq_char"), "escape_seq_char")(TParseTree("", false,[], s));
         }
     }
     static string escape_seq_char(GetName g)
@@ -1380,7 +1378,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, pegged.peg.option!(newline), ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string")(p);
         }
         else
         {
@@ -1388,7 +1386,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string"), "ml_basic_string")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, pegged.peg.option!(newline), ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string"), "ml_basic_string")(p);
                 memo[tuple(`ml_basic_string`, p.end)] = result;
                 return result;
             }
@@ -1399,12 +1397,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, pegged.peg.option!(newline), ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string"), "ml_basic_string")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(ml_basic_string_delim, pegged.peg.option!(newline), ml_basic_body, ml_basic_string_delim), "TomlGrammar.ml_basic_string"), "ml_basic_string")(TParseTree("", false,[], s));
         }
     }
     static string ml_basic_string(GetName g)
@@ -1596,7 +1594,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.mlb_unescaped")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.mlb_unescaped")(p);
         }
         else
         {
@@ -1604,7 +1602,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.mlb_unescaped"), "mlb_unescaped")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.mlb_unescaped"), "mlb_unescaped")(p);
                 memo[tuple(`mlb_unescaped`, p.end)] = result;
                 return result;
             }
@@ -1615,12 +1613,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.mlb_unescaped")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.mlb_unescaped")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.or!(pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~')), non_ascii), "TomlGrammar.mlb_unescaped"), "mlb_unescaped")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(wschar, pegged.peg.literal!("!"), pegged.peg.charRange!('#', '['), pegged.peg.charRange!(']', '~'), non_ascii), "TomlGrammar.mlb_unescaped"), "mlb_unescaped")(TParseTree("", false,[], s));
         }
     }
     static string mlb_unescaped(GetName g)
@@ -1740,7 +1738,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.literal_char")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.literal_char")(p);
         }
         else
         {
@@ -1748,7 +1746,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.literal_char"), "literal_char")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.literal_char"), "literal_char")(p);
                 memo[tuple(`literal_char`, p.end)] = result;
                 return result;
             }
@@ -1759,12 +1757,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.literal_char")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.literal_char")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.literal_char"), "literal_char")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.literal_char"), "literal_char")(TParseTree("", false,[], s));
         }
     }
     static string literal_char(GetName g)
@@ -1776,7 +1774,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string")(p);
+            return         pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, pegged.peg.option!(newline), ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string")(p);
         }
         else
         {
@@ -1784,7 +1782,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string"), "ml_literal_string")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, pegged.peg.option!(newline), ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string"), "ml_literal_string")(p);
                 memo[tuple(`ml_literal_string`, p.end)] = result;
                 return result;
             }
@@ -1795,12 +1793,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, pegged.peg.option!(newline), ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string"), "ml_literal_string")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.and!(ml_literal_string_delim, pegged.peg.option!(newline), ml_literal_body, ml_literal_string_delim), "TomlGrammar.ml_literal_string"), "ml_literal_string")(TParseTree("", false,[], s));
         }
     }
     static string ml_literal_string(GetName g)
@@ -1920,7 +1918,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.mll_char")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.mll_char")(p);
         }
         else
         {
@@ -1928,7 +1926,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.mll_char"), "mll_char")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.mll_char"), "mll_char")(p);
                 memo[tuple(`mll_char`, p.end)] = result;
                 return result;
             }
@@ -1939,12 +1937,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.mll_char")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.mll_char")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~')), non_ascii), "TomlGrammar.mll_char"), "mll_char")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '&'), pegged.peg.charRange!('(', '~'), non_ascii), "TomlGrammar.mll_char"), "mll_char")(TParseTree("", false,[], s));
         }
     }
     static string mll_char(GetName g)
@@ -3756,7 +3754,7 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws, pegged.peg.option!(array_sep))), "TomlGrammar.array_values")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, pegged.peg.option!(array_sep))), "TomlGrammar.array_values")(p);
         }
         else
         {
@@ -3764,7 +3762,7 @@ package struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws, pegged.peg.option!(array_sep))), "TomlGrammar.array_values"), "array_values")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, pegged.peg.option!(array_sep))), "TomlGrammar.array_values"), "array_values")(p);
                 memo[tuple(`array_values`, p.end)] = result;
                 return result;
             }
@@ -3775,12 +3773,12 @@ package struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws, pegged.peg.option!(array_sep))), "TomlGrammar.array_values")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, pegged.peg.option!(array_sep))), "TomlGrammar.array_values")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws, pegged.peg.option!(array_sep))), "TomlGrammar.array_values"), "array_values")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, array_sep, array_values), pegged.peg.and!(ws_comment_newline, val, ws_comment_newline, pegged.peg.option!(array_sep))), "TomlGrammar.array_values"), "array_values")(TParseTree("", false,[], s));
         }
     }
     static string array_values(GetName g)
@@ -4433,4 +4431,5 @@ package struct GenericTomlGrammar(TParseTree)
     }
 }
 
-package alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;
+alias GenericTomlGrammar!(ParseTree).TomlGrammar TomlGrammar;
+
