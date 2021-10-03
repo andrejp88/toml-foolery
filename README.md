@@ -163,11 +163,11 @@ be lost upon parsing.
   supported by toml-foolery.
 - Classes are not supported.
 - Pointers are not supported.
-- Line-separator conversion is **not** performed when decoding a TOML multi-line
+- Line-separator conversion is **not** performed when decoding a TOML multiline
   string.
 - The library can parse all features of TOML, but when encoding data into TOML,
   some formats will not be created:
     - Inline tables (Regular `[]`-syntax is always used)
     - Dotted keys (same as above)
     - Literal strings (regular `"strings"` used instead)
-    - Multi-line strings (same as above)
+    - Multiline strings (same as above)
