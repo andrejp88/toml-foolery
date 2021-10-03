@@ -19,10 +19,6 @@ import toml_foolery.decode.types.integer;
 import toml_foolery.decode.types.string;
 
 import toml_foolery.decode.peg_grammar;
-// If you're working on the toml.peg file, comment the previous import, add `stringImportPaths "." ` to the dub.sdl, and uncomment this:
-// import pegged.grammar; mixin(grammar(import("toml.peg")));
-// To turn it into a D module again, run the following code once:
-// import pegged.grammar : asModule; asModule("toml_foolery.decode.peg_grammar", "source/toml_foolery/decode/peg_grammar", import("toml.peg"));
 
 
 /**

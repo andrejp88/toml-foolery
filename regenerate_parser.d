@@ -4,7 +4,6 @@
     version "1.0.0"
     license "public domain"
     dependency "pegged" version="~>0.4.5"
-    stringImportPaths "."
 +/
 
 // This script fetches the official TOML ABNF file and converts it
