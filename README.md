@@ -4,28 +4,30 @@
 
 ![toml-foolery logo](https://gitlab.com/andrej88/toml-foolery/-/raw/v1.0.1/readme-resources/logo.svg)
 
-toml-foolery is a library for the D programming language which simplifies
-encoding and decoding of TOML-formatted data. There are no intermediate types —
-TOML data is parsed directly into any struct, and structs can be converted
-into TOML.
+Toml-foolery is a library for the D programming language which
+simplifies encoding and decoding of TOML-formatted data. There are no
+intermediate types that couple your code to this library —
+Toml-foolery parses TOML data directly into any struct, and structs
+can be converted into TOML.
 
-toml-foolery v1.0.1 is compatible with TOML v1.0.0-rc1.
+Toml-foolery v1.0.1 is compatible with TOML v1.0.0-rc1.
 
 ## Usage
 
-Decoding is done using the `parseToml` template function. It may optionally
-receive a pre-made instance of that struct as its second argument.
+The `parseToml` template function decodes TOML code into a D data
+structure. It may optionally receive a pre-made instance of that
+struct as its second argument.
 
-Encoding is done using the `tomlify` function, which can accept any struct,
-and returns a string containing TOML data.
+The `tomlify` function encodes D data structure as TOML code. It
+accepts any struct and returns a string containing TOML data.
 
 Note that toml-foolery doesn't do any file I/O.
 
-Each field of the given struct is converted to a TOML key-value pair, where the
-key is the name of the field in D. This can be customized by applying the
-`@TomlName` attribute to a field. The string passed to this attribute is the
-name of the key to look for when parsing TOML data, and the name to use when
-tomlify-ing the struct.
+Each field of the given struct becomes a TOML key-value pair, where
+the key is the name of the field in D. This can be customized by
+applying the `@TomlName` attribute to a field. The string passed to
+this attribute is the key name to look for when decoding TOML data,
+and the key name to write when encoding the struct into TOML.
 
 
 ## Example
@@ -136,13 +138,13 @@ profession = "Thief"
 | [`std.datetime.date.DateTime`](https://dlang.org/library/std/datetime/date/date_time.html)     | Local Date-Time³ |
 | [`std.datetime.date.Date`](https://dlang.org/library/std/datetime/date/date.html)              | Local Date       |
 | [`std.datetime.date.TimeOfDay`](https://dlang.org/library/std/datetime/date/time_of_day.html)  | Local Time³      |
-| Array of any of the types above                                     | Array of the corresponding TOML type        |
+| Array of the above types                                            | Array of the corresponding TOML type        |
 | `struct`                                                            | Table                                       |
 | Array of `struct`s                                                  | Array of tables                             |
 
 ¹ The TOML specification requires Integers to be in the range
 `[long.min, long.max]`, so toml-foolery will throw a `TomlTypeException` if the
-input contains an integer outside of that range.
+input contains an integer outside that range.
 
 ² Parsing is case-sensitive.
 
@@ -154,18 +156,16 @@ be lost upon parsing.
 
 ## Notes
 
-- If the parsed TOML data contains keys that don't match any fields in the given
-  struct, those keys are ignored.
-- Similarly, if a destination field is a static array but the
-  parsed array is too big to fit, additional entires will be ignored. Dynamic
-  arrays will be resized as needed.
-- Mixed-type arrays are allowed by the TOML specification, but are not yet
-  supported by toml-foolery.
-- Classes are not supported.
-- Pointers are not supported.
-- Line-separator conversion is **not** performed when decoding a TOML multiline
-  string.
-- The library can parse all features of TOML, but when encoding data into TOML,
+- If the parsed TOML data contains keys that don't match any fields in
+  the given struct, toml-foolery will ignore those keys.
+- If a destination field is a static array, but the corresponding
+  array in the TOML code is too big to fit, additional entries will be
+  ignored. Dynamic arrays will be resized as needed.
+- The TOML specification allows mixed-type arrays, but toml-foolery
+  does not yet support them.
+- Toml-foolery does not support classes or pointers.
+- Line-separators are preserved when decoding multiline strings.
+- Toml-foolery can parse all features of TOML, but when encoding data into TOML,
   some formats will not be created:
     - Inline tables (Regular `[]`-syntax is always used)
     - Dotted keys (same as above)
