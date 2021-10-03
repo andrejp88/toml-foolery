@@ -9,7 +9,7 @@ import std.range;
 import std.range.primitives;
 import std.traits;
 
-version(unittest) import dshould;
+version(unittest) import exceeds_expectations;
 
 import toml_foolery.decode.set_data;
 import toml_foolery.decode.exceptions;
@@ -212,7 +212,7 @@ unittest
 
     Configuration config = parseToml!Configuration(data);
 
-    config.should.equal(
+    expect(config).toEqual(
         Configuration(
             "127.0.0.1",
             11_000,

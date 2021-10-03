@@ -5,25 +5,18 @@ import std.array : Appender;
 
 version(unittest)
 {
-    import dshould.ShouldType;
+    import exceeds_expectations;
 
-    package(toml_foolery) void equalNoBlanks(Should, T)(
-        Should should,
-        T expected,
-        Fence _ = Fence(),
+    package(toml_foolery) void expectToEqualNoBlanks(
+        string actual,
+        string expected,
         string file = __FILE__,
         size_t line = __LINE__
     )
-    if (isInstanceOf!(ShouldType, Should) && is(T == string))
     {
-        immutable string actualClean = should.got().clean();
+        immutable string actualClean = actual.clean();
         immutable string expectedClean = expected.clean();
-        should.check(
-            compareStringsNoBlanks(actualClean, expectedClean),
-            "\n\n" ~ expected.clean() ~ "\n\n",
-            "\n\n" ~ should.got().clean() ~ "\n\n",
-            file, line
-        );
+        expect(actual, file, line).toSatisfy(actual => compareStringsNoBlanks(actual, expected));
     }
 
     private string clean(string s)

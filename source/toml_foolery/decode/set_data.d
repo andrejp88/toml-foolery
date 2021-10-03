@@ -207,11 +207,11 @@ private bool isSizeT(string s)
 unittest
 {
     import std.bigint;
-    import dshould;
-    size_t.min.to!string.isSizeT.should.equal(true);
-    size_t.max.to!string.isSizeT.should.equal(true);
-    (BigInt(size_t.max) + 1).to!string.isSizeT.should.equal(false);
-    (-1).to!string.isSizeT.should.equal(false);
+    import exceeds_expectations;
+    expect(size_t.min.to!string.isSizeT).toEqual(true);
+    expect(size_t.max.to!string.isSizeT).toEqual(true);
+    expect((BigInt(size_t.max) + 1).to!string.isSizeT).toEqual(false);
+    expect((-1).to!string.isSizeT).toEqual(false);
 }
 
 private enum isFieldOrProperty(alias dest, string member) = (

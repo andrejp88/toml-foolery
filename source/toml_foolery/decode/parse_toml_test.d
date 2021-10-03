@@ -13,7 +13,7 @@ version (unittest)
     import std.array : staticArray;
     import std.datetime;
 
-    import dshould;
+    import exceeds_expectations;
 }
 
 
@@ -112,8 +112,8 @@ unittest
         test2 = 2
     `);
 
-    s.x.y.z.w.test1.should.equal(1);
-    s.x.test2.should.equal(2);
+    expect(s.x.y.z.w.test1).toEqual(1);
+    expect(s.x.test2).toEqual(2);
 }
 
 @("Simple Integer -> int")
@@ -126,7 +126,7 @@ unittest
 
     S result = parseToml!S("myInt = 5123456");
 
-    result.myInt.should.equal(5_123_456);
+    expect(result.myInt).toEqual(5_123_456);
 }
 
 @("Hex Integer -> long")
@@ -139,7 +139,7 @@ unittest
 
     S result = parseToml!S("hex = 0xbeadface");
 
-    result.hex.should.equal(0xbeadface);
+    expect(result.hex).toEqual(0xbeadface);
 }
 
 @("Binary Integer -> ubyte")
@@ -152,7 +152,7 @@ unittest
 
     S result = parseToml!S("bin = 0b00110010");
 
-    result.bin.should.equal(50);
+    expect(result.bin).toEqual(50);
 }
 
 @("Octal Integer -> short")
@@ -165,7 +165,7 @@ unittest
 
     S result = parseToml!S("oct = 0o501");
 
-    result.oct.should.equal(321);
+    expect(result.oct).toEqual(321);
 }
 
 @("Integers with underscores (all bases)")
@@ -186,10 +186,10 @@ unittest
     d = 0b0_0_0_1_0_0_0_1
     `);
 
-    result.a.should.equal(1000);
-    result.b.should.equal(255);
-    result.c.should.equal(511);
-    result.d.should.equal(17);
+    expect(result.a).toEqual(1000);
+    expect(result.b).toEqual(255);
+    expect(result.c).toEqual(511);
+    expect(result.d).toEqual(17);
 }
 
 @("Floating Point -> float")
@@ -202,7 +202,7 @@ unittest
 
     S result = parseToml!S("f = 1.1234");
 
-    result.f.should.equal.approximately(1.1234, error = 1.0e-05);
+    expect(result.f).toApproximatelyEqual(1.1234);
 }
 
 @("Floating Point -> real")
@@ -215,7 +215,7 @@ unittest
 
     S result = parseToml!S("r = 12_232.008_2");
 
-    result.r.should.equal.approximately(12_232.0082, error = 1.0e-05);
+    expect(result.r).toApproximatelyEqual(12_232.0082);
 }
 
 @("Floating Point -> double")
@@ -228,7 +228,7 @@ unittest
 
     S result = parseToml!S("d = -3.141_6e-01");
 
-    result.d.should.equal.approximately(-3.141_6e-01, error = 1.0e-05);
+    expect(result.d).toApproximatelyEqual(-3.141_6e-01);
 }
 
 @("Floating Point — Infinities")
@@ -247,9 +247,9 @@ unittest
         i = inf
     `);
 
-    result.pi.should.equal(real.infinity);
-    result.ni.should.equal(-double.infinity);
-    result.i.should.equal(float.infinity);
+    expect(result.pi).toEqual(real.infinity);
+    expect(result.ni).toEqual(-double.infinity);
+    expect(result.i).toEqual(float.infinity);
 }
 
 @("Floating Point — NaNs")
@@ -289,8 +289,8 @@ unittest
         f = false
     `);
 
-    result.t.should.equal(true);
-    result.f.should.equal(false);
+    expect(result.t).toEqual(true);
+    expect(result.f).toEqual(false);
 }
 
 @("Basic String -> string")
@@ -305,7 +305,7 @@ unittest
         s = "Appel"
     `);
 
-    result.s.should.equal("Appel");
+    expect(result.s).toEqual("Appel");
 }
 
 @("Basic Multiline String -> string")
@@ -321,7 +321,7 @@ unittest
         Phlogiston\tX"""
     `);
 
-    result.s.should.equal("        Phlogiston\tX");
+    expect(result.s).toEqual("        Phlogiston\tX");
 }
 
 @("Literal String -> string")
@@ -336,7 +336,7 @@ unittest
         s = 'Abc\tde'
     `);
 
-    result.s.should.equal("Abc\\tde");
+    expect(result.s).toEqual("Abc\\tde");
 }
 
 @("Literal Multiline String -> string")
@@ -353,7 +353,7 @@ Abc\t''de
 '''
     `);
 
-    result.s.should.equal("Abc\\t''de\n");
+    expect(result.s).toEqual("Abc\\t''de\n");
 }
 
 @("String Unicode test (string, wstring, and dstring)")
@@ -372,9 +372,9 @@ unittest
         d = "🦆"
     `);
 
-    result.s.should.equal("🦢");
-    result.w.should.equal("🐃"w);
-    result.d.should.equal("🦆"d);
+    expect(result.s).toEqual("🦢");
+    expect(result.w).toEqual("🐃"w);
+    expect(result.d).toEqual("🦆"d);
 }
 
 @("Offset Date-Time -> SysTime")
@@ -389,7 +389,7 @@ unittest
         t = 2020-01-26 12:09:59Z
     `);
 
-    result.t.should.equal(SysTime(
+    expect(result.t).toEqual(SysTime(
         DateTime(
             2020,
             1,
@@ -415,7 +415,7 @@ unittest
         t = 2020-01-26 12:09:59
     `);
 
-    result.t.should.equal(SysTime(
+    expect(result.t).toEqual(SysTime(
         DateTime(
             2020,
             1,
@@ -441,7 +441,7 @@ unittest
         t = 2020-01-26
     `);
 
-    result.t.should.equal(Date(2020, 1, 26));
+    expect(result.t).toEqual(Date(2020, 1, 26));
 }
 
 @("Local Time -> TimeOfDay")
@@ -456,7 +456,7 @@ unittest
         t = 12:09:59
     `);
 
-    result.t.should.equal(TimeOfDay(12, 9, 59));
+    expect(result.t).toEqual(TimeOfDay(12, 9, 59));
 }
 
 @("Array of Integers -> static long[]")
@@ -483,7 +483,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123L,
         +111L,
         -82L,
@@ -521,7 +521,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         -82,
@@ -558,7 +558,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         -82,
@@ -592,7 +592,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         -82,
@@ -625,7 +625,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123L,
         +111L,
         0L,
@@ -659,7 +659,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         0,
@@ -692,7 +692,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         0,
@@ -723,7 +723,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([
+    expect(result.t).toEqual([
         123,
         +111,
         0,
@@ -756,7 +756,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([ 123, +111, -82, ]);
+    expect(result.t).toEqual([ 123, +111, -82, ]);
 
     result = parseToml!S(`
         t = [
@@ -773,7 +773,7 @@ unittest
         ]
     `);
 
-    result.t.should.equal([ -189_912, 511, 0b11001101 ]);
+    expect(result.t).toEqual([ -189_912, 511, 0b11001101 ]);
 }
 
 @("Array of Strings -> dynamic string[]")
@@ -788,7 +788,7 @@ unittest
         t = [ "do", "re", "mi" ]
     `);
 
-    result.t.should.equal([ "do", "re", "mi" ]);
+    expect(result.t).toEqual([ "do", "re", "mi" ]);
 }
 
 @("Array of Floats -> dynamic float[]")
@@ -803,7 +803,7 @@ unittest
         t = [ 0.0, 2e5, -3.6e-2 ]
     `);
 
-    result.t.should.equal([ 0.0f, 2e5f, -3.6e-2f ]);
+    expect(result.t).toEqual([ 0.0f, 2e5f, -3.6e-2f ]);
 }
 
 @("Array of Booleans -> dynamic bool[]")
@@ -819,7 +819,7 @@ unittest
          ]
     `);
 
-    result.t.should.equal([ true, false, false, true ]);
+    expect(result.t).toEqual([ true, false, false, true ]);
 }
 
 @("Array of Offset Date-Times -> dynamic SysTime[]")
@@ -834,7 +834,7 @@ unittest
         t = [ 2020-02-02 12:51:05Z ]
     `);
 
-    result.t.should.equal([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), UTC()) ]);
+    expect(result.t).toEqual([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), UTC()) ]);
 }
 
 @("Array of Local Date-Times -> dynamic SysTime[]")
@@ -849,7 +849,7 @@ unittest
         t = [ 2020-02-02 12:51:05 ]
     `);
 
-    result.t.should.equal([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), LocalTime()) ]);
+    expect(result.t).toEqual([ SysTime(DateTime(2020, 2, 2, 12, 51, 5), LocalTime()) ]);
 }
 
 @("Array of Local Dates -> dynamic Date[]")
@@ -864,7 +864,7 @@ unittest
         t = [ 2020-02-02, 2020-10-31 ]
     `);
 
-    result.t.should.equal([ Date(2020, 2, 2), Date(2020, 10, 31) ]);
+    expect(result.t).toEqual([ Date(2020, 2, 2), Date(2020, 10, 31) ]);
 }
 
 @("Array of Local Times -> dynamic TimeOfDay[]")
@@ -879,7 +879,7 @@ unittest
         t = [ 12:53:23, 00:20:01, 19:22:54 ]
     `);
 
-    result.t.should.equal([ TimeOfDay(12, 53, 23), TimeOfDay(0, 20, 1), TimeOfDay(19, 22, 54), ]);
+    expect(result.t).toEqual([ TimeOfDay(12, 53, 23), TimeOfDay(0, 20, 1), TimeOfDay(19, 22, 54), ]);
 }
 
 @("Arrays — Empty")
@@ -902,10 +902,10 @@ unittest
     t = []
     `);
 
-    s.i.should.equal([]);
-    s.f.should.equal([]);
-    s.s.should.equal([]);
-    s.t.should.equal([]);
+    expect(s.i.length).toEqual(0);
+    expect(s.f.length).toEqual(0);
+    expect(s.s.length).toEqual(0);
+    expect(s.t.length).toEqual(0);
 }
 
 @("Array of Inline Tables -> Array of Structs")
@@ -930,9 +930,9 @@ unittest
     ]
     `);
 
-    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
-    s.musicians[1].should.equal(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
-    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
+    expect(s.musicians[0]).toEqual(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    expect(s.musicians[1]).toEqual(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
+    expect(s.musicians[2]).toEqual(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
 
 @("Table - one level")
@@ -956,8 +956,8 @@ unittest
     x = 10
     `);
 
-    o.x.should.equal(5);
-    o.inn.x.should.equal(10);
+    expect(o.x).toEqual(5);
+    expect(o.inn.x).toEqual(10);
 }
 
 @("Table - two levels")
@@ -983,7 +983,7 @@ unittest
     c = 2
     `);
 
-    o.inn.nuc.c.should.equal(2);
+    expect(o.inn.nuc.c).toEqual(2);
 }
 
 @("Table - three level + unicode")
@@ -1016,7 +1016,7 @@ unittest
 
     `);
 
-    earth.mantle.outer.iñner.heat.should.equal(9001);
+    expect(earth.mantle.outer.iñner.heat).toEqual(9001);
 }
 
 @("Table - dotted keys")
@@ -1049,7 +1049,7 @@ unittest
 
     `);
 
-    earth.mantle.outer.iñner.heat.should.equal(9001);
+    expect(earth.mantle.outer.iñner.heat).toEqual(9001);
 }
 
 @("Table - inline")
@@ -1079,7 +1079,7 @@ unittest
     mantle = { outer = { "iñner" = { heat = 9001 } } }
     `);
 
-    earth.mantle.outer.iñner.heat.should.equal(9001);
+    expect(earth.mantle.outer.iñner.heat).toEqual(9001);
 }
 
 @("Table Array")
@@ -1110,9 +1110,9 @@ unittest
     dob = 1868-11-24
     `);
 
-    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
-    s.musicians[1].should.equal(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
-    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
+    expect(s.musicians[0]).toEqual(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    expect(s.musicians[1]).toEqual(S.Musician("Frank Sinatra", Date(1915, 12, 12)));
+    expect(s.musicians[2]).toEqual(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
 
 @("Table Array — dotted keys")
@@ -1159,11 +1159,11 @@ unittest
 
     `);
 
-    s.countries.count.should.equal(4);
-    s.countries.republics[0].should.equal(Country("Ireland", "Éire"));
-    s.countries.republics[1].should.equal(Country("Greece", "Ελλάδα"));
-    s.countries.monarchies[0].should.equal(Country("Bhutan", "འབྲུག་ཡུལ་"));
-    s.countries.monarchies[1].should.equal(Country("Denmark", "Danmark"));
+    expect(s.countries.count).toEqual(4);
+    expect(s.countries.republics[0]).toEqual(Country("Ireland", "Éire"));
+    expect(s.countries.republics[1]).toEqual(Country("Greece", "Ελλάδα"));
+    expect(s.countries.monarchies[0]).toEqual(Country("Bhutan", "འབྲུག་ཡུལ་"));
+    expect(s.countries.monarchies[1]).toEqual(Country("Denmark", "Danmark"));
 }
 
 @("Table Array — empty entry")
@@ -1192,9 +1192,9 @@ unittest
     dob = 1868-11-24
     `);
 
-    s.musicians[0].should.equal(S.Musician("Bob Dylan", Date(1941, 5, 24)));
-    s.musicians[1].should.equal(S.Musician());
-    s.musicians[2].should.equal(S.Musician("Scott Joplin", Date(1868, 11, 24)));
+    expect(s.musicians[0]).toEqual(S.Musician("Bob Dylan", Date(1941, 5, 24)));
+    expect(s.musicians[1]).toEqual(S.Musician());
+    expect(s.musicians[2]).toEqual(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
 
 @("Integer can't fit into a byte")
@@ -1205,7 +1205,7 @@ unittest
         byte i;
     }
 
-    parseToml!S(`i = 128`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = 128`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer can't fit into a ubyte")
@@ -1216,7 +1216,7 @@ unittest
         byte i;
     }
 
-    parseToml!S(`i = 256`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = 256`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer can't fit into a short")
@@ -1227,7 +1227,7 @@ unittest
         short i;
     }
 
-    parseToml!S(`i = 32768`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = 32768`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer can't fit into a ushort")
@@ -1238,7 +1238,7 @@ unittest
         ushort i;
     }
 
-    parseToml!S(`i = 65536`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = 65536`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer too small (ushort)")
@@ -1249,7 +1249,7 @@ unittest
         ushort i;
     }
 
-    parseToml!S(`i = -1`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = -1`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer too small (short)")
@@ -1260,7 +1260,7 @@ unittest
         ushort i;
     }
 
-    parseToml!S(`i = -32769`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`i = -32769`); }).toThrow!TomlDecodingException;
 }
 
 @("Offset date-time before year 0")
@@ -1271,7 +1271,7 @@ unittest
         SysTime timestamp;
     }
 
-    parseToml!S(`timestamp = -0001-01-01 00:00:00Z`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`timestamp = -0001-01-01 00:00:00Z`); }).toThrow!TomlDecodingException;
 }
 
 @("Offset date-time after year 9999")
@@ -1282,7 +1282,7 @@ unittest
         SysTime timestamp;
     }
 
-    parseToml!S(`timestamp = 10000-01-01 00:00:00Z`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`timestamp = 10000-01-01 00:00:00Z`); }).toThrow!TomlDecodingException;
 }
 
 @("Date before year 0")
@@ -1293,7 +1293,7 @@ unittest
         SysTime date;
     }
 
-    parseToml!S(`date = -0001-01-01`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`date = -0001-01-01`); }).toThrow!TomlDecodingException;
 }
 
 @("Date after year 9999")
@@ -1304,7 +1304,7 @@ unittest
         Date date;
     }
 
-    parseToml!S(`date = 10000-01-01`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`date = 10000-01-01`); }).toThrow!TomlDecodingException;
 }
 
 @("Invalid month 0")
@@ -1315,7 +1315,7 @@ unittest
         Date date;
     }
 
-    parseToml!S(`date = 2020-00-01`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`date = 2020-00-01`); }).toThrow!TomlDecodingException;
 }
 
 @("Invalid month 13")
@@ -1326,7 +1326,7 @@ unittest
         Date date;
     }
 
-    parseToml!S(`date = 2020-13-01`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`date = 2020-13-01`); }).toThrow!TomlDecodingException;
 }
 
 @("Invalid day of month")
@@ -1337,7 +1337,7 @@ unittest
         Date date;
     }
 
-    parseToml!S(`date = 2011-02-29`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`date = 2011-02-29`); }).toThrow!TomlDecodingException;
 }
 
 @("Invalid time")
@@ -1348,9 +1348,9 @@ unittest
         TimeOfDay time;
     }
 
-    parseToml!S(`time = 22:61:00`).should.throwA!TomlDecodingException;
-    parseToml!S(`time = 24:01:00`).should.throwA!TomlDecodingException;
-    parseToml!S(`time = 22:01:60`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`time = 22:61:00`); }).toThrow!TomlDecodingException;
+    expect({ parseToml!S(`time = 24:01:00`); }).toThrow!TomlDecodingException;
+    expect({ parseToml!S(`time = 22:01:60`); }).toThrow!TomlDecodingException;
 }
 
 @("Overly precise floating point")
@@ -1361,7 +1361,7 @@ unittest
         float f;
     }
 
-    parseToml!S(`f = 3.1415926535897932384626`).should.not.throwAn!Exception;
+    expect({ parseToml!S(`f = 3.1415926535897932384626`); }).not.toThrow!Exception;
 }
 
 @("Integer outside of [long.max, long.min]")
@@ -1372,8 +1372,8 @@ unittest
         ulong x;
     }
 
-    parseToml!S(`x = 18446744073709551615`).should.throwA!TomlDecodingException;
-    parseToml!S(`x = -18446744073709551615`).should.throwA!TomlDecodingException;
+    expect({ parseToml!S(`x = 18446744073709551615`); }).toThrow!TomlDecodingException;
+    expect({ parseToml!S(`x = -18446744073709551615`); }).toThrow!TomlDecodingException;
 }
 
 @("Integer keys as array indices")
@@ -1384,14 +1384,14 @@ unittest
         int[5] x;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         [x]
         0 = 11
         1 = 22
         2 = 33
         3 = 44
         4 = 55
-    `).should.equal(S([11, 22, 33, 44, 55]));
+    `)).toEqual(S([11, 22, 33, 44, 55]));
 }
 
 @("Integer keys as named fields")
@@ -1411,14 +1411,14 @@ unittest
         X x;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         [x]
         1 = 11
         2 = 22
         3 = 33
         4 = 44
         5 = 55
-    `).should.equal(S(S.X(11, 22, 33, 44, 55)));
+    `)).toEqual(S(S.X(11, 22, 33, 44, 55)));
 }
 
 @("Non-existent keys should be ignored")
@@ -1429,10 +1429,10 @@ unittest
         int a;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         a = 5
         b = 6
-    `).should.equal(S(5));
+    `)).toEqual(S(5));
 }
 
 @("Non-existent tables should be ignored")
@@ -1443,12 +1443,12 @@ unittest
         int a;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         a = 5
 
         [x]
         b = 6
-    `).should.equal(S(5));
+    `)).toEqual(S(5));
 }
 
 @("A key corresponding to a non-struct property should work")
@@ -1467,7 +1467,7 @@ unittest
         a = 5
     `, s);
 
-    s.should.equal(S(5));
+    expect(s).toEqual(S(5));
 }
 
 @("A key corresponding to a public property of a struct type should not compile")
@@ -1503,9 +1503,9 @@ unittest
         int[5] arr;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         arr = [11, 22, 33, 44, 55, 66, 77, 88]
-    `).should.equal(S([11, 22, 33, 44, 55]));
+    `)).toEqual(S([11, 22, 33, 44, 55]));
 }
 
 @("Don't assign non-public fields")
@@ -1516,5 +1516,5 @@ unittest
         private int x;
     }
 
-    parseToml!S(`x = 3`).should.equal(S());
+    expect(parseToml!S(`x = 3`)).toEqual(S());
 }

@@ -70,16 +70,16 @@ if (isFloatingPoint!T)
     unittest
     {
         ` ~ T.stringof ~ ` zero = ` ~ T.stringof ~ `(0.0f);
-        _tomlifyValue(zero).should.equal("0.0");
+        expect(_tomlifyValue(zero)).toEqual("0.0");
 
         ` ~ T.stringof ~ ` one = ` ~ T.stringof ~ `(1.0f);
-        _tomlifyValue(one).should.equal("1.0");
+        expect(_tomlifyValue(one)).toEqual("1.0");
 
         ` ~ T.stringof ~ ` negOne = ` ~ T.stringof ~ `(-1.0f);
-        _tomlifyValue(negOne).should.equal("-1.0");
+        expect(_tomlifyValue(negOne)).toEqual("-1.0");
 
         ` ~ T.stringof ~ ` po2 = ` ~ T.stringof ~ `(512.5);
-        _tomlifyValue(po2).should.equal("512.5");
+        expect(_tomlifyValue(po2)).toEqual("512.5");
     }
 
     @("Encode ` ~ "`" ~ T.stringof ~ "`" ~ ` values — weird")
@@ -89,19 +89,19 @@ if (isFloatingPoint!T)
         // They just become 0 and NaN.
 
         ` ~ T.stringof ~ ` negZero = ` ~ T.stringof ~ `(-0.0f);
-        _tomlifyValue(negZero).should.equal("0.0");
+        expect(_tomlifyValue(negZero)).toEqual("0.0");
 
         ` ~ T.stringof ~ ` posInf = ` ~ T.stringof ~ `(` ~ T.stringof ~ `.infinity);
-        _tomlifyValue(posInf).should.equal("inf");
+        expect(_tomlifyValue(posInf)).toEqual("inf");
 
         ` ~ T.stringof ~ ` negInf = ` ~ T.stringof ~ `(-` ~ T.stringof ~ `.infinity);
-        _tomlifyValue(negInf).should.equal("-inf");
+        expect(_tomlifyValue(negInf)).toEqual("-inf");
 
         ` ~ T.stringof ~ ` posNan = ` ~ T.stringof ~ `(` ~ T.stringof ~ `.nan);
-        _tomlifyValue(posNan).should.equal("nan");
+        expect(_tomlifyValue(posNan)).toEqual("nan");
 
         ` ~ T.stringof ~ ` negNan = ` ~ T.stringof ~ `(-` ~ T.stringof ~ `.nan);
-        _tomlifyValue(negNan).should.equal("nan");
+        expect(_tomlifyValue(negNan)).toEqual("nan");
     }
     `
     ;

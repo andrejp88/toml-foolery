@@ -7,7 +7,7 @@ import std.variant : Algebraic;
 
 import toml_foolery.decode : TomlDecodingException;
 
-version(unittest) import dshould;
+version(unittest) import exceeds_expectations;
 
 
 package(toml_foolery.decode) alias DateAndOrTime = Algebraic!(SysTime, Date, TimeOfDay);
@@ -212,36 +212,36 @@ unittest
 {
     SysTime expected = SysTime(DateTime(2020, 1, 20, 21, 54, 56), UTC());
 
-    parseTomlOffsetDateTime("2020-01-20 21:54:56.000z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56.000Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56.000+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56.000-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56.000z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56.000Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56.000+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56.000-00:00")).toEqual(expected);
 
-    parseTomlOffsetDateTime("2020-01-20t21:54:56.000z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56.000Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56.000+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56.000-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56.000z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56.000Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56.000+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56.000-00:00")).toEqual(expected);
 
-    parseTomlOffsetDateTime("2020-01-20T21:54:56.000z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56.000Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56.000+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56.000-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56.000z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56.000Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56.000+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56.000-00:00")).toEqual(expected);
 
 
-    parseTomlOffsetDateTime("2020-01-20 21:54:56z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56-00:00")).toEqual(expected);
 
-    parseTomlOffsetDateTime("2020-01-20t21:54:56z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56-00:00")).toEqual(expected);
 
-    parseTomlOffsetDateTime("2020-01-20T21:54:56z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56+00:00").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56-00:00").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56+00:00")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56-00:00")).toEqual(expected);
 }
 
 @("Offset Date-Time (NPT) -> SysTime")
@@ -249,27 +249,27 @@ unittest
 {
     immutable TimeZone npt = new immutable SimpleTimeZone(dur!"hours"(5) + dur!"minutes"(45), "NPT");
     SysTime expected = SysTime(DateTime(2020, 1, 20, 21, 54, 56), npt);
-    parseTomlOffsetDateTime("2020-01-20 21:54:56.000+05:45").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56.000+05:45").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56.000+05:45").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56.000+05:45")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56.000+05:45")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56.000+05:45")).toEqual(expected);
 
-    parseTomlOffsetDateTime("2020-01-20 21:54:56+05:45").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20t21:54:56+05:45").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-20T21:54:56+05:45").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20 21:54:56+05:45")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20t21:54:56+05:45")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-20T21:54:56+05:45")).toEqual(expected);
 }
 
 @("Offset Date-Time — truncate fracsecs")
 unittest
 {
     SysTime expected = SysTime(DateTime(2020, 1, 26, 16, 55, 23), nsecs(999_999_999), UTC());
-    parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999Z").should.equal(expected);
-    parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999999Z").should.equal(expected);
+    expect(parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999Z")).toEqual(expected);
+    expect(parseTomlOffsetDateTime("2020-01-26 16:55:23.999999999999Z")).toEqual(expected);
 }
 
 @("Local Date-Time -> SysTime")
 unittest
 {
-    parseTomlLocalDateTime("2020-01-26 17:13:11").should.equal(
+    expect(parseTomlLocalDateTime("2020-01-26 17:13:11")).toEqual(
         SysTime(
             DateTime(2020, 1, 26, 17, 13, 11),
             0.nsecs,
@@ -281,7 +281,7 @@ unittest
 @("Local Date-Time -> SysTime (with fractional seconds)")
 unittest
 {
-    parseTomlLocalDateTime("2020-01-26 17:13:11.999999999").should.equal(
+    expect(parseTomlLocalDateTime("2020-01-26 17:13:11.999999999")).toEqual(
         SysTime(
             DateTime(2020, 1, 26, 17, 13, 11),
             999_999_999.nsecs,
@@ -289,7 +289,7 @@ unittest
         )
     );
 
-    parseTomlLocalDateTime("2020-01-26 17:13:11.999999999999").should.equal(
+    expect(parseTomlLocalDateTime("2020-01-26 17:13:11.999999999999")).toEqual(
         SysTime(
             DateTime(2020, 1, 26, 17, 13, 11),
             999_999_999.nsecs,
@@ -301,11 +301,11 @@ unittest
 @("Local Date -> Date")
 unittest
 {
-    parseTomlLocalDate("2020-01-26").should.equal(Date(2020, 1, 26));
+    expect(parseTomlLocalDate("2020-01-26")).toEqual(Date(2020, 1, 26));
 }
 
 @("Local Time -> Time")
 unittest
 {
-    parseTomlLocalTime("13:51:15").should.equal(TimeOfDay(13, 51, 15));
+    expect(parseTomlLocalTime("13:51:15")).toEqual(TimeOfDay(13, 51, 15));
 }

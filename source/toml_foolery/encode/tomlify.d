@@ -17,7 +17,7 @@ import std.array : join;
 import std.range.primitives : ElementType;
 import std.traits;
 
-version(unittest) import dshould;
+version(unittest) import exceeds_expectations;
 
 /**
  *  Encodes a struct of type T into a TOML string.
@@ -89,7 +89,7 @@ unittest
 
     string toml = tomlify(data);
 
-    toml.should.equalNoBlanks(`
+    expectToEqualNoBlanks(toml, `
 temperatureUnit = "℃"
 
 [location]
@@ -230,11 +230,11 @@ if (makesTomlKey!T)
 @("Ensure keys are legal")
 unittest
 {
-    tomlifyKey(`hello_woRLD---`).should.equal(`hello_woRLD---`);
-    tomlifyKey(`hello world`).should.equal(`"hello world"`);
-    tomlifyKey(`012`).should.equal(`012`);
-    tomlifyKey(`kiː`).should.equal(`"kiː"`);
-    tomlifyKey(``).should.equal(`""`);
+    expect(tomlifyKey(`hello_woRLD---`)).toEqual(`hello_woRLD---`);
+    expect(tomlifyKey(`hello world`)).toEqual(`"hello world"`);
+    expect(tomlifyKey(`012`)).toEqual(`012`);
+    expect(tomlifyKey(`kiː`)).toEqual(`"kiː"`);
+    expect(tomlifyKey(``)).toEqual(`""`);
 }
 
 /// Encodes any value of type T.

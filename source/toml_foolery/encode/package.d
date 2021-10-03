@@ -13,5 +13,5 @@ package
     import toml_foolery.encode.util;
     import toml_foolery.encode.tomlify;
 
-    version(unittest) import dshould;
+    version(unittest) import exceeds_expectations;
 }

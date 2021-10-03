@@ -24,8 +24,8 @@ if (makesTomlBoolean!T)
 unittest
 {
     bool bt = true;
-    _tomlifyValue(bt).should.equal(`true`);
+    expect(_tomlifyValue(bt)).toEqual(`true`);
 
     bool bf;
-    _tomlifyValue(bf).should.equal(`false`);
+    expect(_tomlifyValue(bf)).toEqual(`false`);
 }

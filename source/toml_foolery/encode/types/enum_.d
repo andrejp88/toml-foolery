@@ -38,7 +38,7 @@ unittest
         Note note;
     }
 
-    _tomlifyValue(S(Note.Fa)).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(S(Note.Fa)), `
         note = "Fa"
     `);
 }

@@ -31,33 +31,33 @@ if (makesTomlArray!T)
 unittest
 {
     int[3] arr = [ 1, 2, 3 ];
-    _tomlifyValue(arr).should.equal("[ 1, 2, 3, ]");
+    expect(_tomlifyValue(arr)).toEqual("[ 1, 2, 3, ]");
 }
 
 @("Encode static arrays of floats")
 unittest
 {
     real[3] arr = [ 512.5f, 2.0, real.nan ];
-    _tomlifyValue(arr).should.equal("[ 512.5, 2.0, nan, ]");
+    expect(_tomlifyValue(arr)).toEqual("[ 512.5, 2.0, nan, ]");
 }
 
 @("Encode static arrays of booleans")
 unittest
 {
     bool[2] arr = [ true, false ];
-    _tomlifyValue(arr).should.equal("[ true, false, ]");
+    expect(_tomlifyValue(arr)).toEqual("[ true, false, ]");
 }
 
 @("Encode static arrays of strings")
 unittest
 {
     string[3] arr = [ "🧞", "hello", "world" ];
-    _tomlifyValue(arr).should.equal(`[ "🧞", "hello", "world", ]`);
+    expect(_tomlifyValue(arr)).toEqual(`[ "🧞", "hello", "world", ]`);
 }
 
 @("Encode 2D static arrays")
 unittest
 {
     int[3][2] arr = [[ 5, 5, 5 ], [ 4, 2, 2 ]];
-    _tomlifyValue(arr).should.equal(`[ [ 5, 5, 5, ], [ 4, 2, 2, ], ]`);
+    expect(_tomlifyValue(arr)).toEqual(`[ [ 5, 5, 5, ], [ 4, 2, 2, ], ]`);
 }

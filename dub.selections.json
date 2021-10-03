@@ -1,28 +1,10 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"botan": "1.12.12",
-		"botan-math": "1.0.3",
 		"colorize": "1.0.5",
 		"datefmt": "1.0.4",
-		"ddmp": "0.0.1-0.dev.3",
-		"diet-ng": "1.6.1",
-		"dshould": "1.1.0",
-		"eventcore": "0.8.48",
-		"fluent-asserts": "0.12.5",
-		"libasync": "0.8.5",
-		"libdparse": "0.8.8",
-		"libevent": "2.0.2+2.0.16",
-		"memutils": "1.0.1",
-		"mir-linux-kernel": "1.0.1",
-		"openssl": "1.1.6+1.0.1g",
+		"exceeds-expectations": "0.8.0",
 		"pegged": "0.4.5",
-		"quirks": "0.6.1",
-		"silly": "1.1.1",
-		"stdx-allocator": "2.77.5",
-		"taggedalgebraic": "0.11.8",
-		"unit-threaded": "0.10.8",
-		"vibe-core": "1.8.1",
-		"vibe-d": "0.8.6"
+		"silly": "1.1.1"
 	}
 }

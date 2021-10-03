@@ -11,7 +11,7 @@ import toml_foolery.encode.types.datetime :
     makesTomlLocalTime,
     makesTomlLocalDate;
 
-version(unittest) import toml_foolery.encode.util : equalNoBlanks;
+version(unittest) import toml_foolery.encode.util : expectToEqualNoBlanks;
 
 
 private enum bool isSpeciallyHandledStruct(T) = (
@@ -54,7 +54,7 @@ unittest
 
     Empty s;
 
-    _tomlifyValue(s).should.equalNoBlanks(``);
+    expectToEqualNoBlanks(_tomlifyValue(s), ``);
 }
 
 @("Encode a struct with some fields")
@@ -69,7 +69,7 @@ unittest
 
     Example sInit;
 
-    _tomlifyValue(sInit).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(sInit), `
     i = 0
     f = nan
     s = ""
@@ -77,7 +77,7 @@ unittest
 
     Example sCustom = Example(225, -5.0f, "kwyjibo");
 
-    _tomlifyValue(sCustom).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(sCustom), `
     i = 225
     f = -5.0
     s = "kwyjibo"
@@ -101,7 +101,7 @@ unittest
 
     Entity e = Entity("Simon?", Position(-22, 95));
 
-    _tomlifyValue(e).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(e), `
         name = "Simon?"
 
         [pos]
@@ -132,7 +132,7 @@ unittest
 
     Outer s = Outer();
 
-    _tomlifyValue(s).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(s), `
         a = 0
 
         [mid]
@@ -183,7 +183,7 @@ unittest
 
     L0 l;
 
-    _tomlifyValue(l).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(l), `
         a = 0
 
         [some]
@@ -224,7 +224,7 @@ unittest
         B normal;
     }
 
-    _tomlifyValue(C()).should.equalNoBlanks(`
+    expectToEqualNoBlanks(_tomlifyValue(C()), `
     z = 0
 
     [normal]

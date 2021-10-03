@@ -7,7 +7,7 @@ import std.regex;
 import std.string : strip;
 import std.uni;
 
-version(unittest) import dshould;
+version(unittest) import exceeds_expectations;
 
 
 package(toml_foolery.decode) string parseTomlString(string value)
@@ -114,125 +114,125 @@ private string removeLeadingNewline(string value)
 @("Basic — Simple")
 unittest
 {
-    parseTomlBasicString(`"Hello World!"`).should.equal("Hello World!");
+    expect(parseTomlBasicString(`"Hello World!"`)).toEqual("Hello World!");
 }
 
 @("Basic — Tabs")
 unittest
 {
-    parseTomlBasicString("\"Hello\tWorld!\"").should.equal("Hello\tWorld!");
+    expect(parseTomlBasicString("\"Hello\tWorld!\"")).toEqual("Hello\tWorld!");
 }
 
 @("Basic — Escaped chars")
 unittest
 {
-    parseTomlBasicString(`"\"Hello\n\tWorld!\""`).should.equal("\"Hello\n\tWorld!\"");
+    expect(parseTomlBasicString(`"\"Hello\n\tWorld!\""`)).toEqual("\"Hello\n\tWorld!\"");
 }
 
 @("ML Basic — Simple")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"Hello\nWorld!\"\"\"").should.equal("Hello\nWorld!");
+    expect(parseTomlBasicMultiLineString("\"\"\"Hello\nWorld!\"\"\"")).toEqual("Hello\nWorld!");
 }
 
 @("ML Basic — Leading Newline")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"\nHello\nWorld!\n\"\"\"").should.equal("Hello\nWorld!\n");
+    expect(parseTomlBasicMultiLineString("\"\"\"\nHello\nWorld!\n\"\"\"")).toEqual("Hello\nWorld!\n");
 }
 
 @("ML Basic — Trailing backslash")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"Hello \\\n    World!\"\"\"").should.equal("Hello World!");
+    expect(parseTomlBasicMultiLineString("\"\"\"Hello \\\n    World!\"\"\"")).toEqual("Hello World!");
 }
 
 @("ML Basic — CRLF")
 unittest
 {
-    parseTomlBasicMultiLineString("\"\"\"\r\nHello\r\nWorld!\"\"\"").should.equal("Hello\r\nWorld!");
+    expect(parseTomlBasicMultiLineString("\"\"\"\r\nHello\r\nWorld!\"\"\"")).toEqual("Hello\r\nWorld!");
 }
 
 @("Literal — Simple")
 unittest
 {
-    parseTomlLiteralString("'Hello World!'").should.equal("Hello World!");
+    expect(parseTomlLiteralString("'Hello World!'")).toEqual("Hello World!");
 }
 
 @("Literal — Escaped chars")
 unittest
 {
-    parseTomlLiteralString(`'Hello\nWorld!'`).should.equal("Hello\\nWorld!");
+    expect(parseTomlLiteralString(`'Hello\nWorld!'`)).toEqual("Hello\\nWorld!");
 }
 
 @("ML Literal — Simple")
 unittest
 {
-    parseTomlLiteralMultiLineString("'''Hello\nWorld!'''").should.equal("Hello\nWorld!");
+    expect(parseTomlLiteralMultiLineString("'''Hello\nWorld!'''")).toEqual("Hello\nWorld!");
 }
 
 @("ML Literal — Leading Newline")
 unittest
 {
-    parseTomlLiteralMultiLineString("'''\n Hello\nWorld!\n'''").should.equal(" Hello\nWorld!\n");
+    expect(parseTomlLiteralMultiLineString("'''\n Hello\nWorld!\n'''")).toEqual(" Hello\nWorld!\n");
 }
 
 @("ML Literal — Trailing backslash")
 unittest
 {
-    parseTomlLiteralMultiLineString("'''Hello \\\n    World!'''").should.equal("Hello \\\n    World!");
+    expect(parseTomlLiteralMultiLineString("'''Hello \\\n    World!'''")).toEqual("Hello \\\n    World!");
 }
 
 @("ML Literal — CRLF")
 unittest
 {
-    parseTomlBasicMultiLineString("'''Hello\r\nWorld!'''").should.equal("Hello\r\nWorld!");
+    expect(parseTomlBasicMultiLineString("'''Hello\r\nWorld!'''")).toEqual("Hello\r\nWorld!");
 }
 
 @(`Basic — Decode \u####`)
 unittest
 {
-    parseTomlBasicString(`"\uD834\uDD1E"`).should.equal("𝄞");
+    expect(parseTomlBasicString(`"\uD834\uDD1E"`)).toEqual("𝄞");
 }
 
 @(`Basic — Decode \U########`)
 unittest
 {
-    parseTomlBasicString(`"\U000132f9"`).should.equal("𓋹");
+    expect(parseTomlBasicString(`"\U000132f9"`)).toEqual("𓋹");
 }
 
 @(`ML Basic — Decode \u####`)
 unittest
 {
-    parseTomlBasicMultiLineString(`"""\uD834\uDD1E"""`).should.equal("𝄞");
+    expect(parseTomlBasicMultiLineString(`"""\uD834\uDD1E"""`)).toEqual("𝄞");
 }
 
 @(`ML Basic — Decode \U########`)
 unittest
 {
-    parseTomlBasicMultiLineString(`"""\U000132f9"""`).should.equal("𓋹");
+    expect(parseTomlBasicMultiLineString(`"""\U000132f9"""`)).toEqual("𓋹");
 }
 
 @(`Literal — Don't Decode \u####`)
 unittest
 {
-    parseTomlLiteralString(`'\uD834\uDD1E'`).should.equal(`\uD834\uDD1E`);
+    expect(parseTomlLiteralString(`'\uD834\uDD1E'`)).toEqual(`\uD834\uDD1E`);
 }
 
 @(`Literal — Don't Decode \U########`)
 unittest
 {
-    parseTomlLiteralString(`'\U000132f9'`).should.equal(`\U000132f9`);
+    expect(parseTomlLiteralString(`'\U000132f9'`)).toEqual(`\U000132f9`);
 }
 
 @(`ML Literal — Don't Decode \u####`)
 unittest
 {
-    parseTomlLiteralMultiLineString(`'''\uD834\uDD1E'''`).should.equal(`\uD834\uDD1E`);
+    expect(parseTomlLiteralMultiLineString(`'''\uD834\uDD1E'''`)).toEqual(`\uD834\uDD1E`);
 }
 
 @(`ML Literal — Don't Decode \U########`)
 unittest
 {
-    parseTomlLiteralMultiLineString(`'''\U000132f9'''`).should.equal(`\U000132f9`);
+    expect(parseTomlLiteralMultiLineString(`'''\U000132f9'''`)).toEqual(`\U000132f9`);
 }

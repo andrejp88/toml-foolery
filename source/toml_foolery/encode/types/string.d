@@ -53,55 +53,55 @@ private string escaped(string s)
 unittest
 {
     string str = "Eskarina";
-    _tomlifyValue(str).should.equal(`"Eskarina"`);
+    expect(_tomlifyValue(str)).toEqual(`"Eskarina"`);
 }
 
 @("Encode `wstring` values")
 unittest
 {
     wstring wstr = "Weskarina";
-    _tomlifyValue(wstr).should.equal(`"Weskarina"`);
+    expect(_tomlifyValue(wstr)).toEqual(`"Weskarina"`);
 }
 
 @("Encode `dstring` values")
 unittest
 {
     dstring dstr = "Deskarina";
-    _tomlifyValue(dstr).should.equal(`"Deskarina"`);
+    expect(_tomlifyValue(dstr)).toEqual(`"Deskarina"`);
 }
 
 @("Encode strings with multi-codepoint unicode characters")
 unittest
 {
     string a = "🍕👨‍👩‍👧🜀";
-    _tomlifyValue(a).should.equal(`"🍕👨‍👩‍👧🜀"`);
+    expect(_tomlifyValue(a)).toEqual(`"🍕👨‍👩‍👧🜀"`);
 
     wstring b = "👨‍👩‍👧🜀🍕"w;
-    _tomlifyValue(b).should.equal(`"👨‍👩‍👧🜀🍕"`);
+    expect(_tomlifyValue(b)).toEqual(`"👨‍👩‍👧🜀🍕"`);
 
     dstring c = "🜀🍕👨‍👩‍👧"d;
-    _tomlifyValue(c).should.equal(`"🜀🍕👨‍👩‍👧"`);
+    expect(_tomlifyValue(c)).toEqual(`"🜀🍕👨‍👩‍👧"`);
 }
 
 @("Encode `char` values as Strings")
 unittest
 {
     char c = '*';
-    _tomlifyValue(c).should.equal(`"*"`);
+    expect(_tomlifyValue(c)).toEqual(`"*"`);
 }
 
 @("Encode `wchar` values as Strings")
 unittest
 {
     wchar w = 'ⵖ';
-    _tomlifyValue(w).should.equal(`"ⵖ"`);
+    expect(_tomlifyValue(w)).toEqual(`"ⵖ"`);
 }
 
 @("Encode `dchar` values as Strings")
 unittest
 {
     dchar d = '🌻';
-    _tomlifyValue(d).should.equal(`"🌻"`);
+    expect(_tomlifyValue(d)).toEqual(`"🌻"`);
 }
 
 @("Escape characters that need to be escaped")
@@ -128,11 +128,11 @@ unittest
      +/
 
     string compactSequences = "\"\\\b\f\n\r";
-    _tomlifyValue(compactSequences).should.equal(`"\"\\\b\f\n\r"`);
+    expect(_tomlifyValue(compactSequences)).toEqual(`"\"\\\b\f\n\r"`);
 
     string nonCompactSequences = "\u0001\U0000007f\x00";
-    _tomlifyValue(nonCompactSequences).should.equal(`"\u0001\u007F\u0000"`);
+    expect(_tomlifyValue(nonCompactSequences)).toEqual(`"\u0001\u007F\u0000"`);
 
     string dontEscapeTab = "\t";
-    _tomlifyValue(dontEscapeTab).should.equal("\"\t\"");
+    expect(_tomlifyValue(dontEscapeTab)).toEqual("\"\t\"");
 }

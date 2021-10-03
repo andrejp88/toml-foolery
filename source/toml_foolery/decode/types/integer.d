@@ -6,7 +6,7 @@ import std.conv;
 
 import toml_foolery.decode.exceptions;
 
-version(unittest) import dshould;
+version(unittest) import exceeds_expectations;
 
 
 package(toml_foolery.decode) long parseTomlInteger(string value)
@@ -47,77 +47,77 @@ in (
 @("Positive")
 unittest
 {
-    parseTomlInteger("123").should.equal(123);
+    expect(parseTomlInteger("123")).toEqual(123);
 }
 
 @("Positive with leading +")
 unittest
 {
-    parseTomlInteger("+123").should.equal(123);
+    expect(parseTomlInteger("+123")).toEqual(123);
 }
 
 @("Negative")
 unittest
 {
-    parseTomlInteger("-123").should.equal(-123);
+    expect(parseTomlInteger("-123")).toEqual(-123);
 }
 
 @("Zero")
 unittest
 {
-    parseTomlInteger("0").should.equal(0);
+    expect(parseTomlInteger("0")).toEqual(0);
 }
 
 @("Underscores — Positive")
 unittest
 {
-    parseTomlInteger("525_600").should.equal(525_600);
+    expect(parseTomlInteger("525_600")).toEqual(525_600);
 }
 
 @("Underscores — Negative")
 unittest
 {
-    parseTomlInteger("-189_912").should.equal(-189_912);
+    expect(parseTomlInteger("-189_912")).toEqual(-189_912);
 }
 
 @("Hex — lowercase")
 unittest
 {
-    parseTomlInteger("0xbee").should.equal(0xbee);
+    expect(parseTomlInteger("0xbee")).toEqual(0xbee);
 }
 
 @("Hex — uppercase")
 unittest
 {
-    parseTomlInteger("0xBEE").should.equal(0xbee);
+    expect(parseTomlInteger("0xBEE")).toEqual(0xbee);
 }
 
 @("Hex — mixed case")
 unittest
 {
-    parseTomlInteger("0xbEe").should.equal(0xbee);
+    expect(parseTomlInteger("0xbEe")).toEqual(0xbee);
 }
 
 @("Hex — long")
 unittest
 {
-    parseTomlInteger("0xbeadface").should.equal(0xBeadFace);
+    expect(parseTomlInteger("0xbeadface")).toEqual(0xBeadFace);
 }
 
 @("Hex — underscores")
 unittest
 {
-    parseTomlInteger("0xb_e_e").should.equal(0xbee);
+    expect(parseTomlInteger("0xb_e_e")).toEqual(0xbee);
 }
 
 @("Octal")
 unittest
 {
-    parseTomlInteger("0o777").should.equal(511);
+    expect(parseTomlInteger("0o777")).toEqual(511);
 }
 
 @("Binary")
 unittest
 {
-    parseTomlInteger("0b11001101").should.equal(205);
+    expect(parseTomlInteger("0b11001101")).toEqual(205);
 }

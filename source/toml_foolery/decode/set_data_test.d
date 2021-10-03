@@ -2,8 +2,8 @@ module toml_foolery.decode.set_data_test;
 
 version(unittest)
 {
+    import exceeds_expectations;
     import std.array : staticArray;
-    import dshould;
     import toml_foolery.decode.set_data;
 }
 
@@ -18,7 +18,7 @@ unittest
 
     S s;
     setData(s, ["a"], -44);
-    s.a.should.equal(-44);
+    expect(s.a).toEqual(-44);
 }
 
 @("setData — rather more complex")
@@ -37,7 +37,7 @@ unittest
 
     S target;
     setData(target, ["box", "abc"], 525_600);
-    target.box.abc.should.equal(525_600);
+    expect(target.box.abc).toEqual(525_600);
 }
 
 @("setData — bloody complex")
@@ -78,9 +78,9 @@ unittest
     S s;
 
     setData(s, ["ogres", "are", "like", "onions", "bye"], Surprise(827, 912, 9));
-    s.ogres.are.like.onions.bye.a.should.equal(827);
-    s.ogres.are.like.onions.bye.b.should.equal(912);
-    s.ogres.are.like.onions.bye.c.should.equal(9);
+    expect(s.ogres.are.like.onions.bye.a).toEqual(827);
+    expect(s.ogres.are.like.onions.bye.b).toEqual(912);
+    expect(s.ogres.are.like.onions.bye.c).toEqual(9);
 }
 
 @("setData — now with methods")
@@ -128,8 +128,8 @@ unittest
 
     setData(s, ["c", "x"], 5);
     setData(s, ["a"], 9);
-    s.c.x.should.equal(5);
-    s.a.should.equal(9);
+    expect(s.c.x).toEqual(5);
+    expect(s.a).toEqual(9);
 }
 
 @("setData — properties")
@@ -144,7 +144,7 @@ unittest
 
     S s;
     setData(s, ["x"], 5);
-    s.x.should.equal(5);
+    expect(s.x).toEqual(5);
 }
 
 @("setData — read-only properties")
@@ -193,13 +193,13 @@ unittest
     S s;
 
     setData(s, ["statArr"], staticArray!(int, 4)([27, 92, 71, -34]));
-    s.statArr.should.equal(staticArray!(int, 4)([27, 92, 71, -34]));
+    expect(s.statArr).toEqual(staticArray!(int, 4)([27, 92, 71, -34]));
 
-    setData(s, ["badSizeStatArr"], staticArray!(int, 4)([62, 12, 92, 10])).should.throwAn!Exception;
+    expect({ setData(s, ["badSizeStatArr"], staticArray!(int, 4)([62, 12, 92, 10])); }).toThrow!Exception;
 
     int[] dynArr = [33, 22, 11, 99];
     setData(s, ["statArr"], dynArr);
-    s.statArr.should.equal(staticArray!(int, 4)([33, 22, 11, 99]));
+    expect(s.statArr).toEqual(staticArray!(int, 4)([33, 22, 11, 99]));
 }
 
 @("setData — Into Static Array")
@@ -208,7 +208,7 @@ unittest
     int[5] x;
 
     setData(x, ["4"], 99);
-    x[4].should.equal(99);
+    expect(x[4]).toEqual(99);
 }
 
 @("setData — Into Static Array (out of range)")
@@ -218,7 +218,7 @@ unittest
 
     setData(x, ["5"], 99);
 
-    x.should.equal((int[5]).init);
+    expect(x).toEqual((int[5]).init);
 }
 
 @("setData — Into Dynamic Array (with resizing)")
@@ -226,10 +226,10 @@ unittest
 {
     int[] x;
 
-    x.length.should.equal(0);
+    expect(x.length).toEqual(0);
     setData(x, ["5"], 88);
-    x.length.should.equal(6);
-    x[5].should.equal(88);
+    expect(x.length).toEqual(6);
+    expect(x[5]).toEqual(88);
 }
 
 @("setData — Into static array of arrays")
@@ -238,7 +238,7 @@ unittest
     int[6][4] x;
 
     setData(x, ["3", "5"], 88);
-    x[3][5].should.equal(88);
+    expect(x[3][5]).toEqual(88);
 }
 
 @("setData — Into dynamic array of arrays")
@@ -247,9 +247,9 @@ unittest
     int[][] x;
 
     setData(x, ["5", "3"], 88);
-    x.length.should.equal(6);
-    x[5].length.should.equal(4);
-    x[5][3].should.equal(88);
+    expect(x.length).toEqual(6);
+    expect(x[5].length).toEqual(4);
+    expect(x[5][3]).toEqual(88);
 }
 
 @("setData — Into dynamic array of structs")
@@ -263,8 +263,8 @@ unittest
     S[] s;
 
     setData(s, ["5", "x"], 88);
-    s.length.should.equal(6);
-    s[5].x.should.equal(88);
+    expect(s.length).toEqual(6);
+    expect(s[5].x).toEqual(88);
 }
 
 @("setData — Into static array of structs")
@@ -278,7 +278,7 @@ unittest
     S[4] s;
 
     setData(s, ["3", "x"], 88);
-    s[3].x.should.equal(88);
+    expect(s[3].x).toEqual(88);
 }
 
 @("setData — Into field that is static array of ints")
@@ -292,7 +292,7 @@ unittest
     S s;
     setData(s, ["i", "2"], 772);
 
-    s.i[2].should.equal(772);
+    expect(s.i[2]).toEqual(772);
 }
 
 @("setData — Into field that is static array of structs")
@@ -311,7 +311,7 @@ unittest
     Outer outer;
     setData(outer, ["inner", "2", "x"], 202);
 
-    outer.inner[2].x.should.equal(202);
+    expect(outer.inner[2].x).toEqual(202);
 }
 
 @("setData — array of struct with array of array of structs")
@@ -335,5 +335,5 @@ unittest
     A a;
 
     setData(a, ["b", "2", "c", "1", "3", "x"], 773);
-    a.b[2].c[1][3].x.should.equal(773);
+    expect(a.b[2].c[1][3].x).toEqual(773);
 }

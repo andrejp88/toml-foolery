@@ -83,25 +83,25 @@ if (makesTomlLocalTime!T)
 unittest
 {
     immutable TimeZone cet = new immutable SimpleTimeZone(dur!"hours"(1), "CET");
-    _tomlifyValue(SysTime(DateTime(1996, 12, 11, 10, 20, 42), cet)).should.equal("1996-12-11 10:20:42.000 +01:00");
+    expect(_tomlifyValue(SysTime(DateTime(1996, 12, 11, 10, 20, 42), cet))).toEqual("1996-12-11 10:20:42.000 +01:00");
 }
 
 @("Encode `SysTime` values with LocalTime")
 unittest
 {
-    _tomlifyValue(SysTime(DateTime(2020, 1, 15, 15, 0, 33))).should.equal("2020-01-15 15:00:33.000");
+    expect(_tomlifyValue(SysTime(DateTime(2020, 1, 15, 15, 0, 33)))).toEqual("2020-01-15 15:00:33.000");
 }
 
 @("Encode `Date` values")
 unittest
 {
-    _tomlifyValue(Date(2020, 1, 15)).should.equal("2020-01-15");
+    expect(_tomlifyValue(Date(2020, 1, 15))).toEqual("2020-01-15");
 }
 
 @("Encode `TimeOfDay` values")
 unittest
 {
-    _tomlifyValue(TimeOfDay(15, 0, 33)).should.equal("15:00:33.000");
+    expect(_tomlifyValue(TimeOfDay(15, 0, 33))).toEqual("15:00:33.000");
 }
 
 

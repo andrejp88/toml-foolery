@@ -2,7 +2,7 @@ module toml_foolery.attributes.toml_name_test;
 
 version(unittest)
 {
-    import dshould;
+    import exceeds_expectations;
     import toml_foolery.attributes.toml_name;
     import toml_foolery.decode;
     import toml_foolery.encode;
@@ -18,7 +18,7 @@ unittest
         string field;
     }
 
-    tomlify(S("test")).should.equalNoBlanks(`
+    expectToEqualNoBlanks(tomlify(S("test")), `
         key = "test"
         `
     );
@@ -33,7 +33,7 @@ unittest
         string field;
     }
 
-    tomlify(S("test")).should.equalNoBlanks(`
+    expectToEqualNoBlanks(tomlify(S("test")), `
         "this is not a valid D identifier" = "test"
         `
     );
@@ -53,7 +53,7 @@ unittest
         Inner i;
     }
 
-    tomlify(S(S.Inner("test"))).should.equalNoBlanks(`
+    expectToEqualNoBlanks(tomlify(S(S.Inner("test"))), `
         [Contents]
         name = "test"
         `
@@ -75,7 +75,7 @@ unittest
         @TomlName("i") Inner inner;
     }
 
-    tomlify(S(5, S.Inner("hello world", 0.5))).should.equalNoBlanks(`
+    expectToEqualNoBlanks(tomlify(S(5, S.Inner("hello world", 0.5))), `
         eye = 5
 
         [i]
@@ -115,10 +115,10 @@ unittest
         string field;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         key = "test"
         `
-    ).should.equal(S("test"));
+    )).toEqual(S("test"));
 }
 
 @("Rename a field with spaces when decoding")
@@ -130,10 +130,10 @@ unittest
         string field;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         "this is not a valid D identifier" = "test"
         `
-    ).should.equal(S("test"));
+    )).toEqual(S("test"));
 }
 
 @("Rename a table when decoding")
@@ -150,11 +150,11 @@ unittest
         Inner i;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         [Contents]
         name = "test"
         `
-    ).should.equal(S(S.Inner("test")));
+    )).toEqual(S(S.Inner("test")));
 }
 
 @("Complex rename on decoding")
@@ -172,13 +172,13 @@ unittest
         @TomlName("i") Inner inner;
     }
 
-    parseToml!S(`
+    expect(parseToml!S(`
         eye = 5
 
         [i]
         why = "hello world"
         y = 0.5
-    `).should.equal(
+    `)).toEqual(
         S(
             5,
             S.Inner(
