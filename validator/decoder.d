@@ -1,6 +1,6 @@
 #!/usr/bin/env dub
 /+ dub.sdl:
-    name "regenerate_parser"
+    name "decoder"
     version "1.0.0"
     license "public domain"
     dependency "toml-foolery" path=".."
