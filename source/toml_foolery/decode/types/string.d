@@ -6,6 +6,8 @@ import std.conv : to;
 import std.regex;
 import std.string : strip;
 import std.uni;
+import std.utf : UTFException;
+import toml_foolery.decode.exceptions;
 
 version(unittest) import exceeds_expectations;
 
@@ -40,7 +42,6 @@ private string parseTomlLiteralMultiLineString(string value)
 }
 
 /// Opposite of toml_foolery.encode.string.escaped
-/// TODO: Parse unicode escape sequences
 private string unescaped(string s)
 {
     enum auto unidecoder = ctRegex!(`(?:\\u[0-9a-fA-F]{4})+|\\U[0-9a-fA-F]{8}`, "g");
@@ -65,23 +66,37 @@ private string unescaped(string s)
             {
                 // case \u####
 
-                // Since some of code units might not be standalone code points
-                // (surrogates), we match sequences of them and parse them all
-                // at once. Doing them one at a time causes problems since you
-                // can't add a surrogate to a UTF-8 string. Or something.
-                return captures.hit
-                    .splitter(`\u`)
-                    .filter!((e) => e.length != 0)
-                    .map!((e) => e.to!int(16))
-                    .map!((e) => e.to!wchar)
-                    .array
-                    .to!string;
+                try
+                {
+                    // Since some of code units might not be standalone code points
+                    // (surrogates), we match sequences of them and parse them all
+                    // at once. Doing them one at a time causes problems since you
+                    // can't add a surrogate to a UTF-8 string. Or something.
+                    return captures.hit
+                        .splitter(`\u`)
+                        .filter!((e) => e.length != 0)
+                        .map!((e) => e.to!int(16))
+                        .map!((e) => e.to!wchar)
+                        .array
+                        .to!string;
+                }
+                catch (UTFException e)
+                {
+                    throw new TomlDecodingException("Caught UTFException while decoding a string.", e);
+                }
             }
             else
             {
                 // case \U########
 
-                return captures.hit[2..$].to!int(16).to!dchar.to!string;
+                try
+                {
+                    return captures.hit[2..$].to!int(16).to!dchar.to!string;
+                }
+                catch (UTFException e)
+                {
+                    throw new TomlDecodingException("Caught UTFException while decoding a string.", e);
+                }
             }
         }
     )(unidecoder).to!string;
