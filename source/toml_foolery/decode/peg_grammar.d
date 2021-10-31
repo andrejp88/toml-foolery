@@ -38,7 +38,7 @@ newline          <:  [\n]  /  [\r]   [\n]   # LF / CRLF
 
 comment_start_symbol <-  [#]  # #
 non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF]
-non_eol          <-  [\t]  /  [ -\x7F]  / non_ascii
+non_eol          <-  [\t]  /  [ -~]  / non_ascii
 
 comment          <- comment_start_symbol non_eol*
 
@@ -694,7 +694,7 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol")(p);
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '~'), non_ascii), "TomlGrammar.non_eol")(p);
         }
         else
         {
@@ -702,7 +702,7 @@ struct GenericTomlGrammar(TParseTree)
                 return *m;
             else
             {
-                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(p);
+                TParseTree result = hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '~'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(p);
                 memo[tuple(`non_eol`, p.end)] = result;
                 return result;
             }
@@ -713,12 +713,12 @@ struct GenericTomlGrammar(TParseTree)
     {
         if(__ctfe)
         {
-            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol")(TParseTree("", false,[], s));
+            return         pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '~'), non_ascii), "TomlGrammar.non_eol")(TParseTree("", false,[], s));
         }
         else
         {
             forgetMemo();
-            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '\x7F'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(TParseTree("", false,[], s));
+            return hooked!(pegged.peg.defined!(pegged.peg.or!(pegged.peg.literal!("\t"), pegged.peg.charRange!(' ', '~'), non_ascii), "TomlGrammar.non_eol"), "non_eol")(TParseTree("", false,[], s));
         }
     }
     static string non_eol(GetName g)

@@ -1,5 +1,5 @@
---- tmp/toml.original.peg	2021-10-03 10:34:02.455483249 +0100
-+++ tmp/toml.fixed.peg	2021-10-03 12:19:49.008271065 +0100
+--- tmp/toml.original.peg	2021-10-31 17:12:18.006000000 +0000
++++ tmp/toml.fixed.peg	2021-10-31 17:12:56.294747869 +0000
 @@ -15,9 +15,12 @@
  
  #; Overall Structure
@@ -27,7 +27,7 @@
  comment_start_symbol <-  [#]  # #
 -non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF] 
 +non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF]
- non_eol          <-  [\t]  /  [ -\x7F]  / non_ascii
+ non_eol          <-  [\t]  /  [ -~]  / non_ascii
  
  comment          <- comment_start_symbol non_eol*
 @@ -40,7 +43,7 @@
