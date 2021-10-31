@@ -117,7 +117,7 @@ if (is(T == struct))
                 case "TomlGrammar.table":
 
                     // Add the previous table to the seen-so-far set
-                    if (tableAddress != tableAddress.init)
+                    if (tableAddress != tableAddress.init && tableAddress !in tableArrayCounts)
                     {
                         tablesSeenSoFar[tableAddress.idup] = true;
                     }
@@ -129,9 +129,10 @@ if (is(T == struct))
                         .find!(e => e.name == "TomlGrammar.key")[0]
                         .splitDottedKey;
 
+
                     if (partOfLine.children[0].name == "TomlGrammar.array_table")
                     {
-                        if (tableAddress in keysSeenSoFar)
+                        if (tableAddress in keysSeenSoFar && tableAddress !in tableArrayCounts)
                         {
                             throw new TomlDuplicateNameException(
                                 "Attempt to re-define table `" ~ tableAddress.join(".") ~ "` as an array."
@@ -140,26 +141,28 @@ if (is(T == struct))
 
                         if (tableAddress !in tableArrayCounts)
                         {
+                            // Add the name of the array
+                            keysSeenSoFar[tableAddress.idup] = true;
+
                             tableArrayCounts[tableAddress.idup] = 0;
                         }
                         else
                         {
                             tableArrayCounts[tableAddress.idup]++;
                         }
+
                         tableAddress ~= tableArrayCounts[tableAddress].to!string;
+
                     }
-                    else
+
+                    if (tableAddress in keysSeenSoFar)
                     {
-                        if (tableAddress in keysSeenSoFar)
-                        {
-                            throw new TomlDuplicateNameException(
-                                `Key/table "` ~ tableAddress.join('.') ~ `" has been declared twice.`
-                            );
-                        }
-
-                        keysSeenSoFar[tableAddress.idup] = true;
+                        throw new TomlDuplicateNameException(
+                            `Table "` ~ tableAddress.join('.') ~ `" has been declared twice.`
+                        );
                     }
 
+                    keysSeenSoFar[tableAddress.idup] = true;
                     break;
 
                 default:
