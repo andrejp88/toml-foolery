@@ -131,6 +131,13 @@ if (is(T == struct))
 
                     if (partOfLine.children[0].name == "TomlGrammar.array_table")
                     {
+                        if (tableAddress in keysSeenSoFar)
+                        {
+                            throw new TomlDuplicateNameException(
+                                "Attempt to re-define table `" ~ tableAddress.join(".") ~ "` as an array."
+                            );
+                        }
+
                         if (tableAddress !in tableArrayCounts)
                         {
                             tableArrayCounts[tableAddress.idup] = 0;
