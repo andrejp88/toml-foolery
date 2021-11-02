@@ -88,12 +88,16 @@ if (is(T == struct))
 
     ParseTree[] lines = tree.children[0].children;
 
-    bool[string[]] keysSeenSoFar;
-    bool[string[]] tablesSeenSoFar;
-    string[] tableAddress;
-
-    // Given a dotted key representing an array of tables, how many times has it appeared so far?
+    // Fully-qualified key names are added to `keysCompleted` once
+    // they are written-to. The only exception is the names of
+    // array-of-tables, because we won't know that an array-of-tables
+    // has been completed until we reach the end of the document.
+    // Instead, we add the names of arrays-of-tables to
+    // `tableArrayCounts`.
+    bool[string[]] keysCompleted;
     size_t[string[]] tableArrayCounts;
+
+    string[] tableAddress;
 
     foreach (ParseTree line; lines)
     {
@@ -111,15 +115,17 @@ if (is(T == struct))
             switch (partOfLine.name)
             {
                 case "TomlGrammar.keyval":
-                    processTomlKeyval(partOfLine, dest, tableAddress, keysSeenSoFar, tablesSeenSoFar);
+                    processTomlKeyval(partOfLine, dest, tableAddress, keysCompleted);
                     break;
 
                 case "TomlGrammar.table":
 
-                    // Add the previous table to the seen-so-far set
+                    // Add the previous table to the keys-completed
+                    // set. Even if it was an array of tables, the key
+                    // contains the index, so it was still completed.
                     if (tableAddress != tableAddress.init && tableAddress !in tableArrayCounts)
                     {
-                        tablesSeenSoFar[tableAddress.idup] = true;
+                        keysCompleted[tableAddress.idup] = true;
                     }
 
                     tableAddress =
@@ -132,19 +138,16 @@ if (is(T == struct))
 
                     if (partOfLine.children[0].name == "TomlGrammar.array_table")
                     {
-                        if (tableAddress in keysSeenSoFar && tableAddress !in tableArrayCounts)
+                        if (tableAddress in keysCompleted && tableAddress !in tableArrayCounts)
                         {
                             throw new TomlDuplicateNameException(
-                                "Attempt to re-define table `" ~ tableAddress.join(".") ~ "` as an array."
+                                "Attempt to re-define table `" ~ tableAddress.join(".") ~ "` as an array-of-tables."
                             );
                         }
 
                         if (tableAddress !in tableArrayCounts)
                         {
-                            // Add the name of the array
-                            keysSeenSoFar[tableAddress.idup] = true;
-
-                            tableArrayCounts[tableAddress.idup] = 0;
+                            tableArrayCounts[tableAddress.idup] = 1;
                         }
                         else
                         {
@@ -154,15 +157,25 @@ if (is(T == struct))
                         tableAddress ~= tableArrayCounts[tableAddress].to!string;
 
                     }
+                    else if (partOfLine.children[0].name == "TomlGrammar.std_table")
+                    {
+                        if (tableAddress in tableArrayCounts)
+                        {
+                            throw new TomlDuplicateNameException(
+                                `The name "` ~ tableAddress.join('.') ~
+                                `" was already used for an array-of-tables, but is now being used for a table.`
+                            );
+                        }
+                    }
+                    else assert(false, "Unknown table type: " ~ partOfLine.children[0].name);
 
-                    if (tableAddress in keysSeenSoFar)
+                    if (tableAddress in keysCompleted)
                     {
                         throw new TomlDuplicateNameException(
                             `Table "` ~ tableAddress.join('.') ~ `" has been declared twice.`
                         );
                     }
 
-                    keysSeenSoFar[tableAddress.idup] = true;
                     break;
 
                 default:
@@ -309,12 +322,11 @@ private void processTomlKeyval(S)(
     ParseTree pt,
     ref S dest,
     string[] tableAddress,
-    ref bool[string[]] keysSeenSoFar,
-    ref bool[string[]] tablesSeenSoFar,
+    ref bool[string[]] keysCompleted,
 )
 in (pt.name == "TomlGrammar.keyval")
 {
-    processTomlVal(pt.children[2], dest, tableAddress, splitDottedKey(pt.children[0]), keysSeenSoFar, tablesSeenSoFar);
+    processTomlVal(pt.children[2], dest, tableAddress, splitDottedKey(pt.children[0]), keysCompleted);
 }
 
 private void processTomlVal(S)(
@@ -322,14 +334,13 @@ private void processTomlVal(S)(
     ref S dest,
     string[] tableAddress,
     string[] keyAddressInTable,
-    ref bool[string[]] keysSeenSoFar,
-    ref bool[string[]] tablesSeenSoFar,
+    ref bool[string[]] keysCompleted,
 )
 in (pt.name == "TomlGrammar.val")
 {
     string[] address = tableAddress ~ keyAddressInTable;
 
-    if (address in keysSeenSoFar)
+    if (address in keysCompleted)
     {
         throw new TomlDuplicateNameException(`Duplicate key: "` ~ address.join('.') ~ `"`);
     }
@@ -347,7 +358,7 @@ in (pt.name == "TomlGrammar.val")
 
     foreach (string[] tableAddressToCheckFor; tableAddressesToCheckFor)
     {
-        if (tableAddressToCheckFor in tablesSeenSoFar)
+        if (tableAddressToCheckFor in keysCompleted)
         {
             throw new TomlDecodingException(
                 "Attempted injection into table `" ~ tableAddressToCheckFor.join(".") ~
@@ -355,8 +366,6 @@ in (pt.name == "TomlGrammar.val")
             );
         }
     }
-
-    keysSeenSoFar[address.idup] = true;
 
     string value = pt.input[pt.begin .. pt.end];
 
@@ -385,17 +394,19 @@ in (pt.name == "TomlGrammar.val")
             break;
 
         case "TomlGrammar.array":
-            processTomlArray(typedValPT, dest, address, keysSeenSoFar, tablesSeenSoFar);
+            processTomlArray(typedValPT, dest, address, keysCompleted);
             break;
 
         case "TomlGrammar.inline_table":
-            processTomlInlineTable(typedValPT, dest, address, keysSeenSoFar, tablesSeenSoFar);
+            processTomlInlineTable(typedValPT, dest, address, keysCompleted);
             break;
 
         default:
             debug { assert(false, "Unsupported TomlGrammar rule: \"" ~ pt.children[0].name ~ "\""); }
             else { break; }
     }
+
+    keysCompleted[address.idup] = true;
 }
 
 
@@ -444,8 +455,7 @@ private void processTomlInlineTable(S)(
     ParseTree pt,
     ref S dest,
     string[] address,
-    ref bool[string[]] keysSeenSoFar,
-    ref bool[string[]] tablesSeenSoFar,
+    ref bool[string[]] keysCompleted,
 )
 in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" but got "` ~ pt.name ~ `".`)
 {
@@ -453,20 +463,19 @@ in (pt.name == "TomlGrammar.inline_table", `Expected "TomlGrammar.inline_table" 
         ParseTree pt,
         ref S dest,
         string[] address,
-        ref bool[string[]] keysSeenSoFar,
-        ref bool[string[]] tablesSeenSoFar,
+        ref bool[string[]] keysCompleted,
     )
     in (pt.name == "TomlGrammar.inline_table_keyvals")
     {
-        processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address, keysSeenSoFar, tablesSeenSoFar);
+        processTomlKeyval(pt.children.find!(e => e.name == "TomlGrammar.keyval")[0], dest, address, keysCompleted);
         ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
         if (keyvals.empty) return;
-        processTomlInlineTableKeyvals(keyvals[0], dest, address, keysSeenSoFar, tablesSeenSoFar);
+        processTomlInlineTableKeyvals(keyvals[0], dest, address, keysCompleted);
     }
 
     ParseTree[] keyvals = pt.children.find!(e => e.name == "TomlGrammar.inline_table_keyvals");
     if (keyvals.empty) return;
-    processTomlInlineTableKeyvals(keyvals[0], dest, address, keysSeenSoFar, tablesSeenSoFar);
+    processTomlInlineTableKeyvals(keyvals[0], dest, address, keysCompleted);
 }
 
 
@@ -474,8 +483,7 @@ private void processTomlArray(S)(
     ParseTree pt,
     ref S dest,
     string[] address,
-    ref bool[string[]] keysSeenSoFar,
-    ref bool[string[]] tablesSeenSoFar,
+    ref bool[string[]] keysCompleted,
 )
 in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ pt.name ~ `".`)
 {
@@ -568,7 +576,7 @@ in (pt.name == "TomlGrammar.array", `Expected "TomlGrammar.array" but got "` ~ p
     ParseTree[] valuePTs = consumeArrayValues(findResult[0], []);
     foreach (size_t i, ParseTree valuePT; valuePTs)
     {
-        processTomlVal(valuePT, dest, address, [i.to!string], keysSeenSoFar, tablesSeenSoFar);
+        processTomlVal(valuePT, dest, address, [i.to!string], keysCompleted);
     }
 }
 
