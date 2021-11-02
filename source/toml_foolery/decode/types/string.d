@@ -91,7 +91,7 @@ private string unescaped(string s)
 
                 try
                 {
-                    return captures.hit[2..$].to!int(16).to!dchar.to!string;
+                    return captures.hit[2..$].to!uint(16).to!dchar.to!string;
                 }
                 catch (UTFException e)
                 {
