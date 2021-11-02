@@ -154,7 +154,8 @@ if (is(T == struct))
                             tableArrayCounts[tableAddress.idup]++;
                         }
 
-                        tableAddress ~= tableArrayCounts[tableAddress].to!string;
+                        size_t tableArrayCurrentIndex = (tableArrayCounts[tableAddress] - 1);
+                        tableAddress ~= tableArrayCurrentIndex.to!string;
 
                     }
                     else if (partOfLine.children[0].name == "TomlGrammar.std_table")
