@@ -97,6 +97,11 @@ if (is(T == struct))
     bool[string[]] keysCompleted;
     size_t[string[]] tableArrayCounts;
 
+    // A set containing all things that are known to be tables, even
+    // if they haven't been completed yet, and even if they have only
+    // been implicitly declared.
+    bool[string[]] tables;
+
     string[] tableAddress;
 
     foreach (ParseTree line; lines)
@@ -135,9 +140,21 @@ if (is(T == struct))
                         .find!(e => e.name == "TomlGrammar.key")[0]
                         .splitDottedKey;
 
+                    // Add all the implicitly defined regular tables.
+                    foreach (string[] parentTable; getAllParentTables(tableAddress))
+                    {
+                        tables[parentTable.idup] = true;
+                    }
 
                     if (partOfLine.children[0].name == "TomlGrammar.array_table")
                     {
+                        if (tableAddress in tables)
+                        {
+                            throw new TomlDuplicateNameException(
+                                "Attempt to re-define table `" ~ tableAddress.join(".") ~ "` as an array-of-tables."
+                            );
+                        }
+
                         if (tableAddress in keysCompleted && tableAddress !in tableArrayCounts)
                         {
                             throw new TomlDuplicateNameException(
@@ -160,6 +177,8 @@ if (is(T == struct))
                     }
                     else if (partOfLine.children[0].name == "TomlGrammar.std_table")
                     {
+                        tables[tableAddress.idup] = true;
+
                         if (tableAddress in tableArrayCounts)
                         {
                             throw new TomlDuplicateNameException(
@@ -352,10 +371,7 @@ in (pt.name == "TomlGrammar.val")
     //
     // e.g. for the address "a.b.c.d", check if we've already defined
     // a table named "a" or "a.b" or "a.b.c" or "a.b.c.d".
-    string[][] tableAddressesToCheckFor =
-        cumulativeFold!((string[] previous, string current) => previous ~ current)
-                       (address, cast(string[])[])
-                       .array;
+    string[][] tableAddressesToCheckFor = getAllParentTables(address);
 
     foreach (string[] tableAddressToCheckFor; tableAddressesToCheckFor)
     {
@@ -603,4 +619,11 @@ in (pt.name == "TomlGrammar.key")
             [ pt.input[pt.begin + 1 .. pt.end - 1] ] :
             [ pt.input[pt.begin .. pt.end] ]
         );
+}
+
+private string[][] getAllParentTables(string[] table)
+{
+    return cumulativeFold!((string[] previous, string current) => previous ~ current)
+                          (table[0 .. $-1], cast(string[])[])
+                          .array;
 }
