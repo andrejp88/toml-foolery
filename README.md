@@ -10,7 +10,7 @@ intermediate types that couple your code to this library —
 Toml-foolery parses TOML data directly into any struct, and structs
 can be converted into TOML.
 
-Toml-foolery v1.0.1 is compatible with TOML v1.0.0-rc1.
+Toml-foolery v1.0.1 is compatible with [TOML v1.0.0](https://toml.io/en/v1.0.0).
 
 ## Usage
 
