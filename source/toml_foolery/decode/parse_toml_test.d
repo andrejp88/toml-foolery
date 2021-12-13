@@ -1197,6 +1197,126 @@ unittest
     expect(s.musicians[2]).toEqual(S.Musician("Scott Joplin", Date(1868, 11, 24)));
 }
 
+@("Table to Associative Array — empty string[string]")
+unittest
+{
+    struct S
+    {
+        string[string] stuff;
+    }
+
+    S s = parseToml!S(`
+    [stuff]
+    `);
+
+    expect(s.stuff).toSatisfy(e => e.length == 0);
+}
+
+@("Table to Associative Array — non-empty string[string]")
+unittest
+{
+    struct S
+    {
+        string[string] stuff;
+    }
+
+    S s = parseToml!S(`
+    [stuff]
+    "it's" = "the"
+    end = "of"
+    the = "world"
+    as = "we"
+    know = "it"
+    `);
+
+    expect(s.stuff).toSatisfy(e => e.length == 5);
+    expect(s.stuff).toEqual([
+        "it's": "the",
+        "end": "of",
+        "the": "world",
+        "as": "we",
+        "know": "it",
+    ]);
+}
+
+@("Table to Associative Array — nested string[string][string]")
+unittest
+{
+    struct S
+    {
+        string[string][string] journey;
+    }
+
+    S s = parseToml!S(`
+    [journey.part1]
+    plants = "birds"
+    rocks = "things"
+
+    [journey.day3]
+    skin = "red"
+
+    [journey.day4]
+    river = "bed"
+    `);
+
+    expect(s.journey).toSatisfy(e => e.length == 3);
+    expect(s.journey).toEqual([
+        "part1": [
+            "plants": "birds",
+            "rocks": "things",
+        ],
+        "day3": [
+            "skin": "red",
+        ],
+        "day4": [
+            "river": "bed",
+        ],
+    ]);
+}
+
+@("Table of Offset Date-Times -> SysTime[string]")
+unittest
+{
+    struct S
+    {
+        SysTime[string] time;
+    }
+
+    S result = parseToml!S(`
+        [time]
+        today = 2021-12-13 13:17:09Z
+        tomorrow = 2021-12-14 13:17:09Z
+        someday = 2022-09-14 15:03:12Z
+    `);
+
+    expect(result.time).toEqual([
+        "today": SysTime(DateTime(2021, 12, 13, 13, 17, 9), UTC()),
+        "tomorrow": SysTime(DateTime(2021, 12, 14, 13, 17, 9), UTC()),
+        "someday": SysTime(DateTime(2022, 9, 14, 15, 3, 12), UTC()),
+    ]);
+}
+
+@("Table of inline table of Offset Date-Times -> SysTime[string][string]")
+unittest
+{
+    struct S
+    {
+        SysTime[string][string] time;
+    }
+
+    S result = parseToml!S(`
+        [time]
+        today = { earlier = 2021-12-13 13:17:09Z, now = 2021-12-13 15:07:01Z }
+    `);
+
+    expect(result.time).toEqual([
+        "today": [
+            "earlier": SysTime(DateTime(2021, 12, 13, 13, 17, 9), UTC()),
+            "now": SysTime(DateTime(2021, 12, 13, 15, 7, 1), UTC()),
+        ],
+    ]);
+}
+
 @("Integer can't fit into a byte")
 unittest
 {

@@ -172,7 +172,11 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
     }
     else
     {
-        static if (isArray!(typeof(dest[idx])) || is(typeof(dest[idx]) == struct))
+        static if (
+            isAssociativeArray!(typeof(dest[idx])) ||
+            isArray!(typeof(dest[idx])) ||
+            is(typeof(dest[idx]) == struct)
+        )
         {
             // Do nothing if it's a specially-handled struct.
             static if (
@@ -185,6 +189,67 @@ in (address[0].isSizeT, `address[0] = "` ~ address[0] ~ `" which is not converti
                 setData(dest[idx], address[1 .. $], value);
             }
         }
+    }
+}
+
+/// ditto
+package void setData(S, T)(ref S dest, string[] address, const T value)
+if (isAssociativeArray!S)
+in (address.length > 0, "`address` may not be empty")
+{
+    if (address.length == 1)
+    {
+        // Defined as a function so that it can go inside a __traits(compiles, ...)
+        static void setKey(S, T)(ref S dest, string key, T value)
+        {
+            dest[key] = value;
+        }
+
+        static if (__traits(compiles, setKey(dest, address[0], value)))
+        {
+            setKey(dest, address[0], value);
+            return;
+        }
+        else
+        {
+            assert (
+                false,
+                `Invalid operation: ` ~
+                dest.to!string ~ `[` ~ address[0].to!string ~ `] =
+                ` ~ value.to!string ~ `.to!` ~ (ElementType!S).stringof
+            );
+        }
+    }
+
+    static if (
+        isAssociativeArray!(typeof(dest[address[0]])) ||
+        isArray!(typeof(dest[address[0]])) ||
+        is(typeof(dest[address[0]]) == struct)
+    )
+    {
+        // Do nothing if it's a specially-handled struct.
+        static if (
+            !(is(typeof(dest[address[0]]) == TimeOfDay)) &&
+            !(is(typeof(dest[address[0]]) == SysTime)) &&
+            !(is(typeof(dest[address[0]]) == DateTime)) &&
+            !(is(typeof(dest[address[0]]) == Date))
+        )
+        {
+            if (address[0] !in dest)
+            {
+                dest[address[0]] = typeof(dest[address[0]]).init;
+            }
+
+            setData(dest[address[0]], address[1 .. $], value);
+        }
+    }
+    else
+    {
+        throw new TomlDecodingException(
+            `Could not place ` ~ T.stringof ~ ` "` ~ value.to!string ~
+            `" into ` ~ S.stringof ~ ` at key "` ~ address[0] ~
+            `. This might be a bug — please file a report.`
+        );
     }
 }
 

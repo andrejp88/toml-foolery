@@ -337,3 +337,70 @@ unittest
     setData(a, ["b", "2", "c", "1", "3", "x"], 773);
     expect(a.b[2].c[1][3].x).toEqual(773);
 }
+
+@("setData — associative array")
+unittest
+{
+    struct S
+    {
+        string[string] aa;
+    }
+
+    S s;
+
+    setData(s, ["aa", "key"], "value");
+    expect(s.aa).toEqual(["key": "value"]);
+}
+
+@("setData — nested associative array")
+unittest
+{
+    struct S
+    {
+        string[string][string] aa;
+    }
+
+    S s;
+
+    setData(s, ["aa", "key", "subkey"], "value");
+    expect(s.aa).toEqual(["key": ["subkey": "value"]]);
+}
+
+@("setData — array of associative arrays")
+unittest
+{
+    struct S
+    {
+        string[string][] aa;
+    }
+
+    S s;
+
+    setData(s, ["aa", "3", "key"], "value");
+    expect(s.aa).toEqual([
+        string[string].init,
+        string[string].init,
+        string[string].init,
+        ["key": "value"]
+    ]);
+}
+
+@("setData — associative array of arrays")
+unittest
+{
+    struct S
+    {
+        string[][string] aa;
+    }
+
+    S s;
+
+    setData(s, ["aa", "key", "2"], "value");
+    expect(s.aa).toEqual([
+        "key": [
+            string.init,
+            string.init,
+            "value"
+        ]
+    ]);
+}
