@@ -163,7 +163,7 @@ public class TomlEncodingException : Exception
 package void tomlifyField(K, V)(K key, V value, ref Appender!string buffer, immutable string[] parentTables)
 if (makesTomlKey!K)
 {
-    static if (makesTomlTable!V)
+    static if (isStructForTable!V || isAssociativeArray!V)
     {
         buffer.put('\n');
         buffer.put('[');
@@ -174,7 +174,7 @@ if (makesTomlKey!K)
     }
     else static if (
         isArray!V &&
-        is(ElementType!V == struct)
+        (is(ElementType!V == struct) || isAssociativeArray!(ElementType!V))
     )
     {
         foreach (ElementType!V entry; value)

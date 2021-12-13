@@ -21,7 +21,7 @@ private enum bool isSpeciallyHandledStruct(T) = (
     makesTomlOffsetDateTime!T
 );
 
-package(toml_foolery.encode) enum bool makesTomlTable(T) = (
+package(toml_foolery.encode) enum bool isStructForTable(T) = (
     is(T == struct) &&
     !isSpeciallyHandledStruct!T
 );
@@ -32,7 +32,7 @@ package(toml_foolery.encode) void tomlifyValueImpl(T)(
     ref Appender!string buffer,
     immutable string[] parentTables
 )
-if (makesTomlTable!T)
+if (isStructForTable!T)
 {
     enum auto fieldNames = FieldNameTuple!T;
 
@@ -44,6 +44,20 @@ if (makesTomlTable!T)
     static foreach (fieldName; fieldNames)
     {
         tomlifyField(dFieldToTomlKey!(T, fieldName), __traits(getMember, value, fieldName), buffer, parentTables);
+    }
+}
+
+/// Serializes structs into TOML tables.
+package(toml_foolery.encode) void tomlifyValueImpl(T)(
+    const T value,
+    ref Appender!string buffer,
+    immutable string[] parentTables
+)
+if (isAssociativeArray!T)
+{
+    foreach (string key; value.keys)
+    {
+        tomlifyField(key, value[key], buffer, parentTables);
     }
 }
 
@@ -234,4 +248,92 @@ unittest
     x = 0
     `);
 
+}
+
+@("Encode an associative array of strings as a table")
+unittest
+{
+    struct S
+    {
+        string[string] aa;
+    }
+
+    S s;
+    s.aa["foo"] = "bar";
+    s.aa["fizz"] = "buzz";
+
+    expectToEqualNoBlanks(_tomlifyValue(s), `
+    [aa]
+    foo = "bar"
+    fizz = "buzz"
+    `);
+}
+
+@("Encode an associative array of associative arrays of strings as tables")
+unittest
+{
+    struct S
+    {
+        string[string][string] aa;
+    }
+
+    S s;
+    s.aa["barry"]["gibb"] = "bee gees";
+    s.aa["barry"]["white"] = "solo";
+    s.aa["tom"]["hanks"] = "gump";
+    s.aa["tom"]["cruise"] = "impossible";
+    s.aa["tom"]["preston-werner"] = "toml";
+
+    expectToEqualNoBlanks(_tomlifyValue(s), `
+    [aa]
+
+    [aa.barry]
+    gibb = "bee gees"
+    white = "solo"
+
+    [aa.tom]
+    preston-werner = "toml"
+    hanks = "gump"
+    cruise = "impossible"
+    `);
+}
+
+@("Encode an array of associative arrays of strings as an array of tables")
+unittest
+{
+    struct S
+    {
+        string[string][] confusion;
+    }
+
+    S s;
+    s.confusion.length = 4;
+    s.confusion[0]["will"] = "ferrel";
+    s.confusion[0]["pharrell"] = "williams";
+    s.confusion[1]["jennifer1"] = "aniston";
+    s.confusion[1]["jennifer2"] = "lawrence";
+    s.confusion[2]["bob1"] = "dole";
+    s.confusion[2]["bob2"] = "ross";
+    s.confusion[2]["bob3"] = "marley";
+    s.confusion[3]["jason"] = "segel";
+    s.confusion[3]["steven"] = "seagal";
+
+    expectToEqualNoBlanks(_tomlifyValue(s), `
+    [[confusion]]
+    will = "ferrel"
+    pharrell = "williams"
+
+    [[confusion]]
+    jennifer1 = "aniston"
+    jennifer2 = "lawrence"
+
+    [[confusion]]
+    bob1 = "dole"
+    bob2 = "ross"
+    bob3 = "marley"
+
+    [[confusion]]
+    steven = "seagal"
+    jason = "segel"
+    `);
 }
