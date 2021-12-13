@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [2.1.0] · 2021-12-13
+
+### Added
+- Support converting D associative arrays to and from TOML tables.
+
+
 ## [2.0.0] · 2021-11-04
 
 The library is now compatible with TOML v1.0.0.
@@ -51,3 +57,4 @@ Decoding rejects certain inputs that were permitted before this version. It now 
 [1.0.0]: https://gitlab.com/andrej88/toml-foolery/-/tree/v1.0.0
 [1.0.1]: https://gitlab.com/andrej88/toml-foolery/-/tree/v1.0.1
 [2.0.0]: https://gitlab.com/andrej88/toml-foolery/-/tree/v2.0.0
+[2.1.0]: https://gitlab.com/andrej88/toml-foolery/-/tree/v2.1.0

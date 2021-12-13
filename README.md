@@ -1,8 +1,8 @@
-[![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.0.0/readme-resources/gitlab-icon-rgb.svg) Main Repo](https://gitlab.com/andrej88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.0.0/readme-resources/github-icon.svg) Mirror](https://github.com/andrejp88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.0.0/readme-resources/dub-logo-small.png) Dub Package Registry](https://code.dlang.org/packages/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.0.0/readme-resources/documentation-icon.svg) Documentation](https://toml-foolery.dpldocs.info/)
+[![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.1.0/readme-resources/gitlab-icon-rgb.svg) Main Repo](https://gitlab.com/andrej88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.1.0/readme-resources/github-icon.svg) Mirror](https://github.com/andrejp88/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.1.0/readme-resources/dub-logo-small.png) Dub Package Registry](https://code.dlang.org/packages/toml-foolery)   ·   [![](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.1.0/readme-resources/documentation-icon.svg) Documentation](https://toml-foolery.dpldocs.info/)
 
 # toml-foolery
 
-![toml-foolery logo](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.0.0/readme-resources/logo.svg)
+![toml-foolery logo](https://gitlab.com/andrej88/toml-foolery/-/raw/v2.1.0/readme-resources/logo.svg)
 
 Toml-foolery is a library for the D programming language which
 simplifies encoding and decoding of TOML-formatted data. There are no
@@ -10,7 +10,7 @@ intermediate types that couple your code to this library —
 Toml-foolery parses TOML data directly into any struct, and structs
 can be converted into TOML.
 
-Toml-foolery v2.0.0 is compatible with [TOML v1.0.0](https://toml.io/en/v1.0.0).
+Toml-foolery v2.1.0 is compatible with [TOML v1.0.0](https://toml.io/en/v1.0.0).
 
 ## Usage
 
@@ -141,6 +141,7 @@ profession = "Thief"
 | Array of the above types                                            | Array of the corresponding TOML type        |
 | `struct`                                                            | Table                                       |
 | Array of `struct`s                                                  | Array of tables                             |
+| Associative array                                                   | Table                                       |
 
 ¹ The TOML specification requires Integers to be in the range
 `[long.min, long.max]`, so toml-foolery will throw a `TomlTypeException` if the
