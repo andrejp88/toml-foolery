@@ -1,21 +1,20 @@
---- tmp/toml.original.peg	2021-10-31 17:12:18.006000000 +0000
-+++ tmp/toml.fixed.peg	2021-10-31 17:12:56.294747869 +0000
-@@ -15,9 +15,12 @@
+--- tmp/toml.original.peg	2022-07-09 12:51:22.367748168 +0100
++++ tmp/toml.fixed.peg	2022-07-09 12:57:13.787246880 +0100
+@@ -15,9 +15,11 @@
  
  #; Overall Structure
  
 -toml             <- expression ( newline expression )*
++TomlGrammar:
  
 -expression       <- ws ( comment )? / ws keyval ws ( comment )? / ws table ws ( comment )?
-+TomlGrammar:
-+
 +toml             <- expression ( newline expression )* :eoi
 +
 +expression       <- ws table ws ( comment )? / ws keyval ws ( comment )? / ws ( comment )?
  
  #; Whitespace
  
-@@ -26,12 +29,12 @@
+@@ -26,13 +28,13 @@
  
  #; Newline
  
@@ -26,11 +25,13 @@
  
  comment_start_symbol <-  [#]  # #
 -non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF] 
+-non_eol          <-  [\t]  /  [ -\x7F]  / non_ascii
 +non_ascii        <-  [\x80-\uD7FF]  /  [\uE000-\U0010FFFF]
- non_eol          <-  [\t]  /  [ -~]  / non_ascii
++non_eol          <-  [\t]  /  [ -~]  / non_ascii
  
  comment          <- comment_start_symbol non_eol*
-@@ -40,7 +43,7 @@
+ 
+@@ -40,7 +42,7 @@
  
  keyval           <- key keyval_sep val
  
@@ -39,7 +40,7 @@
  simple_key       <- quoted_key / unquoted_key
  
  unquoted_key     <- ( ALPHA / DIGIT /  [-]  /  [_]  )+ # A-Z / a-z / 0-9 / - / _
-@@ -88,7 +91,7 @@
+@@ -88,7 +90,7 @@
  
  mlb_content      <- mlb_char / newline / mlb_escaped_nl
  mlb_char         <- mlb_unescaped / escaped
@@ -48,7 +49,7 @@
  mlb_unescaped    <- wschar /  [!]  /  [#-\[]  /  [\]-~]  / non_ascii
  mlb_escaped_nl   <- escape ws newline ( wschar / newline )*
  
-@@ -109,11 +112,11 @@
+@@ -109,11 +111,11 @@
  
  mll_content      <- mll_char / newline
  mll_char         <-  [\t]  /  [ -&]  /  [(-~]  / non_ascii
@@ -62,7 +63,7 @@
  
  minus            <-  [-]                        # -
  plus             <-  [+]                         # +
-@@ -127,7 +130,7 @@
+@@ -127,7 +129,7 @@
  bin_prefix       <- "0b"               # 0b
  
  dec_int          <- ( minus / plus )? unsigned_dec_int
@@ -71,7 +72,7 @@
  
  hex_int          <- hex_prefix HEXDIG ( HEXDIG / underscore HEXDIG )*
  oct_int          <- oct_prefix digit0_7 ( digit0_7 / underscore digit0_7 )*
-@@ -236,5 +239,4 @@
+@@ -236,5 +238,4 @@
  
  ALPHA            <-  [A-Z]  /  [a-z]  # A-Z / a-z
  DIGIT            <-  [0-9]  # 0-9

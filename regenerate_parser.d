@@ -52,6 +52,8 @@
 //     empty line case last (it can always succeed, so it must not be
 //     the first attempt).
 //
+//   - Adjust the non_eol rule to reject character 0x7F (DEL).
+//
 //   - Reverse the order of alternations in the `key` rule so that
 //     `dotted_key` is attempted before `simple_key`.
 //
@@ -70,6 +72,8 @@
 //
 //   - Add lowercase letters to the `HEXDIG` rule. ABNF is
 //     case-insensitive which is why they aren't there to begin with.
+//
+//   - Remove some trailing spaces
 //
 //
 // 5. Convert tmp/toml.peg into a Pegged module at
