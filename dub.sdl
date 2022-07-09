@@ -14,7 +14,7 @@ configuration "library" {
 
 configuration "unittest" {
 	dependency "silly" version="*"
-	dependency "exceeds-expectations" version="~>0.8.0"
+	dependency "exceeds-expectations" version="~>0.9.5"
 	stringImportPaths "."
 	// versions "tracer"
 }
